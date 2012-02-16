@@ -1,0 +1,297 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Newsletter</title>
+<style>
+body {
+	font-size:14px
+}
+h1 {
+	color:#000;
+ 	font-size:14px;
+	font-weight:900;
+	margin:0px;
+}
+h2 {
+	color:#00C;
+ 	font-size:36px;
+ 	font-weight:900;
+}
+h3 {
+	color:#000;
+	font-size:24px;
+	font-weight:100;
+}
+h4 {
+	color:#000;
+	font-size:18px;
+	font-weight:700;
+}
+p {
+	font-size:14px
+}
+p.platform{
+	color:#999;
+ 	font-size:10px;
+	margin:0px;
+}
+.subsection h2 {
+	color:#000;
+	font-size:24px;
+	font-weight:100;
+}
+.function {
+	margin:0px 20px 20px 20px;
+	background-color:#EEE;
+	padding: 5px 5px 5px 15px;
+}
+.function h2 {
+	color:#900;
+	font-size:14px;
+	font-weight:900;
+}
+.function .param {
+	margin:0px 0px 0px 20px
+}
+.function .param h2 {
+	color:#666;
+	font-size:14px;
+	font-weight:900;
+	margin-bottom: 0px;
+}
+.function .param p {
+	margin-top: 0px;
+}
+.var {
+	margin:0px 0px 0px 20px
+}
+.var h2 {
+	color:#666;
+	font-size:14px;
+	font-weight:900;
+	margin-bottom: 0px;
+}
+.var p {
+	margin-top: 0px;
+}
+</style>
+</head>
+<body>
+<h1>Newsletter version 0.1.2.0</h1>
+<p class="platform">Pour cakePHP 1.3</p>
+<div class="section">
+    <h2>Installation</h2>
+    <ol>
+        <li>Placer le dossier &quot;newsletter&quot; dans &quot;app/plugins/&quot;.</li>
+        <li>Newsletter nécésite que l'admin soit installé.</li>
+        <li>Exécuter les commandes SQL de &quot;databese.sql&quot; dans la base de donnée MySql.</li>
+        <li>Créer le dossier &quot;app\webroot\files\newsletter&quot; et mettre accessible en écriture.</li>
+        <li>Pour ajouter le menu Newsletter dans l'admin, ajouter le code suivant dans votre menu : &lt;?php echo $this-&gt;element('admin_mnu', array('plugin' =&gt; 'newsletter')); ?&gt;</li>
+    </ol>
+</div>
+<div class="section">
+  <h2>Configuration</h2>
+    <p>Le plugin chargera automatiquement les configurations dans le fichier : &quot;\app\config\plugins\newsletter.php&quot;</p>
+    <h4>Variables de configuration</h4>
+    <div class="var">
+        <h2>Newsletter.sendEmail</h2>
+        <p>Email de l'envoyeur des Newsletters</p>
+    </div>
+    <div class="var">
+        <h2>Newsletter.replyTo</h2>
+        <p>Email à qui répondre pour les Newsletters</p>
+    </div>
+    <div class="var">
+        <h2>Newsletter.errorReturn</h2>
+        <p>Email à qui les erreurs d'envoie seront envoyé.</p>
+    </div>
+    <div class="var">
+        <h2>Newsletter.smtpOptions</h2>
+        <p>Définit un smtp par où les emails sont envoyé.</p>
+        <p>Options:</p>
+        <ul>
+        <li>port</li>
+		<li>timeout</li>
+        <li>host</li>
+		<li>username</li>
+		<li>password</li>
+        </ul>
+    </div>
+    <div class="var">
+        <h2>Newsletter.tableSendlist</h2>
+        <p>Array de sendlists qui doivent utiliser un autre model que NewsletterEmail</p>
+        <p>Options:</p>
+        <ul>
+        <li>id</li>
+		<li>model</li>
+        <li>emailField</li>
+		<li>nameField</li>
+        <li>activeField</li>
+		<li>firstNameField</li>
+		<li>lastNameField</li>
+        </ul>
+    </div>
+</div>
+<div class="section">
+    <h2>Création d'un template de newsletter</h2>
+    <p>Les templates doivent être placé dans &quot;app/view/elements/newsletter/&quot;.</p>
+    <h4>Variables</h4>
+    <div class="var">
+        <h2>$title_for_newsletter</h2>
+        <p>Contien le titre de la newsletter</p>
+    </div>
+    <div class="var">
+        <h2>$newsletter_data["Newsletter"]</h2>
+        <p>Contien toutes les données relatives à la newsletter</p>
+    </div>
+    <div class="var">
+        <h2>$newsletter_data["NewsletterBox"]</h2>
+        <p>Contien toutes les données relatives à toutes les boites</p>
+    </div>
+    <h4>Functions</h4>
+    <div class="function">
+        <h2>$newsletter-&gt;column($id)</h2>
+        <p>Créé une colone où du contenue peut être ajouté dynamiquement</p>
+        <h4>Paramètres</h4>
+        <div class="param">
+            <h2>id</h2>
+            <p>Identifiant du conteneur</p>
+        </div>
+        <h4>Valeur de retour</h4>
+        <p>String : Html du contenue de cette colonne.</p>
+    </div>
+    <div class="function">
+        <h2><s>$newsletter-&gt;row($id)</s></h2>
+        <p><strong>(Pas supporté dans la version actuelle)</strong> Créé une rangé où du contenue peut être ajouté dynamiquement</p>
+        <h4>Paramètres</h4>
+        <div class="param">
+            <h2>id</h2>
+            <p>Identifiant du conteneur</p>
+        </div>
+        <h4>Valeur de retour</h4>
+        <p>String : Html du contenue de cette rangé.</p>
+    </div>
+    <div class="function">
+        <h2>$newsletter-&gt;inEditMode()</h2>
+        <p>Retourne si la newsletter est en mode d'édition</p>
+        <h4>Valeur de retour</h4>
+        <p>Booléen : True si la newsletter est en mode d'édition.</p>
+    </div>
+</div>
+<div class="section">
+    <h2>Modifier les templates des boites de contenue</h2>
+    <p>Il est possible de modifier les boites sans modifier le plugin, pour ce faire, il faut copier le template de la boite désirée que se trouve dans &quot;newsletter/views/elements/newsletter_box/&quot; dans &quot;app/views/plugins/newsletter/elements/newsletter_box&quot;</p>
+    <h4>Functions</h4>
+    <p>Voir Création de  boites de contenue</p>
+</div>
+<div class="section">
+    <h2>Modifier les templates des boites de contenue</h2>
+    <p>Il est possible de modifier les boites sans modifier le plugin, pour ce faire, il faut copier le template de la boite désirée que se trouve dans &quot;newsletter/views/elements/newsletter_box/&quot; dans &quot;app/views/plugins/newsletter/elements/newsletter_box&quot;</p>
+    <h4>Variables</h4>
+    <p>Voir <a href="#temp_creation_var">Création de boites de contenue</a></p>
+    <h4>Functions</h4>
+    <p>Voir <a href="#temp_creation_funct">Création de boites de contenue</a></p>
+</div>
+<div class="section">
+    <h2>Création de  boites de contenue</h2>
+    <p>Les templates de boite doivent être placé dans &quot;app/view/elements/newsletter_box/&quot;.</p>
+    <div class="subsection">
+        <h2>Template</h2>
+        <p>Fichier nomée simplement par le nom de la boite. Ex. : gateau.ctp</p>
+        <h4><a name="temp_creation_funct" id="temp_creation_var"></a>Variables</h4>
+        <div class="var">
+            <h2>$newsletter_box[&quot;NewsletterBox&quot;]</h2>
+            <p>Contien toutes les données relatives à la boite</p>
+        </div>
+        <div class="var">
+            <h2>$newsletter_box[&quot;NewsletterBox&quot;][&quot;data&quot;]</h2>
+            <p>Contien toutes les variables enregistrée par la boite.</p>
+        </div>
+        <div class="var">
+            <h2>$newsletter_box[&quot;NewsletterBox&quot;][&quot;file&quot;]</h2>
+            <p>Contien les paths et les noms des fichiers utilisée par la boite</p>
+        </div>
+        <h4><a name="temp_creation_funct" id="temp_creation_funct"></a>Functions</h4>
+        <div class="function">
+            <h2>$newsletter-&gt;inEditMode()</h2>
+            <p>Retourne si la newsletter est en mode d'édition</p>
+            <h4>Valeur de retour</h4>
+            <p>Booléen : True si la newsletter est en mode d'édition.</p>
+        </div>
+    </div>
+    <div class="subsection">
+        <h2>Formulaire pour l'édition</h2>
+        <p>Fichier nomée  par le nom de la boite suivie de &quot;_edit&quot;. Ex. : gateau_edit.ctp</p>
+        <h4>Functions</h4>
+        <div class="function">
+            <h2>$newsletter-&gt;createEditForm()</h2>
+            <p>Crée et retourne le formulaire de modification. Il crée automatiquement un champ hidden représentant le id. cette fonction doit être appeler au début du fichier</p>
+            <h4>Valeur de retour</h4>
+            <p>String : Html du début du formulaire.</p>
+        </div>
+        <div class="function">
+            <h2>$newsletter-&gt;endEditForm()</h2>
+            <p>Retourne la fin du formulaire de modification. Cette fonction doit être appeler à la fin du fichier</p>
+            <h4>Valeur de retour</h4>
+            <p>String : Html de la fin du formulaire.</p>
+        </div>
+        <div class="function">
+            <h2>$newsletter-&gt;editInput($name,$options=array())</h2>
+            <p>Crée un input relié a une variable de Data, accessible par $newsletter_box[&quot;NewsletterBox&quot;][&quot;data&quot;][variable]</p>
+            <h4>Paramètres</h4>
+            <div class="param">
+                <h2>name</h2>
+                <p>Nom de la variable qui sera sauvegarder dans Data</p>
+            </div>
+            <div class="param">
+                <h2>options</h2>
+                <p>Option pour l'input. <a href="http://book.cakephp.org/view/189/Automagic-Form-Elements">Voir le core helper "Form" de CakePHP</a></p>
+            </div>
+            <h4>Valeur de retour</h4>
+            <p>String : Html de l'input.</p>
+        </div>
+        <div class="function">
+            <h2>$newsletter-&gt;editFileInput($name,$options=array())</h2>
+            <p>Permet d'upload de fichier vers le serveur pour être utiliser dans la newsletter. Le path et le nom du fichier sont accessible par $newsletter_box[&quot;NewsletterBox&quot;][&quot;file&quot;][fichier]</p>
+            <h4>Paramètres</h4>
+            <div class="param">
+                <h2>name</h2>
+                <p>Nom de  variable pour le fichier.</p>
+            </div>
+            <div class="param">
+                <h2>options</h2>
+                <p>Option pour l'input. <a href="http://book.cakephp.org/view/189/Automagic-Form-Elements">Voir le core helper "Form" de CakePHP</a></p>
+            </div>
+            <h4>Valeur de retour</h4>
+            <p>String : Html des inputs néssésaire à l'upload.</p>
+        </div>
+        <div class="function">
+            <h2>$newsletter-&gt;editEntriesSelect($name,$entries,$options=array())</h2>
+            <p></p>
+            <h4>Paramètres</h4>
+            <div class="param">
+                <h2>name</h2>
+                <p>Nom de la variable qui sera sauvegarder dans Data.</p>
+            </div>
+            <div class="param">
+                <h2>entries</h2>
+                <p></p>
+            </div>
+            <div class="param">
+                <h2>options</h2>
+                <p></p>
+            </div>
+            <h4>Valeur de retour</h4>
+            <p>String : </p>
+        </div>
+        <div class="function">
+            <h2>$newsletter-&gt;inEditMode()</h2>
+            <p>Retourne si la newsletter est en mode d'édition</p>
+            <h4>Valeur de retour</h4>
+            <p>Booléen : True si la newsletter est en mode d'édition.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

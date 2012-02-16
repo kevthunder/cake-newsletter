@@ -1,0 +1,1 @@
+<p><?php __d('newsletter','You are now unsubscribed.')?></p>

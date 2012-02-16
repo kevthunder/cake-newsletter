@@ -1,0 +1,19 @@
+@media print {
+  .noprint{
+	  display:none;
+  }
+}
+#header{
+	margin: 0px 0px 20px 0px;
+}
+.btn{
+	padding:5px 15px 5px 15px;
+	background-color:#9FB1C4;
+	border: 1px solid;
+	border-top-color:#CDD7E0;
+	border-left-color:#CDD7E0;
+	border-bottom-color:#415469;
+	border-right-color:#415469;
+	cursor:pointer;
+	float:left;
+}

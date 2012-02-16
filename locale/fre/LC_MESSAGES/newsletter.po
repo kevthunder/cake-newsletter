@@ -1,0 +1,221 @@
+# LANGUAGE translation of CakePHP Application
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from file: Revision: 7296 \webroot\test.php
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-10-27 08:45-0400\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+msgid "January"
+msgstr "Janvier"
+
+msgid "February"
+msgstr "Février"
+
+msgid "March"
+msgstr "Mars"
+
+msgid "April"
+msgstr "Avril"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "June"
+msgstr "Juin"
+
+msgid "July"
+msgstr "Juillet"
+
+msgid "August"
+msgstr "Août"
+
+msgid "September"
+msgstr "Septembre"
+
+msgid "October"
+msgstr "Octobre"
+
+msgid "November"
+msgstr "Novembre"
+
+msgid "December"
+msgstr "Décembre"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+msgid "List"
+msgstr "Liste"
+
+msgid "List Newsletters"
+msgstr "Liste des Newsletters"
+
+msgid "Edit Newsletter"
+msgstr "Éditer Newsletter"
+
+msgid "Delete"
+msgstr "Effacer"
+
+msgid "Are you sure you want to delete # %s?"
+msgstr "Voulez-vous vraiment effacer # %s?"
+
+msgid "Page %page% of %pages%, showing %current% records out of %count% total, starting on record %start%, ending on %end%"
+msgstr "Page %page% de %pages%, %current% entrés montrées sur un total de %count%, commençant à  %start%, finissant à  %end%"
+
+msgid "Send"
+msgstr "Envoyer"
+
+msgid "Send to"
+msgstr "Envoyer à"
+
+msgid "View"
+msgstr "Voir"
+
+msgid "Edit"
+msgstr "Éditer"
+
+msgid "previous"
+msgstr "précédant"
+
+msgid "next"
+msgstr "suivant"
+
+msgid "New Newsletter"
+msgstr "Nouvelle Newsletter"
+
+msgid "Add Newsletter"
+msgstr "Ajouter Newsletter"
+
+msgid "Send Newsletter"
+msgstr "Envoyer la Newsletter"
+
+msgid "Active"
+msgstr "Actif"
+
+msgid "Created"
+msgstr "Date de création"
+
+msgid "Modified"
+msgstr "Date de modification"
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "Text"
+msgstr "Texte"
+
+msgid "Delete Newsletter"
+msgstr "Effacer Newsletter"
+
+msgid "Continue"
+msgstr "Continuer"
+
+msgid "Submit"
+msgstr "Soumettre"
+
+msgid "Add content"
+msgstr "Ajouter du contenu"
+
+msgid "Content"
+msgstr "Contenu"
+
+msgid "Newsletter deleted"
+msgstr "Newsletter Effacé"
+
+msgid "The Newsletter has been saved"
+msgstr "La Newsletter à été sauvegardée"
+
+msgid "Add NewsletterSendlist"
+msgstr "Ajouter une liste de diffusion"
+
+msgid "Edit NewsletterSendlist"
+msgstr "Éditer la liste de diffusion"
+
+msgid "NewsletterSendlists"
+msgstr "Listes de diffusion"
+
+msgid "New NewsletterSendlist"
+msgstr "Nouvelle liste de diffusion"
+
+msgid "NewsletterSendlist"
+msgstr "Liste de diffusion"
+
+msgid "View Emails"
+msgstr "Voir Emails"
+
+msgid "Mister/Miss"
+msgstr "Monsieur/madame"
+
+msgid "Stats"
+msgstr "Statistiques"
+
+msgid "Newsletters Stats"
+msgstr "Statistiques Newsletters"
+
+msgid "Newsletters title"
+msgstr "Titre de la Newsletters"
+
+msgid "Sended to %d people"
+msgstr "Envoyée à %d personnes"
+
+msgid "Email not found."
+msgstr "Courriel introuvable."
+
+msgid "Unsubscribe"
+msgstr "Se désabonner"
+
+msgid "Are you sure you want to unsubscribe from our newletter ?"
+msgstr "Êtes-vous sûr de vouloir vous désabonner de notre newsletter?"
+
+msgid "Your email"
+msgstr "Votre e-mail"
+
+msgid "You are now unsubscribed."
+msgstr "Vous êtes maintenant désabonné."
+
+msgid "This email has allready been disabled."
+msgstr "Ce e-mail a déjà été désactivé."
+
+msgid "Subscribe to our Newletter"
+msgstr "Inscrivez-vous à notre newsletter"
+
+msgid "Subscribe"
+msgstr "S'inscrire"
+
+msgid "You are now subscribed to our newsletter."
+msgstr "Vous êtes maintenant inscrit à notre newsletter."
+
+msgid "Unique visits"
+msgstr "Visites uniques"
+
+msgid "Cliqued links"
+msgstr "Liens cliqués"
+
+msgid "Unique views"
+msgstr "Ouvertures uniques"
+
+msgid "Views"
+msgstr "Ouvertures"
+
+msgid "Views per time"
+msgstr "Ouvertures par jour"
+
+msgid "Invalid email."
+msgstr "Courriel invalide."
+
+msgid "The Newsletter has been sended.(%s/%s)"
+msgstr "La Newsletter a été envoyée.(%s/%s)"
+

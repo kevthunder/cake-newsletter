@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Newsletter</title>
+<style>
+body {
+	font-size:14px
+}
+h1 {
+	color:#00C;
+ font-size:36px font-weight:900;
+}
+h2 {
+	color:#000;
+	font-size:24px;
+	font-weight:100;
+}
+h3 {
+	color:#000;
+	font-size:18px;
+	font-weight:700;
+}
+p {
+	font-size:14px
+}
+.subsection h1 {
+	color:#000;
+	font-size:24px;
+	font-weight:100;
+}
+.function {
+	margin:0px 20px 20px 20px;
+	background-color:#EEE;
+	padding: 5px 5px 5px 15px;
+}
+.function h1 {
+	color:#900;
+	font-size:14px;
+	font-weight:900;
+}
+.function .param {
+	margin:0px 0px 0px 20px
+}
+.function .param h1 {
+	color:#666;
+	font-size:14px;
+	font-weight:900;
+	margin-bottom: 0px;
+}
+.function .param p {
+	margin-top: 0px;
+}
+.var {
+	margin:0px 0px 0px 20px
+}
+.var h1 {
+	color:#666;
+	font-size:14px;
+	font-weight:900;
+	margin-bottom: 0px;
+}
+.var p {
+	margin-top: 0px;
+}
+pre{
+	padding:10px;
+	background:#CCDDDD;
+}
+</style>
+</head>
+<body>
+<div class="section">
+    <h1>v0.1.2.1.0</h1>
+    <ul>
+        <li>Statistiques : Optimisation des requêtes</li>
+        <li>Statistiques : Ne pas afficher le graphique quand il n'y a aucune ouverture</li>
+        <li>Statistiques : Limiter le nombre d'éléments sur l'axe X du graphique</li>
+        <li>Bug Encodage Ajax</li>
+		<li>Item Selecteur</li>
+		<li>Newletter Helper : unsubscribeUrl</li>
+		<li>Newletter Helper : viewUrl</li>
+		<li>Newletter Helper : pToBr</li>
+		<li>Ajustement des Style CSS Bugué a cause du reset css</li>
+		<li>Modif de l'init de tinyMCE</li>
+		<li>Début d'intégration de Multimedia (non-fonctionnel)</li>
+    </ul>
+    <h1>v0.1.2.1.1</h1>
+    <ul>
+        <li>array_map_recursive est maintenant interne</li>
+		<li>Newletter Helper : arrayToTime</li>
+		<li>Newletter Helper : Mofification de editInput, plus simple, plus standard et permet maintenant d'avoir des champ date</li>
+		<li>Bug résolu : pagination emails</li>
+    </ul>
+    <h1>v0.1.2.1.2</h1>
+    <ul>
+        <li>Ajout du paramètre plugin dans certains liens</li>
+        <li>bug delete de session dans add email</li>
+    </ul>
+    <h1>v0.1.2.1.3</h1>
+    <ul>
+        <li>Ajout de l'option "Ignorer les contacts à qui cette infolettre a déjà été envoyé"</li>
+        <li>Validation supplementaire sending_no pour éviter les refresh</li>
+		<li>Ajout de date dans newsletter_sended</li>
+		<li>view des stats changer &lt;? par &lt;?php</li>
+		<li>Bug résolu : calcul du graphic</li>
+    </ul>
+    <h1>v0.1.2.2.0</h1>
+    <ul>
+        <li>Nouveau système d'envoi : beaucoup plus rapide avec un pause, un cancel et une cron peut y être associé</li>
+		<li>Nouvelle écran demande de tester les newsletters avant de les envoyer.<li>
+		<li>Affichage du nombre d'emails dans l'index des listes de diffusion<li>
+		<li>Ménage dans le menu admin<li>
+    </ul>
+    <h1>v0.1.2.2.1</h1>
+    <ul>
+        <li>NewsletterMakerHelper::column : possibiliter de modifier les attributs de la pluspart des elements</li>
+    </ul>
+    <h1>v0.1.2.2.2</h1>
+    <ul>
+        <li>NewsletterMakerHelper::column : possiblilité d'ajouter des séparateurs</li>
+        <li>
+			NewsletterTemplateConfig: paramétrage supplémentaire pour les newsletter/newsletterBox au niveau contoller/model<br>
+			Option disponibles pour le moment:
+			<ul>
+				<li>Newsletter : label</li>
+				<li>Newsletter : beforeConfig</li>
+				<li>Newsletter : beforeRender</li>
+			</ul>
+		</li>
+        <li>NewsletterMakerHelper::Url : correction d'un bug quand array est passé en argument</li>
+        <li>Correction d'un bug d'affichage pout le bouton "ajouter contenue"</li>
+    </ul>
+    <h1>v0.1.2.2.3</h1>
+    <ul>
+        <li>Fix pour quand un template est introuvable</li>
+    </ul>
+    <h1>v0.1.2.2.4</h1>
+    <ul>
+        <li>New email importation tool</li>
+    </ul>
+</div>
+</body>
+</html>
