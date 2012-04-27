@@ -89,22 +89,6 @@ class FunctComponent extends Object
 	
 		return $boxElements;
 	}
-	function read_box($newsletter_box){
-		$newsletter_box["NewsletterBox"]["data"] = $this->json_dec($newsletter_box["NewsletterBox"]["data"]);
-		if(isset($newsletter_box["NewsletterBox"]["data"]["file"])){
-			$newsletter_box["NewsletterBox"]["file"] = $newsletter_box["NewsletterBox"]["data"]["file"];
-			unset($newsletter_box["NewsletterBox"]["data"]["file"]);
-		}
-		return $newsletter_box;
-	}
-	function encode_box($newsletter_box){
-		if(isset($newsletter_box["NewsletterBox"]["file"])){
-			$newsletter_box["NewsletterBox"]["data"]["file"] = $newsletter_box["NewsletterBox"]["file"];
-			unset($newsletter_box["NewsletterBox"]["file"]);
-		}
-		$newsletter_box["NewsletterBox"]["data"] = $this->json_enc($newsletter_box["NewsletterBox"]["data"]);
-		return $newsletter_box;
-	}
 	function json_enc($value){
 		return json_encode($this->recur_utf8_encode($value));
 	}

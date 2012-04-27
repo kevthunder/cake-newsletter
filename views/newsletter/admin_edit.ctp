@@ -11,7 +11,7 @@ $javascript->codeBlock($script,array('inline'=>false));
 $javascript->link('/newsletter/js/jquery-1.4.2.min.js', false);
 $javascript->link('/newsletter/js/jquery-ui-1.7.2.custom.min', false);
 $javascript->link('/newsletter/js/jquery.form.js', false);
-$javascript->link('tiny_mce/jquery.tinymce', false);
+//$javascript->link('tiny_mce/jquery.tinymce', false);
 $javascript->link('/newsletter/js/newsletter', false);
 
 if(isset($multimedia)){

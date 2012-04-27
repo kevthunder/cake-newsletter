@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `newsletter_boxes` (
   `zone` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `order` int(11) NOT NULL DEFAULT '0',
   `template` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `data` text COLLATE utf8_unicode_ci NOT NULL,
+  `data` text COLLATE utf8_unicode_ci DEFAULT NULL,
   `multimedia` text COLLATE utf8_unicode_ci,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=5 ;

@@ -234,6 +234,25 @@ class NewsletterMakerHelper extends AppHelper {
 		$options = array_merge($default_options,$options);
 		mktime($options['hour'],$options['min'],$options['sec'],$options['month'],$options['day'],$options['year']);
 	}
+	function filterRichtext($text, $options = array()){
+		$defOpt = array(
+			'pToBr' => false
+		);
+		$opt = array_merge($defOpt,$options);
+		//filter urls
+		$findUrl = '/=["\']'.str_replace('/','\/',$this->html->url('/')).'([-\/_=?&%.:#a-zA-Z0-9]*)["\']/';
+		//debug($findUrl);
+		while(preg_match($findUrl,$text,$matches,PREG_OFFSET_CAPTURE)){
+			if(preg_match('/<img[^>]*$/',substr($text,0,$matches[0][1]))){
+				$fullUrl = $this->html->url('/'.$matches[1][0],true);
+			}else{
+				$fullUrl = $this->url('/'.$matches[1][0]);
+			}
+			$text = substr($text,0,$matches[0][1]).'="'.$fullUrl.'"'.substr($text,$matches[0][1]+strlen($matches[0][0]));
+			//debug($matches);
+		}
+		return $text;
+	}
 	function pToBr($text){
 		return str_replace(array("<p>","</p>"),"",preg_replace("/<\/p>(?!$)/","<br /><br />",$text));
 	}
@@ -261,6 +280,9 @@ class NewsletterMakerHelper extends AppHelper {
 	}
 	function viewUrl(){
 		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false));
+	}
+	function title(){
+		return $this->newsletter["Newsletter"]["title"];
 	}
 	function date($format = "jS F Y"){
 		return date_($format,strtotime($this->newsletter["Newsletter"]["date"]));
@@ -299,6 +321,7 @@ class NewsletterMakerHelper extends AppHelper {
 				$options['id'] .= ucfirst($part);
 			}
 		}*/
+		$type = '';
 		if(!isset($options['type'])){
 			if($target[count($target)-1]=='id'){
 				$options['type'] = 'hidden';
@@ -307,16 +330,19 @@ class NewsletterMakerHelper extends AppHelper {
 			}else{
 				$options['type'] = 'text';
 			}
-		}elseif($options['type']=='tinymce') {
-			$options['type'] = 'textarea';
-			if(!isset($options['class'])){
-				$options['class'] = '';
-			}else{
-				$options['class'] .= ' ';
+		}else{
+			$type = $this->Form->input('NewsletterBox.data.types'.'.'.$name,array('type'=>'hidden','value'=>$options['type']));
+			if($options['type']=='tinymce') {
+				$options['type'] = 'textarea';
+				if(!isset($options['class'])){
+					$options['class'] = '';
+				}else{
+					$options['class'] .= ' ';
+				}
+				$options['class'] .= 'tinymce';
 			}
-			$options['class'] .= 'tinymce';
 		}
-		return $this->Form->input('NewsletterBox.data'.'.'.$name,$options);//'target'=>$this->box_element.'__'.$name
+		return $type.$this->Form->input('NewsletterBox.data'.'.'.$name,$options);//'target'=>$this->box_element.'__'.$name
 	}
 	function editFileInput($name,$options=array()){
 		if(!is_array($options)){

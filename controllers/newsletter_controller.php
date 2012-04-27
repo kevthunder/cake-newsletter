@@ -421,8 +421,14 @@ class NewsletterController extends NewsletterAppController {
 		}
 		//debug($this->params);
 		$newsletter = $this->Newsletter->read(null, $id);
+		$newsletter_boxes = $this->NewsletterBox->find('all',array('conditions'=>array('NewsletterBox.newsletter_id'=>$id),'order'=>'NewsletterBox.zone ASC, NewsletterBox.order ASC'));
+		$boxes_by_zone = array();
+		foreach($newsletter_boxes as $box){
+			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
+		}
 		$this->Newsletter->beforeRender();
 		$this->set('newsletter', $this->Newsletter->data);
+		$this->set('boxes_by_zone',$boxes_by_zone);
 		$this->set('newsletter_data', $this->Newsletter->data);
 		$this->set('title_for_newsletter', '<span id="title_for_newsletter">'.$newsletter['Newsletter']['title'].'</span>');
 		//$this->set('text_for_newsletter', '<div id="text_for_newsletter">'.$newsletter['Newsletter']['text'].'</div>');
@@ -443,7 +449,7 @@ class NewsletterController extends NewsletterAppController {
 			$newsletter_boxes = $this->NewsletterBox->find('all',array('conditions'=>array('NewsletterBox.newsletter_id'=>$id),'order'=>'NewsletterBox.zone ASC, NewsletterBox.order ASC'));
 			$boxes_by_zone = array();
 			foreach($newsletter_boxes as $box){
-				$boxes_by_zone[$box['NewsletterBox']['zone']][] = $this->Funct->read_box($box);
+				$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
 			}
 			$this->Newsletter->beforeRender();
 			$this->set('newsletter',$this->Newsletter->data);
@@ -502,7 +508,7 @@ class NewsletterController extends NewsletterAppController {
 		$newsletter_boxes = $this->NewsletterBox->find('all',array('conditions'=>array('NewsletterBox.newsletter_id'=>$id),'order'=>'NewsletterBox.zone ASC, NewsletterBox.order ASC'));
 		$boxes_by_zone = array();
 		foreach($newsletter_boxes as $box){
-			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $this->Funct->read_box($box);
+			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
 		}
 		
 		$this->Newsletter->beforeConfig();
@@ -516,7 +522,7 @@ class NewsletterController extends NewsletterAppController {
 			Configure::write('debug', 1);
 		}
 		$this->layout = "newsletter_box_edit_ajax";
-		$newsletter_box = $this->Funct->read_box($this->NewsletterBox->read(null, $id));
+		$newsletter_box = $this->NewsletterBox->read(null, $id);
 		$newsletter = $this->Newsletter->read(null, $newsletter_box["NewsletterBox"]["newsletter_id"]);
 		$this->set('newsletter_box',$newsletter_box);
 		$this->data = $newsletter_box;
@@ -554,7 +560,7 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$this->layout = "newsletter_box_ajax";
 		
-		$newsletter_box = $this->Funct->read_box($this->NewsletterBox->read(null, $id));
+		$newsletter_box = $this->NewsletterBox->read(null, $id);
 		if (!empty($this->data)) {
 			//debug($this->data);
 			if(Configure::read('App.encoding') && strtolower(Configure::read('App.encoding')) != "utf-8" && $this->RequestHandler->isAjax()){
@@ -586,13 +592,13 @@ class NewsletterController extends NewsletterAppController {
 			}
 			
 			//////// save ////////
-			$this->data = $this->Funct->encode_box($this->data);
+			//$this->data = $this->Funct->encode_box($this->data);
 			//debug($this->data);
 			if ($this->NewsletterBox->save($this->data)) {
 
 			}
 		}
-		$newsletter_box = $this->Funct->read_box($this->NewsletterBox->read(null, $id));
+		$newsletter_box = $this->NewsletterBox->read(null, $id);
 		$newsletter = $this->Newsletter->read(null, $newsletter_box["NewsletterBox"]["newsletter_id"]);
 		$this->set('newsletter_box',$newsletter_box);
 		$this->set('newsletter',$newsletter);
