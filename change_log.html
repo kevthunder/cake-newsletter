@@ -139,6 +139,19 @@ pre{
     <ul>
         <li>New email importation tool</li>
     </ul>
+    <h1>v0.1.2.2.5</h1>
+    <ul>
+        <li>L'encodage du data des box se fait maintanant dans le model NewsletterBox</li>
+        <li>Encodage mantenant en serialize et détection de l'ancient format</li>
+        <li>Les url des champs tinymce sont maintenent enregistré en relatif dans la bd</li>
+        <li>NewsletterMakerHelper::filterRichtext : traite les champ rich text comme les tinymce
+			<ul>
+				<li>Met les url en absolut</li>
+				<li>Met un tracking sur les liens</li>
+			</ul>
+		</li>
+        <li>NewsletterMakerHelper::title : retourne le titre de la newsletter</li>
+    </ul>
 </div>
 </body>
 </html>
