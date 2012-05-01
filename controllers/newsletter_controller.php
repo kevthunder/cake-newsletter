@@ -312,7 +312,7 @@ class NewsletterController extends NewsletterAppController {
 		//$Newsletter = array();
 		$this->set('Newsletter', $Newsletter);
 		
-		$sended_count = $this->NewsletterSended->find('count',array('conditions'=>array('newsletter_id'=>$id)));
+		$sended_count = $this->NewsletterSended->find('count',array('conditions'=>array('NewsletterSended.newsletter_id'=>$id)));
 		$this->set("sended_count",$sended_count);
 		
 		$sql = "select count(*) from newsletter_stats NewsletterStats LEFT JOIN newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is NULL";
