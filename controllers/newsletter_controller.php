@@ -623,5 +623,132 @@ class NewsletterController extends NewsletterAppController {
 			$this->redirect(array('action'=>'index'));
 		}
 	}
+	
+	function admin_import_template(){
+		$available = true;
+		$available = $available && class_exists('ZipArchive');
+		
+		if(!file_exists(APP.'views'.DS.'elements'.DS.'newsletter')){
+			$available = $available && mkdir(APP.'views'.DS.'elements'.DS.'newsletter',  0777);
+		}
+		if($available){
+			$available = $available && (fileperms(APP.'views'.DS.'elements'.DS.'newsletter') & 0x0002 != 0);
+		}
+		
+		if(!file_exists(APP.'config'.DS.'plugins'.DS.'newsletter')){
+			$available = $available && mkdir(APP.'config'.DS.'plugins'.DS.'newsletter',  0777);
+		}
+		if($available){
+			$available = $available && (fileperms(APP.'config'.DS.'plugins'.DS.'newsletter') & 0x0002 != 0);
+		}
+		
+		if(!file_exists(TMP.'newsletter')){
+			$available = $available && mkdir(TMP.'newsletter',  0777);
+		}
+		if($available){
+			$available = $available && (fileperms(TMP.'newsletter') & 0x0002 != 0);
+		}
+		
+		if(!file_exists(WWW_ROOT.'img'.DS.'newsletter')){
+			$available = $available && mkdir(WWW_ROOT.'img'.DS.'newsletter',  0777);
+		}
+		if($available){
+			$available = $available && (fileperms(WWW_ROOT.'img'.DS.'newsletter') & 0x0002 != 0);
+		}
+		$this->set('available',$available);
+		
+		if($available){
+			if (!empty($this->data)) {
+				debug($this->data);
+				if(!empty($this->data['Newsletter']['zip_file']) && $this->data['Newsletter']['zip_file']['error'] == 0  && $this->data['Newsletter']['zip_file']['type'] == 'application/zip'){
+					$i = 0;
+					while(file_exists(TMP.'newsletter'.DS.'import_'.$i.'.zip')){
+						$i++;
+					}
+					if(move_uploaded_file($this->data['Newsletter']['zip_file']['tmp_name'],TMP.'newsletter'.DS.'import_'.$i.'.zip')){
+						if($this->_import_zip(TMP.'newsletter'.DS.'import_'.$i.'.zip',$this->data['Newsletter']['title'])){
+							$this->Session->setFlash(__d('newsletter','Newsletter template imported', true));
+							$this->redirect(array('action'=>'index'));
+						}else{
+							$this->Session->setFlash(__d('newsletter','Error reading zip file', true));
+						}
+					}else{
+						$this->Session->setFlash(__d('newsletter','Error moving zip file', true));
+					}
+				}else{
+					$this->Session->setFlash(__d('newsletter','Error uploading zip file', true));
+				}
+			}
+			
+		}
+	}
+	
+	function _import_zip($file,$name){
+		
+		$zip = new ZipArchive;
+		$res = $zip->open($file);
+		if (!$res) {
+			return false;
+		}
+		$newsletterFileName = Inflector::slug($name);
+		
+		$content = $zip->getFromName('html.html');
+		if(empty($content)){
+			return false;
+		}
+		$content = preg_replace('/="\/?(?:http:\/\/[^"\']*\/)?img\/([^"\']*)"/','="<?php echo \$html->url(\'/img/newsletter/'.$newsletterFileName.'/$1\',true); ?>"',$content);
+		$content = preg_replace('/href="([^"\']*)"/','/href="<?php echo $this->NewsletterMaker->url(\'$1\'); ?>"/',$content);
+		file_put_contents (APP.'views'.DS.'elements'.DS.'newsletter'.DS.$newsletterFileName.'.ctp' , $content);
+		
+		if(!file_exists(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName)){
+			if(!mkdir(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName,  0777)){
+				return false;
+			}
+		}
+		$imageFilter = '/^img\/.*\.(jpg|gif)$/';
+		$images = array();
+		for ($i = 0; $i < $zip->numFiles; $i++) {
+			$filename = $zip->getNameIndex($i);
+			if(preg_match($imageFilter,$filename)){
+				$images[] = $filename;
+			}
+		}
+		
+		$pluginPath = App::pluginPath('Newsletter');
+		ob_start();
+		include($pluginPath.'vendors'.DS.'config_template.php');
+		$configFile = ob_get_clean();
+		file_put_contents (APP.'config'.DS.'plugins'.DS.'newsletter'.DS.$newsletterFileName.'.php' , $configFile);
+		
+		
+		$this->_zipExtractToFlat($zip,WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName,$images);
+		$zip->close();
+		return true;
+	}
+	
+	function _zipExtractToFlat($zip, $dest, $entries = null){
+		if(is_null($entries)){
+			$entries = array();
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$entries[] = $zip->getNameIndex($i);
+			}
+		}
+		foreach($entries as $entry)
+        {
+            if ( substr( $entry, -1 ) == '/' ) continue; // skip directories
+           
+            $fp = $zip->getStream( $entry );
+            $ofp = fopen( $dest.DS.basename($entry), 'w' );
+           
+            if ( ! $fp )
+                throw new Exception('Unable to extract the file.');
+           
+            while ( ! feof( $fp ) )
+                fwrite( $ofp, fread($fp, 8192) );
+           
+            fclose($fp);
+            fclose($ofp);
+        } 
+	}
 }
 ?>

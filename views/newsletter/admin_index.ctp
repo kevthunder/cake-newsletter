@@ -52,7 +52,7 @@ foreach ($newsletters as $newsletter):
 			<?php echo $newsletter['Newsletter']['date']; ?>
 		</td>
 		<td>
-			<?php echo $newsletter['Newsletter']['TemplateConfig']->getLabel(); ?>
+			<?php if(!empty($newsletter['Newsletter']['TemplateConfig'])) echo $newsletter['Newsletter']['TemplateConfig']->getLabel(); ?>
 		</td>
 		<td>
 			<?php echo $newsletter['Newsletter']['active']; ?>
