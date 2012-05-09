@@ -41,7 +41,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 	}
 
 	function admin_import($id = null) {
-		$allowedTypes = array('application/vnd.ms-excel');
+		$allowedTypes = array('application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 		$moveFolder = TMP."newletter_import".DS;
 		App::import('Lib', 'Newsletter.SetMulti');
 		$filename = SetMulti::extractHierarchic(array('params.named.filename','params.filename','data.NewsletterSendlist.filename'),$this);
@@ -52,8 +52,8 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		if(!empty($this->data)){
 			if(!empty($this->data['NewsletterSendlist']['import_file'])){
 				$uploadFile = $this->data['NewsletterSendlist']['import_file'];
-				debug($uploadFile);
 				if(!in_array($uploadFile['type'],$allowedTypes)){
+					debug($uploadFile);
 					$this->Session->setFlash(__d('newsletter','This file type is not supported.', true));
 				}elseif($uploadFile['error'] == UPLOAD_ERR_OK){
 					$folderOk = is_dir($moveFolder);
@@ -73,7 +73,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 							$movePath = $filename.str_pad($num,3,'0',STR_PAD_LEFT).'.'.$ext;
 							$moveFullPath = $moveFolder.$movePath;
 						}while(file_exists($moveFullPath));
-						debug($moveFullPath);
+						//debug($moveFullPath);
 						if (move_uploaded_file($uploadFile['tmp_name'], $moveFullPath)) {
 							$this->data['NewsletterSendlist']['filename'] = $movePath;
 							
