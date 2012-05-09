@@ -692,7 +692,33 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$newsletterFileName = Inflector::slug($name);
 		
-		$content = $zip->getFromName('html.html');
+		///////// create needed folder /////////
+		if(!file_exists(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName)){
+			if(!mkdir(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName,  0777)){
+				return false;
+			}
+		}
+		
+		///////// map files /////////
+		$contentFileFilter = '/^(?:[^\/]*\/)?html.html$/';
+		$imageFilter = '/^(?:[^\/]*\/)?img\/.*\.(jpg|gif|png)$/';
+		$images = array();
+		for ($i = 0; $i < $zip->numFiles; $i++) {
+			$filename = $zip->getNameIndex($i);
+			if(preg_match($imageFilter,$filename)){
+				$images[] = $filename;
+			}
+			if(preg_match($contentFileFilter,$filename)){
+				$contentFile = $filename;
+			}
+		}
+		
+		
+		///////// extract and format content /////////
+		if(empty($contentFile)){
+			return false;
+		}
+		$content = $zip->getFromName($contentFile);
 		if(empty($content)){
 			return false;
 		}
@@ -700,20 +726,8 @@ class NewsletterController extends NewsletterAppController {
 		$content = preg_replace('/href="([^"\']*)"/','href="<?php echo $this->NewsletterMaker->url(\'$1\'); ?>"',$content);
 		file_put_contents (APP.'views'.DS.'elements'.DS.'newsletter'.DS.$newsletterFileName.'.ctp' , $content);
 		
-		if(!file_exists(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName)){
-			if(!mkdir(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName,  0777)){
-				return false;
-			}
-		}
-		$imageFilter = '/^img\/.*\.(jpg|gif)$/';
-		$images = array();
-		for ($i = 0; $i < $zip->numFiles; $i++) {
-			$filename = $zip->getNameIndex($i);
-			if(preg_match($imageFilter,$filename)){
-				$images[] = $filename;
-			}
-		}
 		
+		///////// create config file /////////
 		$pluginPath = App::pluginPath('Newsletter');
 		ob_start();
 		include($pluginPath.'vendors'.DS.'config_template.php');
@@ -721,7 +735,9 @@ class NewsletterController extends NewsletterAppController {
 		file_put_contents (APP.'config'.DS.'plugins'.DS.'newsletter'.DS.$newsletterFileName.'.php' , $configFile);
 		
 		
+		///////// extract images /////////
 		$this->_zipExtractToFlat($zip,WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName,$images);
+		
 		$zip->close();
 		return true;
 	}
