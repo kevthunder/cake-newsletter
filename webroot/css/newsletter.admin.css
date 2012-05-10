@@ -60,6 +60,9 @@ div.ajax_loader{
 	color:inherit;
 	margin: 0px 0px 15px 0px;
 }
+#edit_zone .preview h1, #edit_zone .preview h2, #edit_zone .preview h3, #edit_zone .preview h4,
+#edit_zone .preview h5, #edit_zone .preview h6, #edit_zone .preview b,
+#edit_zone .preview strong { font-weight: bolder }
 #edit_zone .preview table {
 	border: none;
 	background: transparent none;
