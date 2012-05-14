@@ -265,6 +265,7 @@ class FunctComponent extends Object
 					'emailField'=>'email',
 					'nameField'=>'name',
 					'activeField'=>'active',
+					'showInnactive'=>true,
 					'firstNameField'=>null,
 					'lastNameField'=>null,
 					'conditions'=>null,
@@ -431,7 +432,7 @@ class FunctComponent extends Object
 		if(isset($mail[$modelName]['email'])){
 			$emailData['email']= $mail[$modelName]['email'];
 		}else if($tableSendlist['emailField'] && isset($mail[$modelName][$tableSendlist['emailField']])){
-			$emailData['email']= $mail[$modelName][$tableSendlist['activeField']];
+			$emailData['email']= $mail[$modelName][$tableSendlist['emailField']];
 		}
 		if(isset($emailData['email']) && $emailData['email']){
 			//$basicFields = array('id','email','name','first_name','last_name');

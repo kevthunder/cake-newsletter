@@ -145,7 +145,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 				$tableSendlist = $this->Funct->getTableSendlistID($listId,true);
 				$Model = $tableSendlist['modelClass'];
 				$modelName = $Model->alias;
-				$findOptions = $this->Funct->tabledEmailGetFindOptions($tableSendlist,false);
+				$findOptions = $this->Funct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
 				if($q != null) {
 					$this->paginate['conditions'] = array('OR' => array(
 						'email LIKE' => '%'.$q.'%'
