@@ -32,6 +32,18 @@ class NewsletterController extends NewsletterAppController {
 			$url = urldecode($url);
 		}*/
 		$url = base64_decode(str_replace('-','/',$url));
+		$replace = array(
+			'%sended_id%' => $sended_id,
+			'%email%' => '',
+		);
+		if(!empty($sended_id)){
+			$sended = $this->NewsletterSended->read(null,$sended_id);
+			if(!empty($sended)){
+				$replace['%email%'] = $sended['NewsletterSended']['email'];
+			}
+		}
+		$url = str_replace(array_keys($replace),array_values($replace),$url);
+		
 		if($sended_id){
 			$this->NewsletterStat->create();
 			$visite = array();

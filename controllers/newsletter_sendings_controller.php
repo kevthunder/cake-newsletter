@@ -11,7 +11,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 	var $consoleGo = null;
 
 	
-	function add($newsletter_id = null){
+	function add($newsletter_id = null,$sended_id = null){
 		if (!$newsletter_id){
 			if (!empty($this->data['NewsletterSending']['newsletter_id'])) {
 				$newsletter_id = $this->data['NewsletterSending']['newsletter_id'];
@@ -64,8 +64,19 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$this->Session->setFlash(__d('newsletter','Invalid Newsletter', true));
 				$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
 			}
+		}else{
+			if(!empty($sended_id)){
+				$sended = $this->NewsletterSended->read(null,$sended_id);
+				//debug($sended);
+				if(!empty($sended['NewsletterSended']['email'])){
+					$this->data['NewsletterSending']['sender_email'] = $sended['NewsletterSended']['email'];
+				}
+				if(!empty($sended['NewsletterEmail']['name'])){
+					$this->data['NewsletterSending']['sender_email'] = $sended['NewsletterEmail']['name'];
+				}
+			}
+			$this->data['NewsletterSending']['newsletter_id'] = $newsletter['Newsletter']['id'];
 		}
-		$this->data['NewsletterSending']['newsletter_id'] = $newsletter['Newsletter']['id'];
 		$this->set('newsletter',$newsletter);
 	}
 	
@@ -90,7 +101,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 		}
 		$newsletter = $this->NewsletterSending->Newsletter->read(null,$newsletter_id);
-		if(!$newsletter[Newsletter]['active']){
+		if(!$newsletter['Newsletter']['active']){
 			$this->Session->setFlash(__d('newsletter','This Newsletter must be active in order to send it.', true));
 			$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
 		}
