@@ -156,6 +156,34 @@ pre{
     <ul>
         <li>Système d'importation de template.</li>
     </ul>
+    <h1>v0.1.2.3.0</h1>
+    <ul>
+        <li>Les visiteurs peuvent maintenant evoyer une newsletter par eux même
+			<ul>
+				<li>La config Newsletter.selfSending doit être true</li>
+				<li>NewsletterMakerHelper::selfSendingUrl : peut être utiliser pour offrir un meilleur foward</li>
+			</ul>
+		</li>
+        <li>Les newsletter doivent être actif avant d'être envoyé
+			<ul>
+				<li>Dans le add la newsletter n'est plus actif par défault</li>
+			</ul>
+		</li>
+        <li>Amélioration de l'index admin
+			<ul>
+				<li>les action sont maitenant affiché avec des logo et un label en over</li>
+				<li>Send to caché</li>
+				<li>Created et Modified caché</li>
+			</ul>
+		</li>
+        <li>Les configuration par défault peuvent maintenant être centraliser grâce à NewsletterConfig</li>
+        <li>"files/newsletter" est maintenant créé automatiquement</li>
+        <li>Importation de template : meilleur détection des fichiers</li>
+        <li>NewsletterMakerHelper::tableOfContents : créé une table des matière</li>
+		<li>Le send tentera d'enregistrer les erreurs SMTP</li>
+        <li>Le code de la box img_text est plus claire et l'image est maintenant limité à 700px</li>
+		
+    </ul>
 </div>
 </body>
 </html>

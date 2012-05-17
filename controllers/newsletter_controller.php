@@ -635,6 +635,9 @@ class NewsletterController extends NewsletterAppController {
 			$available = $available && (fileperms(APP.'views'.DS.'elements'.DS.'newsletter') & 0x0002 != 0);
 		}
 		
+		if(!file_exists(APP.'config'.DS.'plugins')){
+			$available = $available && mkdir(APP.'config'.DS.'plugins',  0777);
+		}
 		if(!file_exists(APP.'config'.DS.'plugins'.DS.'newsletter')){
 			$available = $available && mkdir(APP.'config'.DS.'plugins'.DS.'newsletter',  0777);
 		}
@@ -690,7 +693,7 @@ class NewsletterController extends NewsletterAppController {
 		if (!$res) {
 			return false;
 		}
-		$newsletterFileName = Inflector::slug($name);
+		$newsletterFileName = strtolower(Inflector::slug($name));
 		
 		///////// create needed folder /////////
 		if(!file_exists(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName)){
@@ -700,7 +703,7 @@ class NewsletterController extends NewsletterAppController {
 		}
 		
 		///////// map files /////////
-		$contentFileFilter = '/^(?:[^\/]*\/)?html.html$/';
+		$contentFileFilter = array('/^html.html$/','/^(?:[^\/]*\/)?html.html$/','/^(?:[^\/]*\/)?index.html$/');
 		$imageFilter = '/^(?:[^\/]*\/)?img\/.*\.(jpg|gif|png)$/';
 		$images = array();
 		for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -708,8 +711,13 @@ class NewsletterController extends NewsletterAppController {
 			if(preg_match($imageFilter,$filename)){
 				$images[] = $filename;
 			}
-			if(preg_match($contentFileFilter,$filename)){
-				$contentFile = $filename;
+			foreach($contentFileFilter as $priority => $filter){
+				if(preg_match($filter,$filename)){
+					if(empty($contentFile) || $contentFilePriority>=$priority){
+						$contentFile = $filename;
+						$contentFilePriority = $priority;
+					}
+				}
 			}
 		}
 		

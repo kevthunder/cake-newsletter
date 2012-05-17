@@ -3,7 +3,7 @@
 	<fieldset>
  		<legend><?php __d('newsletter','Add Newsletter');?></legend>
 	<?php
-		echo $form->input('active', array('checked'=>1));
+		echo $form->input('active');
 		echo $form->input('title',array('label'=>__d('newsletter','Title',true)));
 		echo $form->input('date');
 		echo $form->input('template',array('options' =>$templates));

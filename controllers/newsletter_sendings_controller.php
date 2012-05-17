@@ -10,6 +10,74 @@ class NewsletterSendingsController extends NewsletterAppController {
 	var $consoleOut = '';
 	var $consoleGo = null;
 
+	
+	function add($newsletter_id = null){
+		if (!$newsletter_id){
+			if (!empty($this->data['NewsletterSending']['newsletter_id'])) {
+				$newsletter_id = $this->data['NewsletterSending']['newsletter_id'];
+			}elseif (!empty($this->params['named']['newsletter_id'])) {
+				$newsletter_id = $this->params['named']['newsletter_id'];
+			}else{
+				$this->Session->setFlash(__d('newsletter','Invalid Newsletter', true));
+				$this->redirect('/');
+			}
+		}
+		App::import('Lib', 'Newsletter.NewsletterConfig');
+		$selfSending = NewsletterConfig::load('selfSending');
+		if(!$selfSending){
+			$this->log('Newsletter : Self sending is disabled',LOG_DEBUG);
+			$this->redirect(array('plugin' => 'auth', 'controller' => 'users', 'action' => 'permission_denied', 'admin' => false));
+		}
+		$newsletter = $this->NewsletterSending->Newsletter->read(null,$newsletter_id);
+		if(empty($newsletter) || !$newsletter['Newsletter']['active']){
+			$this->Session->setFlash(__d('newsletter','Invalid Newsletter', true));
+			$this->redirect('/');
+		}
+		if (!empty($this->data)) {
+			$this->NewsletterSending->create();
+			$this->NewsletterSending->validate['sender_name'] = array(
+				'rule' => 'notEmpty',
+			);
+			$this->NewsletterSending->validate['sender_email'] = array(
+				'rule' => 'notEmpty',
+			);
+			$this->NewsletterSending->validate['additional_emails'] = array(
+				'rule' => 'notEmpty',
+			);
+			if(!empty($newsletter)){
+				unset($this->data['NewsletterSending']['selected_lists']);
+				$this->data['NewsletterSending']['active'] = 1;
+				$this->data['NewsletterSending']['html'] = $newsletter['Newsletter']['html'];
+				$this->data['NewsletterSending']['status'] = "build";
+				$this->data['NewsletterSending']['date'] = date('Y-m-d H:i:s');
+				$this->data['NewsletterSending']['confirm'] = 1;
+				$this->data['NewsletterSending']['started'] = 1;
+				$this->data['NewsletterSending']['self_sending'] = 1;
+				//debug($this->data);
+				if ($this->NewsletterSending->save($this->data)) {
+					$this->Session->setFlash(__('The newsletter sending has been saved', true));
+					$this->redirect(array('action' => 'send',$this->NewsletterSending->id));
+				} else {
+					$this->Session->setFlash(__('The newsletter sending could not be saved. Please, try again.', true));
+				}
+			}else{
+				$this->Session->setFlash(__d('newsletter','Invalid Newsletter', true));
+				$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
+			}
+		}
+		$this->data['NewsletterSending']['newsletter_id'] = $newsletter['Newsletter']['id'];
+		$this->set('newsletter',$newsletter);
+	}
+	
+	function send($id){
+		$sending = $this->NewsletterSending->read(null,$id);
+		if(empty($sending) || !$sending['NewsletterSending']['self_sending']){
+			$this->Session->setFlash(__d('newsletter','Invalid Newsletter Sending', true));
+			$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
+		}
+		$this->set('sending',$sending);
+	}
+	
 	function admin_add($newsletter_id = null,$sendlist_id = null) {
 		if (!$newsletter_id){
 			if (!empty($this->data['NewsletterSending']['newsletter_id'])) {
@@ -21,9 +89,13 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
 			}
 		}
+		$newsletter = $this->NewsletterSending->Newsletter->read(null,$newsletter_id);
+		if(!$newsletter[Newsletter]['active']){
+			$this->Session->setFlash(__d('newsletter','This Newsletter must be active in order to send it.', true));
+			$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
+		}
 		if (!empty($this->data)) {
 			$this->NewsletterSending->create();
-			$newsletter = $this->NewsletterSending->Newsletter->read(null,$newsletter_id);
 			if(!empty($newsletter)){
 				$this->data['NewsletterSending']['active'] = 1;
 				$this->data['NewsletterSending']['html'] = $newsletter['Newsletter']['html'];
@@ -274,6 +346,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 	}
 	
 	function resume($sending){
+		$this->layout = false;
+		$this->autoRender = false;
 		/*$this->_process($sending);
 		if(is_numeric($sending)){
 			$sending = $this->NewsletterSending->read(null,$sending);
@@ -290,6 +364,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 	}
 	
 	function cron_tcheck_send(){
+		$this->layout = false;
+		$this->autoRender = false;
 		if(!isset($this->params['named']['stream'])){
 			$this->params['named']['stream'] = 1;
 		}
@@ -460,6 +536,9 @@ class NewsletterSendingsController extends NewsletterAppController {
 							$data['status'] = 'sent';
 						}else{
 							$this->_consoleOut($id,__d('newsletter','Error', true),null,false);
+							if(!empty($this->Email->smtpError)){
+								$data['error'] = $this->Email->smtpError;
+							}
 							$data['status'] = 'error';
 						}
 						$this->NewsletterSended->save($data);
@@ -607,11 +686,13 @@ class NewsletterSendingsController extends NewsletterAppController {
 		//--- Get Dynamic sendlists ---
 		$sendlists = array();
 		$dynSendlists = array();
-		foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
-			if($this->Funct->isTableSendlist($newsletterSendlist)){
-				$dynSendlists[] = $newsletterSendlist;
-			}else{
-				$sendlists[] = $newsletterSendlist;
+		if(!empty($sending['NewsletterSending']['selected_lists'])){
+			foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
+				if($this->Funct->isTableSendlist($newsletterSendlist)){
+					$dynSendlists[] = $newsletterSendlist;
+				}else{
+					$sendlists[] = $newsletterSendlist;
+				}
 			}
 		}
 		//--- Get Queries ---
@@ -733,7 +814,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 	function _updateProcessTime($id,$sleep=false){
 		if($sleep){
 			$speed = Configure::read('Newsletter.send_speed');
-			if(empty($chunk)){
+			if(empty($speed)){
 				$speed = 1000;// * 2000
 			}
 			usleep($speed);
@@ -756,6 +837,11 @@ class NewsletterSendingsController extends NewsletterAppController {
 			'go' => null,
 			'logGeneralMsg' => true
 		);
+		if(is_null($options)){
+			$options = array();
+		}elseif(!is_array($options)){
+			$options = array('lineBreak'=>$options);
+		}
 		$options = array_merge($defaultOptions,$options);
 		
 		$out = (array)$out;
@@ -872,10 +958,17 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}else{
 			$this->Email->replyTo = $this->EmailUtils->defaultEmail();
 		}
-		if(Configure::read('Newsletter.sendEmail')){
-			$this->Email->from = Configure::read('Newsletter.sendEmail');
+		if(!empty($sending['NewsletterSending']['sender_email'])){
+			$this->Email->from = $sending['NewsletterSending']['sender_email'];
+			if(!empty($sending['NewsletterSending']['sender_name'])){
+				$this->Email->from = $sending['NewsletterSending']['sender_name'].' <'.$sending['NewsletterSending']['sender_email'].'>';
+			}
 		}else{
-			$this->Email->from = $this->EmailUtils->defaultEmail();
+			if(Configure::read('Newsletter.sendEmail')){
+				$this->Email->from = Configure::read('Newsletter.sendEmail');
+			}else{
+				$this->Email->from = $this->EmailUtils->defaultEmail();
+			}
 		}
 		if(Configure::read('Newsletter.errorReturn')){
 			$this->Email->return = Configure::read('Newsletter.errorReturn');

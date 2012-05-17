@@ -29,12 +29,15 @@ echo $paginator->counter(array(
 	<th><?php echo $paginator->sort('date');?></th>
 	<th><?php echo $paginator->sort('template');?></th>
 	<th><?php echo $paginator->sort('active');?></th>
+	<!--
 	<th><?php echo $paginator->sort('created');?></th>
 	<th><?php echo $paginator->sort('modified');?></th>
+	-->
 	<th class="actions"><?php __d('newsletter','Actions');?></th>
 </tr>
 <?php
 $i = 0;
+$bool=array(__('No',true),__('Yes',true));
 foreach ($newsletters as $newsletter):
 	$class = null;
 	if ($i++ % 2 == 0) {
@@ -55,17 +58,32 @@ foreach ($newsletters as $newsletter):
 			<?php if(!empty($newsletter['Newsletter']['TemplateConfig'])) echo $newsletter['Newsletter']['TemplateConfig']->getLabel(); ?>
 		</td>
 		<td>
-			<?php echo $newsletter['Newsletter']['active']; ?>
+			<?php echo $bool[(int)$newsletter['Newsletter']['active']]; ?>
 		</td>
+		<!--
 		<td>
 			<?php echo $newsletter['Newsletter']['created']; ?>
 		</td>
 		<td>
 			<?php echo $newsletter['Newsletter']['modified']; ?>
 		</td>
+		-->
 		<td class="actions">
-        	<?php echo $html->link(__d('newsletter','Send', true), array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action' => 'add', $newsletter['Newsletter']['id'])); ?>
-        	<?php echo $html->link(__d('newsletter','Send to', true), array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action' => 'add', $newsletter['Newsletter']['id']),array('class'=>'sendto_link')); ?>
+        	<?php 
+			if($newsletter['Newsletter']['active']) {
+				echo $html->link(
+						'<span>'.__d('newsletter','Send', true).'</span>',
+						array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action' => 'add', $newsletter['Newsletter']['id']),
+						array('class'=>'icon send','escape' => false)
+				); 
+			}else{
+				echo $html->link(
+						'<span>'.__d('newsletter','This Newsletter must be active in order to send it.', true).'</span>',
+						array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action' => 'add', $newsletter['Newsletter']['id']),
+						array('class'=>'icon send_disabled','escape' => false)
+				); 
+			}
+        	/*echo $html->link(__d('newsletter','Send to', true), array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action' => 'add', $newsletter['Newsletter']['id']),array('class'=>'sendto_link')); ?>
             <div class="send_lists" style="display:none">
             	<h1>Listes de diffusion :</h1>
                 <ul>
@@ -73,12 +91,36 @@ foreach ($newsletters as $newsletter):
                 	<li><?php echo $html->link($sendlist['NewsletterSendlist']['title'], array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action' => 'add', $newsletter['Newsletter']['id'],$sendlist['NewsletterSendlist']['id']),null, sprintf(__d('newsletter','Êtes-vous sûr de vouloir envoyer la newsletter "%s" à "%s" ?', true), $newsletter['Newsletter']['title'],$sendlist['NewsletterSendlist']['title'])); ?></li>
 				<?php endforeach; ?>
                 </ul>
-            </div>
-			<?php echo $html->link(__d('newsletter','View', true), array('action' => 'view', $newsletter['Newsletter']['id'])); ?>
-			<?php echo $html->link(__d('newsletter','Excel', true), array('action' => 'excel', $newsletter['Newsletter']['id'])); ?>
-			<?php echo $html->link(__d('newsletter','Edit', true), array('action' => 'edit', $newsletter['Newsletter']['id'])); ?>
-            <?php echo $html->link(__d('newsletter','Stats', true), array('action' => 'stats', $newsletter['Newsletter']['id'])); ?>
-			<?php echo $html->link(__d('newsletter','Delete', true), array('action' => 'delete', $newsletter['Newsletter']['id']), null, sprintf(__d('newsletter','Are you sure you want to delete # %s?', true), $newsletter['Newsletter']['id'])); ?>
+            </div> <?php  */ 
+			echo $html->link(
+				'<span>'.__d('newsletter','View', true).'</span>', 
+				array('action' => 'view', $newsletter['Newsletter']['id']), 
+				array('class'=>'icon view','escape' => false)
+			);
+			echo $html->link(
+				'<span>'.__d('newsletter','Edit', true).'</span>', 
+				array('action' => 'edit', $newsletter['Newsletter']['id']), 
+				array('class'=>'icon edit','escape' => false)
+			);
+			echo $html->link(
+				'<span>'.__d('newsletter','Delete', true).'</span>', 
+				array('action' => 'delete', $newsletter['Newsletter']['id']), 
+				array('class'=>'icon delete','escape' => false), 
+				sprintf(__d('newsletter','Are you sure you want to delete # %s?', true), $newsletter['Newsletter']['id'])
+			); 
+			if($newsletter['Newsletter']['active']) {
+				echo $html->link(
+					'<span>'.__d('newsletter','Excel', true).'</span>', 
+					array('action' => 'excel', $newsletter['Newsletter']['id']), 
+					array('class'=>'icon excel','escape' => false)
+				);
+				echo $html->link(
+					'<span>'.__d('newsletter','Stats', true).'</span>', 
+					array('action' => 'stats', $newsletter['Newsletter']['id']), 
+					array('class'=>'icon stats','escape' => false)
+				);
+			}
+			?>
 		</td>
 	</tr>
 <?php endforeach; ?>

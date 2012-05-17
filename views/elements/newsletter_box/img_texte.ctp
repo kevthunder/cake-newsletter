@@ -1,22 +1,21 @@
-<h1><?php 
-if(isset($newsletter_box["NewsletterBox"]["data"])){
-	echo $newsletter_box["NewsletterBox"]["data"]["title"]; 
-}else{
-	__d('newsletter','Title');
-}
-?></h1>
-<?php if(isset($newsletter_box["NewsletterBox"]["file"]["photo"])){ ?>
-	<img src="<?php echo $html->url($newsletter_box["NewsletterBox"]["file"]["photo"]["path"].$newsletter_box["NewsletterBox"]["file"]["photo"]["file"],true); ?>" /><br />
+<?php
+	$title = isset($newsletter_box["NewsletterBox"]["data"]['title']) ? $newsletter_box["NewsletterBox"]["data"]['title'] : __d('newsletter','Title',true);
+	$text = isset($newsletter_box["NewsletterBox"]["data"]['text']) ? $newsletter_box["NewsletterBox"]["data"]['text'] : 'Lorem ipsum dolor sit amèt, consectetur adipiscing elit. Ut vitae orci eu erat imperdiet interdum.';
+	$text = $this->NewsletterMaker->filterRichtext($text);
+	$link = isset($newsletter_box["NewsletterBox"]["data"]['url']) ? $newsletter_box["NewsletterBox"]["data"]['url'] : null;
+	$link_text = isset($newsletter_box["NewsletterBox"]["data"]['url_text']) ? $newsletter_box["NewsletterBox"]["data"]['url_text'] : 'Lire la suite';
+	if(isset($newsletter_box["NewsletterBox"]["file"]["photo"])){
+		$img = $this->Photo->path($newsletter_box["NewsletterBox"]["file"]["photo"]["path"],$newsletter_box["NewsletterBox"]["file"]["photo"]["file"],array('method'=>'resize','size'=>'700x700','full'=>true));
+	}
+?>
+
+<h1><?php echo $title ?></h1>
+<?php if(!empty($img)){ ?>
+	<img src="<?php echo $img ?>" /><br />
     <br />
 <?php } ?>
-<?php 
-if(isset($newsletter_box["NewsletterBox"]["data"])){
-	echo $newsletter_box["NewsletterBox"]["data"]["text"]; 
-}else{
-	echo 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut vitae orci eu erat imperdiet interdum.';
-}
-?>
-<?php if(!empty($newsletter_box["NewsletterBox"]["data"]["url"])){ ?>
-	<br /><a href="<?php echo $newsletterMaker->url($newsletter_box["NewsletterBox"]["data"]["url"]); ?>"><?php echo $newsletter_box["NewsletterBox"]["data"]["url_text"]; ?></a>
+<?php echo $text ?>
+<?php if(!empty($link)){ ?>
+	<br /><a href="<?php echo $newsletterMaker->url($link); ?>"><?php echo $link_text; ?></a>
 <?php } ?>
 &nbsp;

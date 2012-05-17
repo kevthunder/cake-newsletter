@@ -163,6 +163,13 @@ class FunctComponent extends Object
 			$fileName = $name.$fileExt;
 			$target_path = $target_path . $fileName;
 			
+			
+			if(!file_exists(WWW_ROOT . $path)){
+				if(!mkdir(WWW_ROOT . $path,  0777)){
+					return false;
+				}
+			}
+			
 			$i = 1;
 			while(file_exists(WWW_ROOT . $path . $fileName)) {
 				/*

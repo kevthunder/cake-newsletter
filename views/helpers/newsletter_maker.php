@@ -129,7 +129,7 @@ class NewsletterMakerHelper extends AppHelper {
 				'overrideAttr' => array(
 					'class'=>array('newsletter_box'),
 				)
-			),
+			)
 		);
 		if(!is_null($boxList)){
 			$elements['table']['overrideAttr']['boxlist'] = implode(';', $boxList);
@@ -178,6 +178,13 @@ class NewsletterMakerHelper extends AppHelper {
 				}
 				$result_html .= '		<td'.$this->_parseAttributes($attr).'>';
 				$element = array('newsletter_box/'.$this->newsletter['Newsletter']['template'].'/'.$box['NewsletterBox']['template'],'newsletter_box/'.$box['NewsletterBox']['template']);
+				
+				$slug = '';
+				if(!empty($box['NewsletterBox']['data']['title'])){
+					$slug = strtolower(Inflector::slug($box['NewsletterBox']['data']['title'])).'_';
+				}
+				$result_html .= '<a name="'.$slug.$box['NewsletterBox']['id'].'"></a>';
+				
 				$result_html .= $this->view->element($element, array("newsletter_box" => $box));//,'plugin' => 'none'
 				$result_html .= $this->boxFooter($box);
 				$result_html .= 		'</td>'."\n";
@@ -195,6 +202,55 @@ class NewsletterMakerHelper extends AppHelper {
 	function row($id){
 		return '<table id="nltr_'.$id.'" class="nltr_row nltr_container" cellspacing="0" cellpadding="0"></table>';
 	}
+	function tableOfContents($zones=null,$options=array()){
+		$defOpt = array(
+			'group' => '<ul>%items%</ul>',
+			'item' => '<li><a href="%anchor%">%title%</a></li>',
+			'titleGroup' => '<ul>%groups%</ul>',
+			'title' => '<li><p>%title%</p>%items%</li>',
+		);
+		$opt = array_merge($defOpt,$options);
+		if(empty($zones)){
+			$zones = array_keys($this->boxes_by_zone);
+		}
+		if(!is_array($zones)){
+			$zones = array($zones);
+		}
+		$named = !set::numeric(array_keys($zones));
+		$out = '';
+		foreach($zones as $key => $id){
+			$links = '';
+			if(!empty($this->boxes_by_zone[$id])){
+				foreach($this->boxes_by_zone[$id] as $box){
+					if(!empty($box['NewsletterBox']['data']['title'])){
+						$anchor = '#'.strtolower(Inflector::slug($box['NewsletterBox']['data']['title'])).'_'.$box['NewsletterBox']['id'];
+						$replace = array(
+							'%anchor%'=>$anchor,
+							'%title%'=>$box['NewsletterBox']['data']['title'],
+						);
+						$links .= str_replace(array_keys($replace),array_values($replace),$opt['item']);
+					}
+				}
+				if(!empty($links)){
+					$links = str_replace('%items%',$links,$opt['group']);
+				}
+			}
+			if(!empty($links) && $named){
+				$replace = array(
+					'%title%'=>$key,
+					'%items%'=>$links,
+				);
+				$out .= str_replace(array_keys($replace),array_values($replace),$opt['title']);
+			}else{
+				$out .= $links;
+			}
+		}
+		if(!empty($out) && $named){
+			$out = str_replace('%groups%',$out,$opt['titleGroup']);
+		}
+		return $out;
+	}
+	
 	function inMakeBox(){
 		return $this->params['controller'] == 'newsletter' && ($this->params['action'] == 'view_box' || $this->params['action'] == 'admin_add_box' || $this->params['action'] == 'admin_edit_box' || $this->params['action'] == 'admin_view_box');
 	}
@@ -280,6 +336,9 @@ class NewsletterMakerHelper extends AppHelper {
 	}
 	function viewUrl(){
 		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false));
+	}
+	function selfSendingUrl(){
+		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action'=>'add', $this->newsletter["Newsletter"]["id"], 'admin' => false));
 	}
 	function title(){
 		return $this->newsletter["Newsletter"]["title"];

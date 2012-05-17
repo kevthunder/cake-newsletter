@@ -27,6 +27,77 @@ div.ajax_loader{
 	margin: 0px 0px 0px 0px;
 	padding: 0px 0px 0px 0px;
 }
+
+td.actions a.send {
+    background: url("../img/icon_send.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 17px;
+}
+
+td.actions a.send_disabled {
+    background: url("../img/icon_send_disabled.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 17px;
+}
+
+.newsletters td.actions a.icon.send_disabled span {
+	color: #ff0000;
+}
+
+td.actions a.excel {
+    background: url("../img/icon_excel.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 17px;
+}
+
+td.actions a.stats {
+    background: url("../img/icon_stats.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 17px;
+}
+
+.newsletters td.actions a.icon{
+	position:relative;
+	margin: 0;
+	padding: 0 6px;
+}
+
+.newsletters td.actions a.icon span {
+    display:none;
+	width:auto;
+	position:absolute;
+    text-indent: 0px;
+	padding: 2px 5px 8px 5px;
+	bottom: 15px;
+	right: 4px;
+	color: #ffffff;
+	background: url("../img/tool_tips.png") no-repeat scroll bottom right transparent;
+}
+
+.newsletters td.actions a.icon:hover span {
+    display:block;
+}
+
+.newsletters td.actions {
+    width: 200px;
+}
+
 #edit_zone{
 	margin: 0px 0px 0px 0px;
 	padding: 0px 0px 0px 0px;
