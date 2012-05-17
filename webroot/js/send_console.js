@@ -12,6 +12,12 @@
 		//console.log(height);
 		
 		$("a.ajax_button", $cc).click(function(){
+			var confirmMsg = $(this).attr('confirm');
+			if(confirmMsg){
+				if(!confirm(confirmMsg)){
+					return false;
+				}
+			}
 			var url = $(this).attr('href');
 			if(url){
 				var $output = $(document.createElement('div'));

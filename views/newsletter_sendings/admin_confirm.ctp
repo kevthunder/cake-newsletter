@@ -26,10 +26,17 @@
 	});
 	function confirmMsg(){
 		if(test_email_sent){
-			return "'.__('Voulez-vous vraiment envoyer la Newsletter maintenant?',true).'";
+			//return "'.__('Voulez-vous vraiment envoyer la Newsletter ?',true).'";
 		}else{
-			return "'.__('Voulez-vous vraiment envoyer la Newsletter maintenant sans la tester d\'abord? \n\n Il est grandement conseillé de tester votre newsletter avant de l\'envoyé.',true).'";
+			return "'.__('Voulez-vous vraiment envoyer la Newsletter sans la tester d\'abord? \n\n Il est grandement conseillé de tester votre newsletter avant de l\'envoyé.',true).'";
 		}
+	}
+	function confirmSend(){
+		var msg = confirmMsg();
+		if(msg){
+			return confirm(msg);
+		}
+		return true;
 	}
 ',array('inline'=>false)); ?>
 
@@ -45,7 +52,7 @@
 		?>
 		</div>
 		<?php 
-			echo $form->create('NewsletterSending',array('onsubmit'=>'return confirm(confirmMsg());'));
+			echo $form->create('NewsletterSending',array('onsubmit'=>'return confirmSend();'));
 			echo $form->input('id');
 			echo $form->input('confirm',array('type'=>'hidden','value'=>1));
 			echo $html->link('<< '.__('Edit Newsletter', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'edit', $newsletterSending['NewsletterSending']['newsletter_id']));

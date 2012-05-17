@@ -9,7 +9,7 @@
 					</div>
 				</div>
 				<div class="actions">
-					<a href="<?php echo $html->url(array('action'=>'start',$newsletterSending['NewsletterSending']['id'])); ?>" class="button ajax_button highlight_button tstart_bt">Start</a>
+					<a href="<?php echo $html->url(array('action'=>'start',$newsletterSending['NewsletterSending']['id'])); ?>" class="button ajax_button highlight_button tstart_bt" confirm="<?php __('Voulez-vous vraiment envoyer la Newsletter maintenant?') ?>">Start</a>
 					<a href="<?php echo $html->url(array('action'=>'pause',$newsletterSending['NewsletterSending']['id'])); ?>" class="button ajax_button pause_bt">Pause</a>
 					<a href="<?php echo $html->url(array('action'=>'cancel',$newsletterSending['NewsletterSending']['id'])); ?>" class="button cancel_bt">Cancel</a>
 				</div>

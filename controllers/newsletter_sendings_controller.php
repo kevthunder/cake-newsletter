@@ -420,7 +420,11 @@ class NewsletterSendingsController extends NewsletterAppController {
 		);
 		if($statistics['status']!='build'){
 			$statistics['remaining'] = $this->NewsletterSended->find('count',array('conditions'=>array('sending_id'=>$id,'status'=>array('ready','reserved'))));
-			$statistics['prc'] = number_format($statistics['total_sended']/($statistics['total_sended']+$statistics['remaining'])*100,2).' %';
+			if($statistics['remaining'] == 0){
+				$statistics['prc'] = '100 %';
+			}else{
+				$statistics['prc'] = number_format($statistics['total_sended']/($statistics['total_sended']+$statistics['remaining'])*100,2).' %';
+			}
 		}else{
 			$statistics['remaining'] = $statistics['prc'] = 'Calculating...';
 		}

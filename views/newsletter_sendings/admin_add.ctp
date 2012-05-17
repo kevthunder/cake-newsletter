@@ -1,5 +1,5 @@
 <div class="newsletters form">
-<?php echo $form->create('NewsletterSending',array('onsubmit'=>'return confirm("'.__('Voulez-vous vraiment envoyer la Newsletter maintenant?',true).'");'));?>
+<?php echo $form->create('NewsletterSending');?>
 	<fieldset>
  		<legend><?php __('Send Newsletter');?></legend>
 	<?php
