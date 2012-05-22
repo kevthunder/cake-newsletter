@@ -149,13 +149,12 @@ class NewsletterController extends NewsletterAppController {
 			$this->NewsletterEmail->recursive = -1;
 			$str_email = null;
 			$email_id = null;
-			if($sended_id){
+			if(isset($this->data['NewsletterEmail']['email'])){
+				$str_email = $this->data['NewsletterEmail']['email'];
+			}elseif($sended_id){
 				$sended = $this->NewsletterSended->read(null, $sended_id);
 				$email_id = $sended['NewsletterSended']['email_id'];
 				$str_email = $sended['NewsletterSended']['email'];
-			}
-			if(isset($this->data['NewsletterEmail']['email'])){
-				$str_email = $this->data['NewsletterEmail']['email'];
 			}
 			if($str_email || $email_id){
 				if($email_id){
@@ -177,6 +176,7 @@ class NewsletterController extends NewsletterAppController {
 				}else{
 					$this->Session->setFlash(__d('newsletter','This email has allready been disabled.', true));
 					$view = 'unsubscribe_step1';
+					unset($this->data['NewsletterEmail']['id']);
 				}
 			}else{
 				$this->Session->setFlash(__d('newsletter','Email not found.', true));
