@@ -1,4 +1,4 @@
-<?php $session->flash(); ?>
+<?php echo $session->flash(); ?>
 <?php echo $form->create('NewsletterEmail',array('name'=>'form','url'=>array('plugin' => 'newsletter', 'controller' => 'newsletter', 'action' => 'unsubscribe', 'id'=>null)));?>
 	<p><?php __d('newsletter','Your email')?> : <?php echo $this->data['NewsletterEmail']['email']; ?></p>
     <p><?php __d('newsletter','Are you sure you want to unsubscribe from our newletter ?')?></p>
