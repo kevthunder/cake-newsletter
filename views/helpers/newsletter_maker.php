@@ -307,6 +307,9 @@ class NewsletterMakerHelper extends AppHelper {
 			$text = substr($text,0,$matches[0][1]).'="'.$fullUrl.'"'.substr($text,$matches[0][1]+strlen($matches[0][0]));
 			//debug($matches);
 		}
+		if($opt['pToBr']){
+			$text = $this->pToBr($text);
+		}
 		return $text;
 	}
 	function pToBr($text){
