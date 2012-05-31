@@ -44,6 +44,10 @@ class NewsletterEmailsController extends NewsletterAppController {
 				if(isset($this->data['NewsletterEmail']['redirect']) && $this->data['NewsletterEmail']['redirect']) {
 					if($this->data['NewsletterEmail']['redirect'] == 'back'){
 						$this->redirect($this->referer());
+					}elseif($this->data['NewsletterEmail']['redirect'] == 'confirm'){
+						$this->Session->delete('newsletterEmailId');
+						$this->Session->write('newsletterEmailId',$this->NewsletterEmail->id);
+						$this->redirect('confirm');
 					}else{
 						$this->redirect($this->data['NewsletterEmail']['redirect']);
 					}
