@@ -1,4 +1,4 @@
-<?php $session->flash(); ?>
+<?php echo $session->flash(); ?>
 <div class="newsletterEmails form">
 <?php echo $form->create('NewsletterEmail');?>
 	<fieldset>

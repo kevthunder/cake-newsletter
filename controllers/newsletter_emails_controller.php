@@ -47,12 +47,16 @@ class NewsletterEmailsController extends NewsletterAppController {
 					}elseif($this->data['NewsletterEmail']['redirect'] == 'confirm'){
 						$this->Session->delete('newsletterEmailId');
 						$this->Session->write('newsletterEmailId',$this->NewsletterEmail->id);
+						//debug('here');
+						//debug($this->NewsletterEmail->id);
 						$this->redirect('confirm');
 					}else{
 						$this->redirect($this->data['NewsletterEmail']['redirect']);
 					}
 				}elseif(Configure::read('Newsletter.EmailAdd.confirm')){
 					$this->Session->delete('newsletterEmailId');
+						//debug('here2');
+						//debug($this->NewsletterEmail->id);
 					$this->Session->write('newsletterEmailId',$this->NewsletterEmail->id);
 					$this->redirect('confirm');
 				}else{
@@ -115,10 +119,11 @@ class NewsletterEmailsController extends NewsletterAppController {
 	
 	function confirm() {
 		$id = $this->Session->read('newsletterEmailId');
+		//debug($id);
 		$this->Session->delete('newsletterEmailId');
 		if (!$id) {
 			$this->Session->setFlash(__d('newsletter','Invalid NewsletterEmail.', true));
-			$this->redirect(array('action'=>'index'));
+			$this->redirect('/');
 		}
 		$this->set('newsletterEmail', $this->NewsletterEmail->read(null, $id));
 	}
