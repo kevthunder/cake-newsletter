@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `newsletter_sended` (
   `view` int(11) NOT NULL default '0',
   `sending_id` int(11) default NULL,
   `status` varchar(255) collate utf8_unicode_ci default NULL,
-  `error` text collate utf8_unicode_ci,
+  `error` text collate utf8_unicode_ci default NULL,
   `date` datetime default NULL,
   `active` tinyint(1) default NULL,
   `created` datetime NOT NULL,

@@ -714,7 +714,12 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$this->_consoleOut($id,sprintf(__d('newsletter','%s Dynamic Sendlists found', true),count($dynSendlists)));
 		foreach($dynSendlists as $list){
 			$this->_consoleOut($id,sprintf(__d('newsletter','Get query for Dynamic sendlist id : %s', true),$list));
-			$finalFindOptions = $this->Funct->tabledEmailGetFindOptions($list,true,$findOptions);
+			$tableSendlist = $this->Funct->getTableSendlistID($list,true);
+			if($tableSendlist['modelClass']->useDbConfig != $this->NewsletterSended->useDbConfig){
+				$finalFindOptions = $this->Funct->tabledEmailGetFindOptions($list,true);
+			}else{
+				$finalFindOptions = $this->Funct->tabledEmailGetFindOptions($list,true,$findOptions);
+			}
 			$finalFindOptions['fields']['sendlist_id'] = $list;
 			$queries[] = $finalFindOptions;
 			
@@ -743,31 +748,47 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$insertFields = $this->NewsletterSended->tcheckSaveFields(array_keys($fields));
 			$fields = array_intersect_key($fields,array_flip($insertFields));
 			$query['fields'] = $fields;
-			$selectStatement = $db->buildStatement($this->Funct->standardizeFindOptions($query),$query['model']);
+			if($query['model']->useDbConfig != $this->NewsletterSended->useDbConfig){
+				//--------------- external database ---------------
+				$this->_consoleOut($id,sprintf(__d('newsletter','The sendlist id : %s Is using an external Database', true),$query['fields']['sendlist_id']));
+				//$this->_consoleOut($id,sprintf(__d('newsletter','Retrieving data', true),$query['fields']['sendlist_id']));
+				//$emails = $query['model']->find('all',$this->Funct->standardizeFindOptions($query));
+				//$this->_updateProcessTime($id,true);
+				//$this->_consoleOut($id,sprintf(__d('newsletter','%s Email found', true),count($emails)));
+				
+				//App::import('Lib', 'SetMulti');
+				//$emails = SetMulti::group($emails,'0.email',array('singleArray' => false));
 			
-			//--- make insert Queries ---
-			$insertQuery = array(
-				'table' => $db->fullTableName($this->NewsletterSended),
-				'fields' => array(),
-				'select' => $selectStatement
-			);
-			foreach($insertFields as $f){
-				$insertQuery['fields'][] = $db->name($f);
-			}
-			$insertQuery['fields'] = implode(', ', $insertQuery['fields']);
-			$insertStatement = 'INSERT INTO '.$insertQuery['table'].' ('.$insertQuery['fields'].') ('.$insertQuery['select'].')';
-			
-			//debug($insertStatement);
-			$this->_consoleOut($id,sprintf(__d('newsletter','Execute query for sendlist id : %s', true),$query['fields']['sendlist_id']));
-			if($db->execute($insertStatement)){
-				$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),$this->NewsletterSended->getAffectedRows()));
-			}else{
 				$this->_consoleOut($id,
-					__d('newsletter','Could not save emails', true),
+					__d('newsletter','External Database lists are not supported yet', true),
 					array('exit'=>true)
 				);
+			}else{
+				$selectStatement = $db->buildStatement($this->Funct->standardizeFindOptions($query),$query['model']);
+				
+				//--- make insert Queries ---
+				$insertQuery = array(
+					'table' => $db->fullTableName($this->NewsletterSended),
+					'fields' => array(),
+					'select' => $selectStatement
+				);
+				foreach($insertFields as $f){
+					$insertQuery['fields'][] = $db->name($f);
+				}
+				$insertQuery['fields'] = implode(', ', $insertQuery['fields']);
+				$insertStatement = 'INSERT INTO '.$insertQuery['table'].' ('.$insertQuery['fields'].') ('.$insertQuery['select'].')';
+				
+				$this->_consoleOut($id,sprintf(__d('newsletter','Execute query for sendlist id : %s', true),$query['fields']['sendlist_id']));
+				if($db->execute($insertStatement)){
+					$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),$this->NewsletterSended->getAffectedRows()));
+				}else{
+					$this->_consoleOut($id,
+						__d('newsletter','Could not save emails', true),
+						array('exit'=>true)
+					);
+				}
+				$this->_updateProcessTime($id,true);
 			}
-			$this->_updateProcessTime($id,true);
 		}
 		
 		//=========================== Done ===========================
