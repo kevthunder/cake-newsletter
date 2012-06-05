@@ -496,6 +496,7 @@ class NewsletterController extends NewsletterAppController {
 			$this->redirect(array('action'=>'index'));
 		}
 		$newsletter = $this->Newsletter->read(null, $id);
+		//debug($newsletter);
 		if (!empty($this->data)) {
 			if(!empty($this->data['NewsletterBox'])){
 				foreach($this->data['NewsletterBox'] as $newsletter_box){
@@ -506,6 +507,9 @@ class NewsletterController extends NewsletterAppController {
 				$this->Newsletter->save($this->data,true,array('id','template'));
 			}
 			$this->data['Newsletter']['html'] = $this->requestAction('admin/newsletter/newsletter/make/'.$id);
+			if(empty($this->data['Newsletter']['associated'])){
+				$this->data['Newsletter']['associated'] = array();
+			}
 			if ($this->Newsletter->save($this->data)) {
 				$this->Session->setFlash(__d('newsletter','The Newsletter has been saved', true));
 				$this->redirect(array('action'=>'index'));
@@ -523,6 +527,11 @@ class NewsletterController extends NewsletterAppController {
 			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
 		}
 		
+		$langs = NewsletterConfig::load('langs');
+		if(!empty($langs)){
+			$newsletterByLang = $this->Newsletter->find('list',array('fields'=>array('id','title','lang'),'conditions'=>array('id NOT'=>$id,'Newsletter.lang IS NOT NULL'), 'recursive' => -1));
+			$this->set('newsletterByLang',$newsletterByLang);
+		}
 		$this->Newsletter->beforeConfig();
 		$this->set('newsletter',$this->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);

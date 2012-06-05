@@ -24,6 +24,9 @@ $(function(e){
 	$(".nltr_column > tbody").sortable({items: 'tr.box_row', connectWith: '.nltr_column > tbody', placeholder: 'placeholder',stop: order_change});
 	$("#edit_form_zone").draggable({handle:".edit_box_title"});
 	
+	$("#NewsletterLang").change(updateLangInputs);
+	updateLangInputs();
+	
 	var clone = $("#add_elem_box #NewsletterElements").clone();
 	clone.attr('id','NewsletterElementsClone').hide();
 	$("#add_elem_box #NewsletterElements").before(clone);
@@ -31,6 +34,15 @@ $(function(e){
 });
 
 ////////////////////////// general newsletter functions //////////////////////////
+function updateLangInputs(){
+	var lang = $("#NewsletterLang").val();
+	if(lang){
+		$(".langAssoc").show().find('select,input').removeAttr('disabled');
+		$("#NewsletterAssociated"+lang.charAt(0).toUpperCase()+lang.substr(1)).attr('disabled','disabled').closest(".langAssoc").hide();
+	}else{
+		$(".langAssoc").hide().find('select,input').attr('disabled','disabled');
+	}
+}
 function newsletter_submit(){
 	order_change();
 	return true;

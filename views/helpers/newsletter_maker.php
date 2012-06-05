@@ -202,6 +202,34 @@ class NewsletterMakerHelper extends AppHelper {
 	function row($id){
 		return '<table id="nltr_'.$id.'" class="nltr_row nltr_container" cellspacing="0" cellpadding="0"></table>';
 	}
+	function langSwitch($options = array()){
+		$defOpt = array(
+			'beforeLink' => '',
+			'afterLink' => '',
+			'separator' => ' - ',
+		);
+		$opt = array_merge($defOpt,$options);
+		$html = '';
+		$langs = NewsletterConfig::load('langs');
+		$i = 0;
+		foreach($langs as $key => $val){
+			if($key != $this->newsletter['Newsletter']['lang'] && !empty($this->newsletter['Newsletter']['associated'][$key])){
+				if($i != 0){
+					$html .= $opt['separator'];
+				}
+				$url = array(
+					'plugin'=>'newsletter', 
+					'controller'=>'newsletter', 
+					'action'=>'view', 
+					$this->newsletter['Newsletter']['associated'][$key], 
+					'admin' => false
+				);
+				$html .= '<a href="'.$this->url($url).'">'.$opt['beforeLink'].$val.$opt['afterLink'].'</a>';
+				$i++;
+			}
+		}
+		return $html;
+	}
 	function tableOfContents($zones=null,$options=array()){
 		$defOpt = array(
 			'group' => '<ul>%items%</ul>',

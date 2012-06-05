@@ -7,7 +7,10 @@ class NewsletterConfig extends Object {
 	
 	var $loaded = false;
 	var $defaultConfig = array(
+		'defaultSendlist' => 1,
+		'EmailAdd.confirm' => true,
 		'selfSending' => false,
+		'langs' => array(), //array('fre'=>'Français','eng'=>'English')
 	);
 	
 	//$_this =& NewsletterConfig::getInstance();

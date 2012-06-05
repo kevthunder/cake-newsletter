@@ -34,6 +34,27 @@ if(isset($multimedia)){
 		echo $form->input('title',array('label'=>__d('newsletter','Title',true)));
 		echo $form->input('date');
 		echo $form->input('template',array('options' =>$templates));
+		$langs = NewsletterConfig::load('langs');
+		if(!empty($langs)){
+			if(count($langs) > 1){
+				echo $form->input('lang',array('label'=>__('Language',true),'options'=>$langs,'empty'=>true));
+				foreach ($langs as $key => $val) {
+					$opts = array();
+					if(!empty($newsletterByLang[$key])){
+						$opts = $newsletterByLang[$key];
+					}
+					$label = $val.' version';
+					if(__($label,true) != $label){
+						$label = __($label,true);
+					}else{
+						$label = sprintf(__('%s version', true), __($val, true));
+					}
+					echo $form->input('Newsletter.associated.'.$key,array('label'=>$label,'options'=>$opts,'empty'=>true,'div'=>array('class'=>'input select langAssoc')));
+				}
+			}else{
+				echo $form->input('lang',array('type'=>'hidden','value'=>reset(array_keys($langs))));
+			}
+		}
 		/*echo $form->input('text');*/
 	?>
         <fieldset style="background-color:#EEEEEE; width:98%">

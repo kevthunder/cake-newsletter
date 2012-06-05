@@ -7,17 +7,36 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 --
 
 CREATE TABLE IF NOT EXISTS `newsletters` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL auto_increment,
   `active` tinyint(1) NOT NULL,
   `created` datetime NOT NULL,
   `modified` datetime NOT NULL,
-  `title` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `title` varchar(255) collate utf8_unicode_ci NOT NULL,
   `date` datetime NOT NULL,
-  `html` text COLLATE utf8_unicode_ci,
-  `template` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `cache_file` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `lang` varchar(255) collate utf8_unicode_ci default NULL,
+  `html` text collate utf8_unicode_ci,
+  `template` varchar(255) collate utf8_unicode_ci default NULL,
+  `cache_file` varchar(255) collate utf8_unicode_ci default NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `newsletter_assocs`
+--
+
+CREATE TABLE IF NOT EXISTS `newsletter_assocs` (
+  `id` int(11) NOT NULL auto_increment,
+  `type` varchar(255) collate utf8_unicode_ci default NULL,
+  `my_newsletter_id` int(11) default NULL,
+  `newsletter_id` int(11) default NULL,
+  `created` datetime default NULL,
+  `modified` datetime default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+
 
 -- --------------------------------------------------------
 
