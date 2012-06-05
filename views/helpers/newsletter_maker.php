@@ -68,11 +68,11 @@ class NewsletterMakerHelper extends AppHelper {
 		
 	}
 	
-	function _parseAttributes($attr){
+	function _parseAttributes($attr, $exclude = null, $insertBefore = ' ', $insertAfter = null){
 		if(isset($attr['class']) && is_array($attr['class'])){
 			$attr['class'] = implode(' ', $attr['class']);
 		}
-		return parent::_parseAttributes($attr);
+		return parent::_parseAttributes($attr, $exclude, $insertBefore, $insertAfter);
 	}
 	
 	//////////////////// Newsletter layout ////////////////////
@@ -208,6 +208,7 @@ class NewsletterMakerHelper extends AppHelper {
 			'afterLink' => '',
 			'separator' => ' - ',
 		);
+		$local = array_keys($defOpt);
 		$opt = array_merge($defOpt,$options);
 		$html = '';
 		$langs = NewsletterConfig::load('langs');
@@ -224,7 +225,7 @@ class NewsletterMakerHelper extends AppHelper {
 					$this->newsletter['Newsletter']['associated'][$key], 
 					'admin' => false
 				);
-				$html .= '<a href="'.$this->url($url).'">'.$opt['beforeLink'].$val.$opt['afterLink'].'</a>';
+				$html .= '<a href="'.$this->url($url).'"'.$this->_parseAttributes($opt, $local).'>'.$opt['beforeLink'].$val.$opt['afterLink'].'</a>';
 				$i++;
 			}
 		}
