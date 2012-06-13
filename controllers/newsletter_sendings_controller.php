@@ -34,6 +34,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$this->redirect('/');
 		}
 		if (!empty($this->data)) {
+			//debug($this->data);
 			$this->NewsletterSending->create();
 			$this->NewsletterSending->validate['sender_name'] = array(
 				'rule' => 'notEmpty',
@@ -42,7 +43,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 				'rule' => 'notEmpty',
 			);
 			$this->NewsletterSending->validate['additional_emails'] = array(
-				'rule' => 'notEmpty',
+				'rule' => 'notEmpty2',
 			);
 			if(!empty($newsletter)){
 				unset($this->data['NewsletterSending']['selected_lists']);
@@ -53,6 +54,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$this->data['NewsletterSending']['confirm'] = 1;
 				$this->data['NewsletterSending']['started'] = 1;
 				$this->data['NewsletterSending']['self_sending'] = 1;
+				$this->data['NewsletterSending']['wrapper'] = 'share';
 				//debug($this->data);
 				if ($this->NewsletterSending->save($this->data)) {
 					$this->Session->setFlash(__('The newsletter sending has been saved', true));
@@ -76,6 +78,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 				}
 			}
 			$this->data['NewsletterSending']['newsletter_id'] = $newsletter['Newsletter']['id'];
+		}
+		//debug(App::objects('plugin'));
+		if(in_array('O2form',App::objects('plugin'))){
+			$this->helpers[] = 'O2form.O2form';
 		}
 		$this->set('newsletter',$newsletter);
 	}
@@ -129,6 +135,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}
 		$this->data['NewsletterSending']['newsletter_id'] = $newsletter_id;
 		$this->set('sendlists', $this->NewsletterSendlist->find('list',array('conditions'=>array('NewsletterSendlist.active'=>1))));
+		
+		if(in_array('O2form',App::objects('plugin'))){
+			$this->helpers[] = 'O2form.O2form';
+		}
 		
 		$this->set(compact('newsletters'));
 	}
@@ -1038,7 +1048,14 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 		}
 		
-		return $this->Email->send($cur_content);
+		if(!empty($sending['NewsletterSending']['wrapper'])){
+			$this->Email->template = $sending['NewsletterSending']['wrapper'];
+			$this->set(compact('email','sending','newsletter'));
+			$this->set('newsletterContent',$cur_content);
+			return $this->Email->send();
+		}else{
+			return $this->Email->send($cur_content);
+		}
 	}
 
 }

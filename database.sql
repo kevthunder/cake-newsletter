@@ -121,6 +121,8 @@ CREATE TABLE IF NOT EXISTS `newsletter_sendings` (
   `html` text collate utf8_unicode_ci,
   `sender_name` varchar(255) collate utf8_unicode_ci default NULL,
   `sender_email` varchar(255) collate utf8_unicode_ci default NULL,
+  `data` text collate utf8_unicode_ci,
+  `wrapper` varchar(255) collate utf8_unicode_ci default NULL,
   `self_sending` tinyint(1) default NULL,
   `status` varchar(255) collate utf8_unicode_ci default NULL,
   `started` tinyint(1) default NULL,

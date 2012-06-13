@@ -88,5 +88,28 @@ pre{
         <li>Faire un update du schema avec newsletter/config/schema.php</li>
     </ol>
 </div>
+<div class="section">
+    <h1>De v0.1.2.3.0 à v0.1.2.3.1</h1>
+    <ol>
+        <li>Database : <pre>
+CREATE TABLE IF NOT EXISTS `newsletter_assocs` (
+  `id` int(11) NOT NULL auto_increment,
+  `type` varchar(255) collate utf8_unicode_ci default NULL,
+  `my_newsletter_id` int(11) default NULL,
+  `newsletter_id` int(11) default NULL,
+  `created` datetime default NULL,
+  `modified` datetime default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;</pre></li>
+    </ol>
+</div>
+<div class="section">
+    <h1>De v0.1.2.3.1 à v0.1.2.3.2</h1>
+    <ol>
+        <li>Database : <pre>
+ALTER TABLE `newsletter_sendings` ADD   `data` text collate utf8_unicode_ci AFTER `sender_email`;
+ALTER TABLE `newsletter_sendings` ADD   `wrapper` varchar(255) collate utf8_unicode_ci default NULL AFTER `data`;</pre></li>
+    </ol>
+</div>
 </body>
 </html>

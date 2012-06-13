@@ -4,8 +4,23 @@
  		<legend><?php __('Send Newsletter');?></legend>
 	<?php
 		echo $form->input('newsletter_id',array('type'=>'hidden'));
-		echo $form->input('selected_lists', array('label'=>__('Listes de diffusion',true),'type' => 'select', 'options' => $sendlists, 'multiple' => true));
-		echo $form->input('additional_emails', array('label'=>'Emails supplementaire','class'=>'noTinyMce','type' => 'textarea','after'=>__('Séparez plusieurs emails par des virgules(,); ex: email1@server.com, email2@server.com',true)));
+		?>
+		<fieldset>
+			<legend><?php __('Listes de diffusion');?></legend>
+			<?php
+			$i = 0;
+			foreach($sendlists as $key => $label){
+				echo $form->input('NewsletterSending.selected_lists.'.$i, array('label'=>$label,'type' => 'checkbox','value'=>$key,'hiddenField' => false));
+				$i++;
+			}
+			?>
+			</fieldset>
+		<?php
+		if(!empty($this->O2form)){
+			echo $this->O2form->input('additional_emails', array('label'=>__('Emails supplementaire',true),'type' => 'multiple','fields'=>array('name','email'),'minRows'=>1));
+		}else{
+			echo $form->input('additional_emails', array('label'=>__('Emails supplementaire',true),'class'=>'noTinyMce','type' => 'textarea','after'=>__('Séparez plusieurs emails par des virgules(,); ex: email1@server.com, email2@server.com',true)));
+		}
 		echo $form->input('check_sended', array('label'=>__('Ignorer les contacts à qui cette infolettre a déjà été envoyé',true),'type' => 'checkbox', 'checked' => true));
 	?>
 	</fieldset>
