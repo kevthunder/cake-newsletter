@@ -427,7 +427,7 @@ class FunctComponent extends Object
 	function valFields($fields){
 		$formated = array();
 		foreach($fields as $alias => $field){
-			$formated[$alias] = "'".$field."'";
+			$formated[$alias] = "'".addslashes($field)."'";
 		}
 		return $formated;
 	}
@@ -444,6 +444,7 @@ class FunctComponent extends Object
 		if(isset($emailData['email']) && $emailData['email']){
 			//$basicFields = array('id','email','name','first_name','last_name');
 			//$emailData = array_intersect_key($mail[$modelName],array_flip($basicFields));
+			//if(array_key_exists($Model->primaryKey, $mail[$modelName]) {}
 			$emailData['id'] = $mail[$modelName][$Model->primaryKey];
 			if(isset($mail[$modelName]['active'])){
 				$emailData['active']= $mail[$modelName]['active'];

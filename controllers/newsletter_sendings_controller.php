@@ -627,7 +627,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			'sending_id' => $id,
 			'newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
 			'date' => date('Y-m-d H:i:s'),
-			'name' => null,
+			//'name' => null,
 			'email' => null
 		);
 		
@@ -727,6 +727,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$tableSendlist = $this->Funct->getTableSendlistID($list,true);
 			if($tableSendlist['modelClass']->useDbConfig != $this->NewsletterSended->useDbConfig){
 				$finalFindOptions = $this->Funct->tabledEmailGetFindOptions($list,true);
+				$finalFindOptions['tableSendlist'] = $tableSendlist;
 			}else{
 				$finalFindOptions = $this->Funct->tabledEmailGetFindOptions($list,true,$findOptions);
 			}
@@ -752,28 +753,105 @@ class NewsletterSendingsController extends NewsletterAppController {
 		foreach($queries as $query){
 			//--- normalize Queries ---
 			$fields = $this->Funct->fieldsAddAlias($query['fields']);
-			$fields['email_id'] = $fields['id'];
-			unset($fields['id']);
-			$fields = array_merge($this->Funct->valFields($basicInfo),$fields);
 			$insertFields = $this->NewsletterSended->tcheckSaveFields(array_keys($fields));
+			//debug($insertFields);
 			$fields = array_intersect_key($fields,array_flip($insertFields));
 			$query['fields'] = $fields;
 			if($query['model']->useDbConfig != $this->NewsletterSended->useDbConfig){
 				//--------------- external database ---------------
 				$this->_consoleOut($id,sprintf(__d('newsletter','The sendlist id : %s Is using an external Database', true),$query['fields']['sendlist_id']));
-				//$this->_consoleOut($id,sprintf(__d('newsletter','Retrieving data', true),$query['fields']['sendlist_id']));
-				//$emails = $query['model']->find('all',$this->Funct->standardizeFindOptions($query));
-				//$this->_updateProcessTime($id,true);
-				//$this->_consoleOut($id,sprintf(__d('newsletter','%s Email found', true),count($emails)));
-				
-				//App::import('Lib', 'SetMulti');
-				//$emails = SetMulti::group($emails,'0.email',array('singleArray' => false));
-			
-				$this->_consoleOut($id,
+				$this->_consoleOut($id,sprintf(__d('newsletter','Retrieving data', true),$query['fields']['sendlist_id']));
+				$tableSendlist = $query['tableSendlist'];
+				//debug($tableSendlist);
+				unset($query['tableSendlist']);
+				$query['limit'] = 200;
+				$i = 0;
+				do {
+					$query['page'] = $i+1;
+					$emails = $query['model']->find('all',$this->Funct->standardizeFindOptions($query));
+					if(!empty($emails)){
+						$this->_consoleOut($id,sprintf(__d('newsletter','%s Email read', true),count($emails)));
+						
+						//debug($emails);
+						
+						App::import('Lib', 'Newsletter.SetMulti');
+						$adresses = Set::extract('{n}.'.$query['model']->alias.'.email',$emails);
+						//debug($adresses);
+						
+						//--- get duplicata ---
+						$dupFindOpt = array(
+							'fields' => array('id','email'),
+							'conditions'=>array(
+								'email'=>$adresses,
+								'newsletter_id'=>$sending['NewsletterSending']['newsletter_id']
+							),
+							'recursive'=>-1
+						);
+						if(!$sending['NewsletterSending']['check_sended']){
+							$dupFindOpt['conditions']['sending_id'] = $id;
+						}
+						$duplicata = $this->NewsletterSended->find('list',$dupFindOpt);
+						if(!empty($duplicata)){
+							$this->_consoleOut($id,sprintf(__d('newsletter','%s dupliqued email Ignored', true),count($duplicata)));
+							//debug($duplicata);
+						}
+						
+						
+						//--- format data ---
+						$toSave = array();
+						foreach($emails as $mail){
+							$mailData = $this->Funct->tabledEmailGetFields($mail,$tableSendlist);
+							if(!in_array($mailData['email'],$duplicata)){
+								$mailData = array_intersect_key($mailData,array_flip($insertFields));
+								$mailData['email_id'] = $mailData['id'];
+								unset($mailData['id']);
+								$mailData = array_merge($basicInfo,$mailData);
+								$toSave[] = $mailData;
+							}
+						}
+						//debug($toSave);
+						
+						//--- save ---
+						if(!empty($toSave)){
+							$toSaveSql = array();
+							foreach($toSave as $d){
+								$toSaveSql[] = "(".implode(",",$this->Funct->valFields($d)).")";
+							}
+							$insertStatement = 'INSERT INTO '.$db->fullTableName($this->NewsletterSended).' (`'.implode("`,`",array_keys($toSave[0])).'`) VALUES '.implode(",",$toSaveSql);
+							//debug($insertStatement);
+							if($db->execute($insertStatement)){
+								$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),count($toSave)));
+							}
+							/*if($this->NewsletterSended->saveAll($toSave)){
+								$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),count($toSave)));
+							}*/
+						}
+						
+						$this->_updateProcessTime($id,true);
+					}
+					$i++;
+					/*if($i>=3){
+						$viewClass = $this->view;
+						if ($viewClass != 'View') {
+							list($plugin, $viewClass) = pluginSplit($viewClass);
+							$viewClass = $viewClass . 'View';
+							App::import('View', $this->view);
+						}
+						$View = new $viewClass($this, false);
+						echo $View->element('sql_dump');
+						
+						exit();
+					}*/
+				} while(!empty($emails));
+				/*$this->_consoleOut($id,
 					__d('newsletter','External Database lists are not supported yet', true),
 					array('exit'=>true)
-				);
+				);*/
 			}else{
+				$query['fields']['email_id'] = $query['fields']['id'];
+				unset($query['fields']['id']);
+				$query['fields'] = array_merge($this->Funct->valFields($basicInfo),$query['fields']);
+				
 				$selectStatement = $db->buildStatement($this->Funct->standardizeFindOptions($query),$query['model']);
 				
 				//--- make insert Queries ---
