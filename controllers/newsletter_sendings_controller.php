@@ -1058,7 +1058,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$sended_id = 0;
 		if(!empty($email['NewsletterSended'])){
 			$fullData = $email;
-			debug($fullData);
+			//debug($fullData);
 			$email = $email['NewsletterSended'];
 			if(!empty($fullData['NewsletterEmail'])){
 				$email = array_merge($fullData['NewsletterEmail'],$email);
