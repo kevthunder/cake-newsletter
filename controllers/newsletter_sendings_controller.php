@@ -537,12 +537,16 @@ class NewsletterSendingsController extends NewsletterAppController {
 		if(empty($chunk)){
 			$chunk = 10;
 		}
+		$belongsToTmp = $this->NewsletterSended->belongsTo;
 		$this->NewsletterSended->recursive = -1;
 		$this->NewsletterSended->belongsTo = array();
+		$this->NewsletterSended->Behaviors->attach('Containable');
 		$continue = $this->_valid_sending($id);
 		$done = false;
 		while($i<$max && $continue){
-			$toSend = $this->NewsletterSended->find('all',array('conditions'=>array('active'=>1,'status'=>'ready','sending_id'=>$id),'limit'=>$chunk));
+			$this->NewsletterSended->belongsTo = $belongsToTmp;
+			$toSend = $this->NewsletterSended->find('all',array('conditions'=>array('NewsletterSended.active'=>1,'NewsletterSended.status'=>'ready','NewsletterSended.sending_id'=>$id),'limit'=>$chunk,'contain'=>'NewsletterEmail'));
+			$this->NewsletterSended->belongsTo = array();
 			$ids = array();
 			if(!empty($toSend)){
 				foreach($toSend as $mail){
@@ -855,6 +859,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$selectStatement = $db->buildStatement($this->Funct->standardizeFindOptions($query),$query['model']);
 				
 				//--- make insert Queries ---
+				$fields = $this->Funct->fieldsAddAlias($query['fields']);
+				$insertFields = $this->NewsletterSended->tcheckSaveFields(array_keys($fields));
 				$insertQuery = array(
 					'table' => $db->fullTableName($this->NewsletterSended),
 					'fields' => array(),
@@ -1051,7 +1057,12 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}
 		$sended_id = 0;
 		if(!empty($email['NewsletterSended'])){
+			$fullData = $email;
+			debug($fullData);
 			$email = $email['NewsletterSended'];
+			if(!empty($fullData['NewsletterEmail'])){
+				$email = array_merge($fullData['NewsletterEmail'],$email);
+			}
 			$email['sended_id'] = $email['id'];
 			unset($email['id']);
 		}
