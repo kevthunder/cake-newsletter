@@ -12,6 +12,7 @@ class EmailUtilsComponent extends Object
 	}
 	
 	function setConfig($conf){
+		$this->Email->reset( );
 		if(!empty($conf['to'])){
 			$this->Email->to = $conf['to'];
 		}
@@ -34,6 +35,9 @@ class EmailUtilsComponent extends Object
 		}
 		if(!empty($conf['sendAs'])){
 			$this->Email->sendAs = $conf['sendAs'];
+		}
+		if(!empty($conf['attachments'])){
+			$this->Email->attachments = $conf['attachments'];
 		}
 	}
 	function set( $one, $two = NULL ){
