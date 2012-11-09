@@ -20,13 +20,14 @@ class NewsletterEmailsController extends NewsletterAppController {
 	
 	function add() {
 		if (!empty($this->data)) {
+			$error = false;
 			if(!empty($this->data['NewsletterEmail']['email']) && strpos($this->data['NewsletterEmail']['email'], '@') !== false){
 				if(!isset($this->data['NewsletterEmail']['name']) && isset($this->data['NewsletterEmail']['first_name']) && isset($this->data['NewsletterEmail']['last_name'])){
 					$this->data['NewsletterEmail']['name'] = $this->data['NewsletterEmail']['first_name'] .' '.$this->data['NewsletterEmail']['last_name'];
 				}
 	
 				$this->NewsletterEmail->create();
-				if(!isset($this->data['NewsletterEmail']['sendlist_id'])){
+				if(empty($this->data['NewsletterEmail']['sendlist_id'])){
 					if(Configure::read('Newsletter.defaultSendlist')){
 						$this->data['NewsletterEmail']['sendlist_id'] = Configure::read('Newsletter.defaultSendlist');
 					}else{
@@ -34,42 +35,58 @@ class NewsletterEmailsController extends NewsletterAppController {
 					}
 				}
 				$this->data['NewsletterEmail']['active'] = 1;
-				$this->NewsletterEmail->save($this->data);
 				
-				$confirmEmail = Configure::read('Newsletter.ConfirmEmail');
-				if(!empty($confirmEmail)){
-					$this->data['NewsletterEmail']['id'] = $this->NewsletterEmail->id;
-					$this->_send_confirm_email($this->data);
-				}
-				if(isset($this->data['NewsletterEmail']['redirect']) && $this->data['NewsletterEmail']['redirect']) {
-					if($this->data['NewsletterEmail']['redirect'] == 'back'){
-						$this->redirect($this->referer());
-					}elseif($this->data['NewsletterEmail']['redirect'] == 'confirm'){
+				$exists = $this->NewsletterEmail->find('first', array(
+					'conditions'=>array(
+						'email'=>$this->data['NewsletterEmail']['email'],
+						'sendlist_id'=>$this->data['NewsletterEmail']['sendlist_id'],
+						'active'=>1
+					),
+					'recursive'=>-1
+				));
+				
+				if(empty($exists)){
+					$this->NewsletterEmail->save($this->data);
+					
+					$confirmEmail = Configure::read('Newsletter.ConfirmEmail');
+					if(!empty($confirmEmail)){
+						$this->data['NewsletterEmail']['id'] = $this->NewsletterEmail->id;
+						$this->_send_confirm_email($this->data);
+					}
+					if(isset($this->data['NewsletterEmail']['redirect']) && $this->data['NewsletterEmail']['redirect']) {
+						if($this->data['NewsletterEmail']['redirect'] == 'back'){
+							$this->redirect($this->referer());
+						}elseif($this->data['NewsletterEmail']['redirect'] == 'confirm'){
+							$this->Session->delete('newsletterEmailId');
+							$this->Session->write('newsletterEmailId',$this->NewsletterEmail->id);
+							//debug('here');
+							//debug($this->NewsletterEmail->id);
+							$this->redirect('confirm');
+						}else{
+							$this->redirect($this->data['NewsletterEmail']['redirect']);
+						}
+					}elseif(Configure::read('Newsletter.EmailAdd.confirm')){
 						$this->Session->delete('newsletterEmailId');
+							//debug('here2');
+							//debug($this->NewsletterEmail->id);
 						$this->Session->write('newsletterEmailId',$this->NewsletterEmail->id);
-						//debug('here');
-						//debug($this->NewsletterEmail->id);
 						$this->redirect('confirm');
 					}else{
-						$this->redirect($this->data['NewsletterEmail']['redirect']);
+						$this->redirect('/');
 					}
-				}elseif(Configure::read('Newsletter.EmailAdd.confirm')){
-					$this->Session->delete('newsletterEmailId');
-						//debug('here2');
-						//debug($this->NewsletterEmail->id);
-					$this->Session->write('newsletterEmailId',$this->NewsletterEmail->id);
-					$this->redirect('confirm');
 				}else{
-					$this->redirect('/');
+					$this->Session->setFlash(__d('newsletter','Ce email est déjà présent dans notre base de données.', true));
+					$error = true;
 				}
 			}else{
 				$this->Session->setFlash(__d('newsletter','Invalid email.', true));
-				if(isset($this->data['NewsletterEmail']['invalid_redirect']) && $this->data['NewsletterEmail']['invalid_redirect']) {
-					if($this->data['NewsletterEmail']['invalid_redirect'] == 'back'){
-						$this->redirect($this->referer());
-					}else{
-						$this->redirect($this->data['NewsletterEmail']['invalid_redirect']);
-					}
+				$error = true;
+			}
+			if($error && isset($this->data['NewsletterEmail']['invalid_redirect']) && $this->data['NewsletterEmail']['invalid_redirect']) {
+				if($this->data['NewsletterEmail']['invalid_redirect'] == 'back'){
+					$this->redirect($this->referer());
+				}else{
+					$this->redirect($this->data['NewsletterEmail']['invalid_redirect']);
 				}
 			}
 		}
