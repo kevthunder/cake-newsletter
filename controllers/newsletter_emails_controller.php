@@ -75,7 +75,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 						$this->redirect('/');
 					}
 				}else{
-					$this->Session->setFlash(__d('newsletter','Ce email est dÈj‡ prÈsent dans notre base de donnÈes.', true));
+					$this->Session->setFlash(__d('newsletter','Ce email est d√©j√† pr√©sent dans notre base de donn√©es.', true));
 					$error = true;
 				}
 			}else{
