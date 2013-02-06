@@ -89,6 +89,16 @@ pre{
     </ol>
 </div>
 <div class="section">
+   <h1>De v0.1.2.2.x à v0.1.2.3.0</h1>
+    <ol>
+        <li>Database : <pre>
+ALTER TABLE `newsletter_sended` ADD   `error` text collate utf8_unicode_ci default NULL AFTER `status`;
+ALTER TABLE `newsletter_sendings` ADD   `sender_name` varchar(255) collate utf8_unicode_ci default NULL AFTER `html`;
+ALTER TABLE `newsletter_sendings` ADD   `sender_email` varchar(255) collate utf8_unicode_ci default NULL AFTER `sender_name`;
+ALTER TABLE `newsletter_sendings` ADD   `self_sending` tinyint(1) default NULL AFTER `sender_email`;</pre></li>
+    </ol>
+</div>
+<div class="section">
     <h1>De v0.1.2.3.0 à v0.1.2.3.1</h1>
     <ol>
         <li>Database : <pre>
