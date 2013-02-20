@@ -588,12 +588,12 @@ class NewsletterController extends NewsletterAppController {
 				$this->data = $this->Funct->array_map_recursive("utf8_decode",$this->data);
 			}
 			//////// Gestion de fichiers ////////
-			if(isset($newsletter_box["NewsletterBox"]["file"])){
-				$uploaded_files = $newsletter_box["NewsletterBox"]["file"];
-			}else{
-				$uploaded_files = array();
-			}
 			if(isset($this->data["NewsletterBox"]["file"])){
+				if(isset($newsletter_box["NewsletterBox"]["file"])){
+					$uploaded_files = $newsletter_box["NewsletterBox"]["file"];
+				}else{
+					$uploaded_files = array();
+				}
 				$files = $this->data["NewsletterBox"]["file"];
 				foreach($files as $name => $file){
 					if($file['error'] == 0) {
@@ -605,11 +605,11 @@ class NewsletterController extends NewsletterAppController {
 						}
 					}
 				}
-			}
-			if(count($uploaded_files)){
-				$this->data["NewsletterBox"]["file"] = $uploaded_files;
-			}else{
-				unset($this->data["NewsletterBox"]["file"]);
+				if(count($uploaded_files)){
+					$this->data["NewsletterBox"]["file"] = $uploaded_files;
+				}else{
+					$this->data["NewsletterBox"]["file"] = null;
+				}
 			}
 			
 			//////// save ////////
