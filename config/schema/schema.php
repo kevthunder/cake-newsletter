@@ -1,6 +1,6 @@
 <?php 
 /* SVN FILE: $Id$ */
-/* App schema generated on: 2011-08-22 21:08:16 : 1314047956*/
+/* App schema generated on: 2013-02-21 14:02:42 : 1361455542*/
 class AppSchema extends CakeSchema {
 	var $name = 'App';
 
@@ -11,6 +11,16 @@ class AppSchema extends CakeSchema {
 	function after($event = array()) {
 	}
 
+	var $newsletter_assocs = array(
+		'id' => array('type' => 'integer', 'null' => false, 'default' => NULL, 'key' => 'primary'),
+		'type' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'my_newsletter_id' => array('type' => 'integer', 'null' => true, 'default' => NULL),
+		'newsletter_id' => array('type' => 'integer', 'null' => true, 'default' => NULL),
+		'created' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
+		'modified' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
+		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1)),
+		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
+	);
 	var $newsletter_boxes = array(
 		'id' => array('type' => 'integer', 'null' => false, 'default' => NULL, 'key' => 'primary'),
 		'active' => array('type' => 'boolean', 'null' => false, 'default' => NULL),
@@ -51,6 +61,7 @@ class AppSchema extends CakeSchema {
 		'view' => array('type' => 'integer', 'null' => false, 'default' => '0'),
 		'sending_id' => array('type' => 'integer', 'null' => true, 'default' => NULL),
 		'status' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'error' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'date' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
 		'active' => array('type' => 'boolean', 'null' => true, 'default' => NULL),
 		'created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
@@ -66,6 +77,11 @@ class AppSchema extends CakeSchema {
 		'check_sended' => array('type' => 'boolean', 'null' => true, 'default' => NULL),
 		'date' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
 		'html' => array('type' => 'text', 'null' => true, 'default' => NULL),
+		'sender_name' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'sender_email' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'data' => array('type' => 'text', 'null' => true, 'default' => NULL),
+		'wrapper' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'self_sending' => array('type' => 'boolean', 'null' => true, 'default' => NULL),
 		'status' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'started' => array('type' => 'boolean', 'null' => true, 'default' => NULL),
 		'confirm' => array('type' => 'boolean', 'null' => true, 'default' => NULL),

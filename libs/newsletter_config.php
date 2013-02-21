@@ -11,6 +11,7 @@ class NewsletterConfig extends Object {
 		'EmailAdd.confirm' => true,
 		'selfSending' => false,
 		'langs' => array(), //array('fre'=>'Français','eng'=>'English')
+		'multimedia' => true,
 	);
 	
 	//$_this =& NewsletterConfig::getInstance();

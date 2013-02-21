@@ -67,6 +67,12 @@ function adjustStyles(elem){
 	$("table[bgcolor], td[bgcolor], tr[bgcolor]", $target).each(function(){
 		$(this).css("background-color",$(this).attr("bgcolor"));
 	});
+	$("table[background], td[background], tr[background]", $target).each(function(){
+		$(this).css("background-image",'url("'+$(this).attr("background")+'")');
+		if(window.console){
+			console.log('url('+$(this).attr("background")+')');
+		}
+	});
 	$("table[width]", $target).each(function(){
 		if($(this).attr("width").substring($(this).attr("width").length-1)!= '%'){
 			$(this).css("width",$(this).attr("width")+"px");
@@ -244,7 +250,7 @@ function addTinyMce(){
 		theme_advanced_statusbar_location : "bottom",
 		theme_advanced_toolbar_location : "top",
 		theme_advanced_toolbar_align : "left",
-		content_css : "/css/admin/tinymce.css",
+		content_css : root+"css/admin/tinymce.css",
 		theme_advanced_buttons3_add : "pastetext, template, separator, tablecontrols",
 		paste_auto_cleanup_on_paste: true,
 		table_inline_editing : true,

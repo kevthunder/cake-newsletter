@@ -74,14 +74,18 @@ class FunctComponent extends Object
 		return $templates;
 	}
 	
-	function getBoxElements(){
+	function getBoxElements($template = null){
 		$paths = $this->getAllViewPaths();
+		$subPaths = array('/elements/newsletter_box');
+		if(!empty($template)) $subPaths[] = '/elements/newsletter_box/'.$template;
 		foreach($paths as $path) {
-			if($this->Folder->cd($path.'/elements/newsletter_box')){
-				$templateFiles = $this->Folder->find('.+\.ctp$');
-				foreach($templateFiles as &$file){
-					if(!preg_match("/_edit.ctp$/",$file)){
-						$boxElements[basename($file, ".ctp")] = basename($file, ".ctp");
+			foreach($subPaths as $subPath) {
+				if($this->Folder->cd($path.$subPath)){
+					$templateFiles = $this->Folder->find('.+\.ctp$');
+					foreach($templateFiles as &$file){
+						if(!preg_match("/_edit.ctp$/",$file)){
+							$boxElements[basename($file, ".ctp")] = basename($file, ".ctp");
+						}
 					}
 				}
 			}

@@ -14,7 +14,7 @@ $javascript->link('/newsletter/js/jquery.form.js', false);
 //$javascript->link('tiny_mce/jquery.tinymce', false);
 $javascript->link('/newsletter/js/newsletter', false);
 
-if(isset($multimedia)){
+if(isset($multimedia) && NewsletterConfig::load('multimedia')){
 	$multimedia->display('NewsletterBox.empty');
 }
 ?>

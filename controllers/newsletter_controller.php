@@ -536,7 +536,7 @@ class NewsletterController extends NewsletterAppController {
 		$this->set('newsletter',$this->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);
 		$this->set('templates',$this->Funct->getTemplates());
-		$this->set('box_elements',$this->Funct->getBoxElements());
+		$this->set('box_elements',$this->Funct->getBoxElements($this->data['Newsletter']['template']));
 	}
 	function admin_get_box_edit($id) {
 		if(Configure::read('debug')==2){
