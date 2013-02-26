@@ -56,6 +56,21 @@ class Newsletter extends NewsletterAppModel {
 		)
 	);*/
 	
+	
+	function minFields($rel = false){
+		$fields = array();
+		$excludeFields = array('html');
+		$schema = $this->schema();
+		foreach($schema as $field => $opt){
+			if(!in_array($field,$excludeFields)){
+				$fields[] = $this->alias.'.'.$field;
+			}
+		}
+		if($rel){
+		}
+		return $fields;
+	}
+	
 	function beforeConfig(){
 		if(isset($this->data[$this->alias]['TemplateConfig'])){
 			$this->data[$this->alias]['TemplateConfig']->beforeConfig($this);

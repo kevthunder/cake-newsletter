@@ -11,6 +11,8 @@
 		$("div.console_box", $cc).css('height',height);
 		//console.log(height);
 		
+		scrollDown();
+			
 		$("a.ajax_button", $cc).click(function(){
 			var confirmMsg = $(this).attr('confirm');
 			if(confirmMsg){
@@ -71,11 +73,12 @@
 				console.log('stream_handler');
 			}
 			$('.stream',$console).remove();
+			$('.original_log',$console).remove();
 			var $output = $(document.createElement('div'));
 			$output.addClass('stream');
 			$console.append($output);
 			$output.append(res);
-			$("div.console_box", $cc).scrollTop($console.outerHeight());
+			scrollDown();
 			try{
 				var json = $(".newsletterSendingOutput",$output).attr('json');
 				if(json){
@@ -122,7 +125,9 @@
 			}
 		}
 		
-		
+		function scrollDown(){
+			$("div.console_box", $cc).scrollTop($console.outerHeight());
+		}
 	});
 	
 	

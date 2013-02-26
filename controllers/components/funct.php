@@ -209,13 +209,6 @@ class FunctComponent extends Object
 		}
 	}
 	
-	function get_base_server_name(){
-		$server_name = $_SERVER['SERVER_NAME'];
-		if(substr_count($server_name,'.')>1){
-			$server_name = preg_replace('!^[^.]*\\.!','', $server_name);
-		}
-		return $server_name;
-	}
 	
 	function isTableSendlist($tableSendlist_id){
 		$tableSendlists = Configure::read('Newsletter.tableSendlist');

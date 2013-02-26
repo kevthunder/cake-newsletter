@@ -33,6 +33,10 @@ if(isset($multimedia) && NewsletterConfig::load('multimedia')){
 		echo $form->input('active');
 		echo $form->input('title',array('label'=>__d('newsletter','Title',true)));
 		echo $form->input('date');
+		$senders = Configure::read('Newsletter.sendEmail');
+		if(is_array($senders)){
+			echo $form->input('sender',array('options' =>array_combine($senders,$senders)));
+		}
 		echo $form->input('template',array('options' =>$templates));
 		$langs = NewsletterConfig::load('langs');
 		if(!empty($langs)){

@@ -64,7 +64,7 @@ msgid "List Newsletters"
 msgstr "Liste des Newsletters"
 
 msgid "Edit Newsletter"
-msgstr "Éditer Newsletter"
+msgstr "Éditer la Newsletter"
 
 msgid "Delete"
 msgstr "Effacer"
@@ -216,6 +216,77 @@ msgstr "Ouvertures par jour"
 msgid "Invalid email."
 msgstr "Courriel invalide."
 
+msgid "Additional Emails"
+msgstr "Emails supplementaire"
+
+msgid "Separate multiple emails by commas(,). eg: email1@server.com, email2@server.com"
+msgstr "Séparez plusieurs emails par des virgules(,); ex: email1@serveur.com, email2@serveur.com"
+
+msgid "Ignore contacts to whom this newsletter has already been sent"
+msgstr "Ignorer les contacts à qui cette infolettre a déjà été envoyé"
+
 msgid "The Newsletter has been sended.(%s/%s)"
 msgstr "La Newsletter a été envoyée.(%s/%s)"
 
+msgid "You have uncompleted sendings"
+msgstr "Vous avez des envois inachevée"
+
+msgid "This Newsletter must be active in order to send it."
+msgstr "Cette Newsletter doit être activée afin d'être envoyée."
+
+msgid "Test your newsletter"
+msgstr "Tester votre Newsletter"
+
+msgid "Testing the \"%title%\" Newsletter"
+msgstr "Tester la Newsletter \"%title%\""
+
+msgid "Send the \"%title%\" Newsletter"
+msgstr "Envoyer la Newsletter \"%title%\""
+
+msgid "Failed deliveries"
+msgstr "Envois ayant échoué"
+
+msgid "Completion (%)"
+msgstr "Progression (%)"
+
+msgid "Continue Without testing"
+msgstr "Continuer sans tester"
+
+msgid "The email looks good, Continue"
+msgstr "Le courriel est beaux, Continuer"
+
+msgid "Do you really want to send the newsletter without testing it first ?"
+msgstr "Voulez-vous vraiment envoyer la Newsletter sans la tester d'abord ?"
+
+msgid "It is highly recommended to test your newsletter before sending it."
+msgstr "Il est grandement conseillé de tester votre newsletter avant de l'envoyé."
+
+msgid "Start"
+msgstr "Commencer"
+
+msgid "You need to press \"Start\""
+msgstr "Vous devez appuyer sur «Commencer»"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Do you really want to send the newsletter now?"
+msgstr "Voulez-vous vraiment envoyer la Newsletter maintenant?"
+
+msgid "The "%title%" Newsletter is scheduled to be sent around the %date%"
+msgstr "La Newsletter "%title%" est prévu pour être envoyé dans les environs du %date%."
+
+msgid "This time can vary depending on your server configuration and performance."
+msgstr "Ce temps peut varier selon la configuration de votre serveur et de ses performances"
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""

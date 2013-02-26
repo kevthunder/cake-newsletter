@@ -121,5 +121,16 @@ ALTER TABLE `newsletter_sendings` ADD   `data` text collate utf8_unicode_ci AFTE
 ALTER TABLE `newsletter_sendings` ADD   `wrapper` varchar(255) collate utf8_unicode_ci default NULL AFTER `data`;</pre></li>
     </ol>
 </div>
+<div class="section">
+    <h1>De v0.1.2.3.6 à v0.1.2.4.0</h1>
+    <ol>
+        <li>Database : <pre>
+ALTER TABLE `newsletters` ADD `tested` BOOLEAN NOT NULL AFTER `template`;
+ALTER TABLE `newsletters` ADD `sender` VARCHAR( 255 ) NULL AFTER `lang`;
+ALTER TABLE `newsletter_sendings` ADD `scheduled` BOOLEAN NULL AFTER `date`;
+</pre></li>
+        <li>Database : <pre></pre></li>
+    </ol>
+</div>
 </body>
 </html>

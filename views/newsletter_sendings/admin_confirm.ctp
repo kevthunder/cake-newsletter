@@ -28,7 +28,7 @@
 		if(test_email_sent){
 			//return "'.__('Voulez-vous vraiment envoyer la Newsletter ?',true).'";
 		}else{
-			return "'.__('Voulez-vous vraiment envoyer la Newsletter sans la tester d\'abord? \n\n Il est grandement conseillé de tester votre newsletter avant de l\'envoyé.',true).'";
+			return "'.__d('newsletter','Do you really want to send the newsletter without testing it first ?',true).'\n\n'.__d('newsletter','It is highly recommended to test your newsletter before sending it.',true).'";
 		}
 	}
 	function confirmSend(){
@@ -43,11 +43,11 @@
 
 <div class="NewsletterSending form">
 	<fieldset>
- 		<legend><?php __('Testing your Newsletter');?></legend>
+ 		<legend><?php echo str_replace('%title%',$newsletterSending['Newsletter']['title'],__d('newsletter','Testing the "%title%" Newsletter',true)); ?></legend>
 		<?php 
 			echo $form->create('NewsletterSending',array('class'=>'test_form','action'=>'admin_test'));
 			echo $form->input('id');
-			echo $form->input('test_email',array('div'=>array('class'=>'input text ajax_testing clearfix'),'after'=>$form->submit(__('Send',true))));
+			echo $form->input('test_email',array('div'=>array('class'=>'input text ajax_testing clearfix'),'after'=>$form->submit(__d('newsletter','Send',true))));
 			echo $form->end();
 		?>
 		</div>
@@ -55,9 +55,9 @@
 			echo $form->create('NewsletterSending',array('onsubmit'=>'return confirmSend();'));
 			echo $form->input('id');
 			echo $form->input('confirm',array('type'=>'hidden','value'=>1));
-			echo $html->link('<< '.__('Edit Newsletter', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'edit', $newsletterSending['NewsletterSending']['newsletter_id']));
-			echo $form->submit(__('Continue Without testing',true),array('div'=>array('class'=>'submit submit_ignore')));
-			echo $form->submit(__('The email looks good, Continue',true),array('div'=>array('class'=>'submit submit_normal')));
+			echo $html->link('<< '.__d('newsletter','Edit Newsletter', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'edit', $newsletterSending['NewsletterSending']['newsletter_id']));
+			echo $form->submit(__d('newsletter','Continue Without testing',true),array('div'=>array('class'=>'submit submit_ignore')));
+			echo $form->submit(__d('newsletter','The email looks good, Continue',true),array('div'=>array('class'=>'submit submit_normal')));
 			echo $form->end();
 		?>
 	</fieldset>

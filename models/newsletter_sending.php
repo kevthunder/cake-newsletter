@@ -16,6 +16,51 @@ class NewsletterSending extends NewsletterAppModel {
 		)
 	);
 	
+	function minFields($rel = true){
+		$fields = array();
+		$excludeFields = array('html','console');
+		$schema = $this->schema();
+		foreach($schema as $field => $opt){
+			if(!in_array($field,$excludeFields)){
+				$fields[] = $this->alias.'.'.$field;
+			}
+		}
+		if($rel){
+			$fields = array_merge($fields, $this->Newsletter->minFields());
+		}
+		return $fields;
+	}
+	
+	function getPendingCond($raw = false){
+		if($raw){
+			return  '`'.$this->alias.'`.`started` IS NOT NULL AND '.
+					'`'.$this->alias.'`.`active` = 1 AND '.
+					'`'.$this->alias.'`.`confirm` = 1 AND '.
+					'`'.$this->alias."`.`status` <> 'done'";
+		}else{
+			return array(
+				$this->alias.'.started IS NOT NULL',
+				$this->alias.'.active' => 1,
+				$this->alias.'.confirm' => 1,
+				$this->alias.'.status NOT' => 'done',
+			);
+		}
+	}
+	
+	function getScheduledCond($raw = false){
+		if($raw){
+			return  '`'.$this->alias.'`.`scheduled` = 1 AND '.
+					'`'.$this->alias.'`.`active` = 1  AND '.
+					'`'.$this->alias.'`.`confirm` = 1';
+		}else{
+			return array(
+				$this->alias.'.scheduled' => 1,
+				$this->alias.'.active' => 1,
+				$this->alias.'.confirm' => 1,
+			);
+		}
+	}
+	
 	function notEmpty2($check){
 		return !empty($check);
 	}
@@ -44,6 +89,11 @@ class NewsletterSending extends NewsletterAppModel {
 			}
 			$this->data[$this->alias]['additional_emails'] = implode(',',$emails);
 			
+		}
+		if(!empty($this->data[$this->alias]['selected_lists'])){
+			$this->data[$this->alias]['selected_lists'] = $this->unserializeFunct($this->data[$this->alias]['selected_lists']);
+			$this->data[$this->alias]['selected_lists'] = array_values($this->data[$this->alias]['selected_lists']);
+			$this->data[$this->alias]['selected_lists'] = $this->serializeFunct($this->data[$this->alias]['selected_lists']);
 		}
 		//debug($this->data);
 		return true;

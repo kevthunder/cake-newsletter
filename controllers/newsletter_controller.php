@@ -11,6 +11,7 @@ class NewsletterController extends NewsletterAppController {
 	var $components = array('Email','Newsletter.Funct', 'RequestHandler');
 	
 	function index() {
+		$this->paginate['order'] = 'date DESC';
 		$this->set('newsletters', $this->paginate());
 	}
 
@@ -192,8 +193,44 @@ class NewsletterController extends NewsletterAppController {
 	
 	function admin_index() {
 		$this->Newsletter->recursive = 0;
-		$this->set('newsletters', $this->paginate());
-		$this->set('sendlists', $this->NewsletterSendlist->find('all',array('conditions'=>array('NewsletterSendlist.active'=>1))));
+		$this->paginate['order'] = 'date DESC';
+		$this->paginate['fields'] = $this->Newsletter->minFields();
+		$res = $this->paginate();
+		if(!empty($res)){
+			$ids = Set::extract('{n}.Newsletter.id',$res);
+			$findOpt = array(
+				'fields'=>array(
+					'Newsletter.id',
+					"COUNT(DISTINCT CASE WHEN ".$this->Newsletter->NewsletterSending->getPendingCond(true)." THEN `".$this->Newsletter->NewsletterSending->alias."`.`id` END) AS pending_sendings",
+					"COUNT(DISTINCT CASE WHEN ".$this->Newsletter->NewsletterSending->getScheduledCond(true)." THEN `".$this->Newsletter->NewsletterSending->alias."`.`id` END) AS scheduled_sendings"
+				),
+				'conditions'=>array(
+					'Newsletter.id' => $ids
+				),
+				'joins' => array(
+					array(
+						'alias' => $this->Newsletter->NewsletterSending->alias,
+						'table'=> $this->Newsletter->NewsletterSending->useTable,
+						'type' => 'left',
+						'conditions' => array(
+							$this->Newsletter->NewsletterSending->alias.'.newsletter_id = Newsletter.id'
+						)
+					)
+				),
+				'group'=>'Newsletter.id',
+				'recursive'=>-1
+			);
+			$stats = $this->Newsletter->find('all',$findOpt);
+			$map = array_flip($ids);
+			foreach($stats as $stat){
+				$res[$map[$stat['Newsletter']['id']]]['Newsletter'] = array_merge(
+					$res[$map[$stat['Newsletter']['id']]]['Newsletter'],
+					$stat[0]
+				);
+			}
+		};
+		$this->set('newsletters', $res);
+		$this->set('sendlists', $this->NewsletterSendlist->find('all',array('conditions'=>array('NewsletterSendlist.active'=>1),'recursive'=>-1)));
 	}
 	function admin_view($id = null) {
 		//$this->autoLayout = false;
@@ -507,6 +544,7 @@ class NewsletterController extends NewsletterAppController {
 				$this->Newsletter->save($this->data,true,array('id','template'));
 			}
 			$this->data['Newsletter']['html'] = $this->requestAction('admin/newsletter/newsletter/make/'.$id);
+			$this->data['Newsletter']['tested'] = 0;
 			if(empty($this->data['Newsletter']['associated'])){
 				$this->data['Newsletter']['associated'] = array();
 			}

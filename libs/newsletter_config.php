@@ -12,6 +12,7 @@ class NewsletterConfig extends Object {
 		'selfSending' => false,
 		'langs' => array(), //array('fre'=>'Français','eng'=>'English')
 		'multimedia' => true,
+		'cron' => 'auto',
 	);
 	
 	//$_this =& NewsletterConfig::getInstance();
@@ -29,6 +30,15 @@ class NewsletterConfig extends Object {
 			config('plugins/newsletter');
 			$config = Configure::read('Newsletter');
 			$config = Set::merge($_this->defaultConfig,$config);
+			$config['_cronAuto'] = ($config['cron'] === 'auto');
+			if($config['_cronAuto']){
+				Cache::config('cron_cache', array(
+					'engine' => 'File',
+					'duration'=> '+1 week',
+					'path' => CACHE,
+				));
+				$config['cron'] = !!Cache::read('newsletter_autocron','cron_cache');
+			}
 			Configure::write('Newsletter',$config);
 			$_this->loaded = true;
 		}

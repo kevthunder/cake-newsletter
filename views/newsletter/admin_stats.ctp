@@ -146,3 +146,9 @@ swfobject.embedSWF(
     } */ ?>
 </ul>
 </div>
+<div class="actions">
+	<ul>
+		<li><?php echo $html->link(__('Generate Excel', true), array('action' => 'excel'));?></li>
+		<li><?php echo $html->link(__('List Newsletters', true), array('action' => 'index'));?></li>
+	</ul>
+</div>

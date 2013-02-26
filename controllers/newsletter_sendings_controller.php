@@ -46,7 +46,6 @@ class NewsletterSendingsController extends NewsletterAppController {
 				'rule' => 'notEmpty2',
 			);
 			if(!empty($newsletter)){
-				unset($this->data['NewsletterSending']['selected_lists']);
 				$this->data['NewsletterSending']['active'] = 1;
 				$this->data['NewsletterSending']['html'] = $newsletter['Newsletter']['html'];
 				$this->data['NewsletterSending']['status'] = "build";
@@ -56,7 +55,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$this->data['NewsletterSending']['self_sending'] = 1;
 				$this->data['NewsletterSending']['wrapper'] = 'share';
 				//debug($this->data);
-				if ($this->NewsletterSending->save($this->data)) {
+				$allowed = array('sender_name','sender_email','additional_emails','newsletter_id','active','html','status','date','confirm','started','self_sending','wrapper','data');
+				if ($this->NewsletterSending->save($this->data,true,$allowed)) {
 					$this->Session->setFlash(__('The newsletter sending has been saved', true));
 					$this->redirect(array('action' => 'send',$this->NewsletterSending->id));
 				} else {
@@ -95,6 +95,95 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$this->set('sending',$sending);
 	}
 	
+	
+	function admin_index() {
+		if(!empty($this->params['named']['newsletter'])) {
+			$newsletterId = $this->params['named']['newsletter'];
+		} 
+		if(!empty($newsletterId)){
+			$this->paginate['conditions']['NewsletterSending.newsletter_id'] = $newsletterId;
+			$newsletter = $this->NewsletterSending->Newsletter->read(null,$newsletterId);
+			$this->set('newsletter',$newsletter);
+		}
+				
+		if(!empty($this->params['named']['pending'])) {
+			$pending = $this->params['named']['pending'];
+		} 	
+		if(!empty($pending)){
+			$this->paginate['conditions'][] = $this->NewsletterSending->getPendingCond();
+			$this->set('pending',$pending);
+		}
+			
+		if(!empty($this->params['named']['scheduled'])) {
+			$scheduled = $this->params['named']['scheduled'];
+		} 	
+		if(!empty($scheduled)){
+			$this->paginate['conditions'][] = $this->NewsletterSending->getScheduledCond();
+			$this->set('scheduled',$scheduled);
+		}
+		
+		$q = null;
+		if(isset($this->params['named']['q']) && strlen(trim($this->params['named']['q'])) > 0) {
+			$q = $this->params['named']['q'];
+		} elseif(isset($this->data['NewsletterSending']['q']) && strlen(trim($this->data['NewsletterSending']['q'])) > 0) {
+			$q = $this->data['NewsletterSending']['q'];
+			$this->params['named']['q'] = $q;
+		}
+		if($q !== null) {
+			$this->paginate['conditions']['OR'] = array('NewsletterSending.selected_lists LIKE' => '%'.$q.'%',
+														'NewsletterSending.additional_emails LIKE' => '%'.$q.'%',
+														'NewsletterSending.html LIKE' => '%'.$q.'%',
+														'NewsletterSending.sender_name LIKE' => '%'.$q.'%',
+														'NewsletterSending.sender_email LIKE' => '%'.$q.'%',
+														'NewsletterSending.data LIKE' => '%'.$q.'%',
+														'NewsletterSending.wrapper LIKE' => '%'.$q.'%',
+														'NewsletterSending.status LIKE' => '%'.$q.'%',
+														'NewsletterSending.console LIKE' => '%'.$q.'%');
+		}
+
+		$this->paginate['fields'] = $this->NewsletterSending->minFields();
+		
+		$this->NewsletterSending->recursive = 0;
+		$res = $this->paginate();
+		if(!empty($res)){
+			$ids = Set::extract('{n}.NewsletterSending.id',$res);
+			$findOpt = array(
+				'fields'=>array(
+					'NewsletterSending.id',
+					"COUNT(DISTINCT CASE WHEN `".$this->NewsletterSended->alias."`.`status` IN ('sent','error') THEN `".$this->NewsletterSended->alias."`.`id` END) AS total_sended",
+					"COUNT(DISTINCT CASE WHEN `".$this->NewsletterSended->alias."`.`status` = 'error' THEN `".$this->NewsletterSended->alias."`.`id` END) AS errors",
+					"COUNT(DISTINCT CASE WHEN `".$this->NewsletterSended->alias."`.`status` IN ('ready','reserved') THEN `".$this->NewsletterSended->alias."`.`id` END) AS remaining"
+				),
+				'conditions'=>array(
+					'NewsletterSending.id' => $ids
+				),
+				'joins' => array(
+					array(
+						'alias' => $this->NewsletterSended->alias,
+						'table'=> $this->NewsletterSended->useTable,
+						'type' => 'left',
+						'conditions' => array(
+							$this->NewsletterSended->alias.'.sending_id = NewsletterSending.id'
+						)
+					)
+				),
+				'group'=>'NewsletterSending.id',
+				'recursive'=>-1
+			);
+			$stats = $this->NewsletterSending->find('all',$findOpt);
+			$map = array_flip($ids);
+			foreach($stats as $stat){
+				$res[$map[$stat['NewsletterSending']['id']]]['NewsletterSending'] = array_merge(
+					$res[$map[$stat['NewsletterSending']['id']]]['NewsletterSending'],
+					$stat[0]
+				);
+			}
+			//debug($res);
+		};
+		$this->set('newsletterSendings', $res);
+		$this->set('sendlists', $this->NewsletterSendlist->find('list',array('conditions'=>array('NewsletterSendlist.active'=>1))));
+	}
+	
 	function admin_add($newsletter_id = null,$sendlist_id = null) {
 		if (!$newsletter_id){
 			if (!empty($this->data['NewsletterSending']['newsletter_id'])) {
@@ -117,11 +206,21 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$this->data['NewsletterSending']['active'] = 1;
 				$this->data['NewsletterSending']['html'] = $newsletter['Newsletter']['html'];
 				$this->data['NewsletterSending']['status'] = "build";
-				$this->data['NewsletterSending']['date'] = date('Y-m-d H:i:s');
+				if(empty($this->data['NewsletterSending']['scheduled']) || !NewsletterConfig::load('cron')){
+					$this->data['NewsletterSending']['date'] = date('Y-m-d H:i:s');
+					$this->data['NewsletterSending']['scheduled'] = 0;
+				}
+				if($newsletter['Newsletter']['tested']){
+					$this->data['NewsletterSending']['confirm'] = 1;
+				}
 				//debug($this->data);
 				if ($this->NewsletterSending->save($this->data)) {
 					$this->Session->setFlash(__('The newsletter sending has been saved', true));
-					$this->redirect(array('action' => 'confirm',$this->NewsletterSending->id));
+					if(!empty($this->data['NewsletterSending']['confirm'])){
+						$this->redirect(array('action' => 'send', $this->NewsletterSending->id));
+					}else{
+						$this->redirect(array('action' => 'confirm', $this->NewsletterSending->id));
+					}
 				} else {
 					$this->Session->setFlash(__('The newsletter sending could not be saved. Please, try again.', true));
 				}
@@ -140,7 +239,43 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$this->helpers[] = 'O2form.O2form';
 		}
 		
-		$this->set(compact('newsletters'));
+		$this->set(compact('newsletter'));
+	}
+	
+	function admin_edit($id = null){
+		$format = $this->NewsletterSending->getDataSource()->columns['datetime']['format'];
+		$sending = $this->NewsletterSending->find('first',array(
+			'conditions'=>array(
+				'NewsletterSending.id'=>$id,
+				$this->NewsletterSending->getScheduledCond(),
+				'NewsletterSending.date > ' => date($format)
+			)
+		));
+		if(empty($sending)){
+			$this->Session->setFlash(__d('newsletter','Invalid Newsletter Sending', true));
+			$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
+		}
+		
+		
+		if (!empty($this->data)) {
+			if ($this->NewsletterSending->save($this->data)) {
+				$this->Session->setFlash(__('The newsletter sending has been saved', true));
+				$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
+			}else{
+				$this->Session->setFlash(__('The newsletter sending could not be saved. Please, try again.', true));
+			}
+		}else{
+			$this->data = $sending;
+		}
+		
+		
+		$this->set('sendlists', $this->NewsletterSendlist->find('list',array('conditions'=>array('NewsletterSendlist.active'=>1))));
+		
+		if(in_array('O2form',App::objects('plugin'))){
+			$this->helpers[] = 'O2form.O2form';
+		}
+		
+		$this->set('sending', $sending);
 	}
 	
 	function admin_confirm($id = null){
@@ -162,7 +297,11 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$this->data['NewsletterSending']['html'] = $sending['Newsletter']['html'];
 			if ($this->NewsletterSending->save($this->data)) {
 				$this->Session->setFlash(__('The newsletter sending has been saved', true));
-				$this->redirect(array('action' => 'send',$this->NewsletterSending->id));
+				if($sending['NewsletterSending']['scheduled']){
+					$this->redirect(array('action' => 'scheduled',$this->NewsletterSending->id));
+				}else{
+					$this->redirect(array('action' => 'send',$this->NewsletterSending->id));
+				}
 			} else {
 				$this->Session->setFlash(__('The newsletter sending could not be saved. Please, try again.', true));
 			}
@@ -187,11 +326,23 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$id = $this->data['NewsletterSending']['id'];
 			}
 		}
+		$sending = null;
 		if($id){
 			$sending = $this->NewsletterSending->read(null,$id);
+			$newsletter = $sending;
+		}else{
+			$newsletter = null;
+			if(isset($this->params['named']['newsletter']) && is_numeric($this->params['named']['newsletter'])) {
+				$newsletterId = $this->params['named']['newsletter'];
+			}elseif(!empty($this->data['NewsletterSending']['newsletter_id'])){
+				$newsletterId = $this->data['NewsletterSending']['newsletter_id'];
+			}
+			if($newsletterId){
+				$newsletter = $this->NewsletterSending->Newsletter->read(null,$newsletterId);
+			}
 		}
 		$ajax = ($this->RequestHandler->isAjax() || !empty($this->params['named']['ajax']));
-		if(empty($sending)){
+		if(empty($sending) && empty($newsletter)){
 			$msg = __d('newsletter','Invalid Newsletter Sending.', true);
 			if($ajax){
 				$this->autoRender = false;
@@ -204,12 +355,24 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}
 		
 		if (!empty($this->data)) {
+			if(empty($sending)){
+				$sending = array($this->NewsletterSending->alias=>array(
+					'additional_emails' => $this->data['NewsletterSending']['test_email'],
+					'newsletter_id' => $newsletterId,
+					'active' => 1,
+					'status' => "test",
+					'date' => date('Y-m-d H:i:s'),
+				));
+				$this->NewsletterSending->save($sending);
+				$sending = $this->NewsletterSending->read(null,$this->NewsletterSending->id);
+			}
 			unset($sending['NewsletterSending']['html']);
 			if($this->_sendEmail($this->data['NewsletterSending']['test_email'],$sending)){
 				$msg = __d('newsletter','Test email sent.', true);
 			}else{
 				$msg = __d('newsletter','Error, Test email could not be sent.', true);
 			}
+			$this->NewsletterSending->Newsletter->save(array('id'=>$sending['Newsletter']['id'],'tested'=>1));
 			if($ajax){
 				$this->autoRender = false;
 				echo $msg;
@@ -229,6 +392,16 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 		}
 		$this->set('newsletterSending',$sending);
+		$this->set('newsletter',$newsletter);
+	}
+	
+	function admin_scheduled($id = null){
+		$sending = $this->NewsletterSending->find('first',array('conditions'=>array('NewsletterSending.id'=>$id,$this->NewsletterSending->getScheduledCond())));
+		if(empty($sending)){
+			$this->Session->setFlash(__d('newsletter','Invalid Newsletter Sending', true));
+			$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
+		}
+		$this->set('newsletterSending',$sending);
 	}
 	
 	function admin_send($id = null){
@@ -246,10 +419,17 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$this->Session->setFlash(__d('newsletter','Invalid Newsletter Sending', true));
 			$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
 		}
+		if(!empty($sending['NewsletterSending']['console'])){
+			$statistics = $this->_getStats($sending);
+			$this->set('statistics',$statistics);
+		}
 		$this->set('newsletterSending',$sending);
 	}
 	
 	function admin_start($id = null){
+		$this->layout = false;
+		$this->autoRender = false;
+		
 		if(!$id){
 			if(isset($this->params['named']['id']) && is_numeric($this->params['named']['id'])) {
 				$id = $this->params['named']['id'];
@@ -290,7 +470,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			);
 		}
 		
-		$this->resume($id);
+		$this->_process($id);
 		
 		
 		$this->_console_render();
@@ -366,7 +546,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$this->_console_render();
 	}
 	
-	function resume($sending){
+	function admin_resume($sending){
 		$this->layout = false;
 		$this->autoRender = false;
 		/*$this->_process($sending);
@@ -385,21 +565,51 @@ class NewsletterSendingsController extends NewsletterAppController {
 	}
 	
 	function cron_tcheck_send(){
-		$this->layout = false;
-		$this->autoRender = false;
-		if(!isset($this->params['named']['stream'])){
-			$this->params['named']['stream'] = 1;
+		if(NewsletterConfig::load('cron') || NewsletterConfig::load('_cronAuto')){
+			//$this->layout = false;
+			$this->autoRender = false;
+			
+			Cache::write('newsletter_autocron',1,'cron_cache');
+			
+			if(!isset($this->params['named']['stream'])){
+				$this->params['named']['stream'] = 1;
+			}
+			
+			$format = $this->NewsletterSending->getDataSource()->columns['datetime']['format'];
+			$sending = $this->NewsletterSending->find('first',array(
+				'conditions'=>array(
+					'or'=>array(
+						'NewsletterSending.started'=>1,
+						array(
+							$this->NewsletterSending->getScheduledCond(),
+							'NewsletterSending.date <= ' => date($format),
+							'status NOT'=>'done'
+						)
+					),
+					'NewsletterSending.active'=>1,
+					'Newsletter.active'=>1
+				),
+				'recursive' => 0,
+			));
+			if(!empty($sending['NewsletterSending']['scheduled']) && empty($sending['NewsletterSending']['started'])){
+				$this->NewsletterSending->create();
+				$this->NewsletterSending->save(array(
+					'id'=> $sending['NewsletterSending']['id'],
+					'started'=> 1,
+				));
+				$this->log($this->NewsletterSending->data,'wtf');
+				$sending['NewsletterSending']['started'] = 1;
+			}
+			if(!empty($sending)){
+				$this->_process($sending);
+			}else{
+				$this->_consoleOut(null,__('All Sendings are Complete.',true),array('logGeneralMsg'=>false));
+			}
+			
+			$this->_console_render();
+			
+			$this->render(false);
 		}
-		
-		$this->NewsletterSending->recursive = -1;
-		$sending = $this->NewsletterSending->find('first',array('conditions'=>array('started'=>1,'active'=>1)));
-		if(!empty($sending)){
-			$this->resume($sending);
-		}else{
-			$this->_consoleOut(null,__('All Sendings are Complete.',true),array('logGeneralMsg'=>false));
-		}
-		
-		$this->_console_render();
 	}
 	
 	function admin_status($id = null){
@@ -422,22 +632,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			);
 		}
 		$this->NewsletterSended->recursive = -1;
-		$statistics = array(
-			'status'=>$sending['NewsletterSending']['status'],
-			'last_process_time'=>$sending['NewsletterSending']['last_process_time'],
-			'total_sended'=>$this->NewsletterSended->find('count',array('conditions'=>array('sending_id'=>$id,'status'=>array('sent','error')))),
-			'errors'=>$this->NewsletterSended->find('count',array('conditions'=>array('sending_id'=>$id,'status'=>array('error'))))
-		);
-		if($statistics['status']!='build'){
-			$statistics['remaining'] = $this->NewsletterSended->find('count',array('conditions'=>array('sending_id'=>$id,'status'=>array('ready','reserved'))));
-			if($statistics['remaining'] == 0){
-				$statistics['prc'] = '100 %';
-			}else{
-				$statistics['prc'] = number_format($statistics['total_sended']/($statistics['total_sended']+$statistics['remaining'])*100,2).' %';
-			}
-		}else{
-			$statistics['remaining'] = $statistics['prc'] = 'Calculating...';
-		}
+		$statistics = $this->_getStats($sending);
 		$ajax = ($this->RequestHandler->isAjax() || !empty($this->params['named']['ajax']));
 		if($ajax){
 			$json = array(
@@ -449,6 +644,27 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$this->set('ajax',$ajax);
 		$this->set('sending',$sending);
 		$this->set('statistics',$statistics);
+	}
+	
+	function _getStats($sending){
+		$id = $sending['NewsletterSending']['id'];
+		$statistics = array(
+			'status'=>$sending['NewsletterSending']['status'],
+			'last_process_time'=>$sending['NewsletterSending']['last_process_time'],
+			'total_sended'=>$this->NewsletterSended->find('count',array('conditions'=>array('sending_id'=>$id,'status'=>array('sent','error')),'recursive'=>-1)),
+			'errors'=>$this->NewsletterSended->find('count',array('conditions'=>array('sending_id'=>$id,'status'=>array('error')),'recursive'=>-1))
+		);
+		if($statistics['status']!='build'){
+			$statistics['remaining'] = $this->NewsletterSended->find('count',array('conditions'=>array('sending_id'=>$id,'status'=>array('ready','reserved')),'recursive'=>-1));
+			if($statistics['remaining'] == 0){
+				$statistics['prc'] = '100 %';
+			}else{
+				$statistics['prc'] = number_format($statistics['total_sended']/($statistics['total_sended']+$statistics['remaining'])*100,2).' %';
+			}
+		}else{
+			$statistics['remaining'] = $statistics['prc'] = 'Calculating...';
+		}
+		return $statistics;
 	}
 	
 	
@@ -479,9 +695,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 		set_time_limit(0);
 		$this->NewsletterSending->Behaviors->detach('History');
 		if(is_numeric($sending)){
+			$this->NewsletterSending->recursive = 0;
 			$sending = $this->NewsletterSending->read(null,$sending);
 		}
-		if(empty($sending)){
+		if(empty($sending['NewsletterSending']['active']) || empty($sending['Newsletter']['active'])){
 			$this->_consoleOut(false,
 				__d('newsletter','Invalid Newsletter Sending', true),
 				array('exit'=>true)
@@ -1029,6 +1246,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 	}
 	
 	function _sendEmail($email,$sending,$newsletter=null){
+	
+		//// get data ////
 		if(is_numeric($sending)){
 			$sending = $this->NewsletterSending->read(null,$sending);
 		}
@@ -1070,6 +1289,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$sended_id = $email['sended_id'];
 		}
 		
+		//// options ////
 		$this->Email->reset();
 		$smtpOptions = Configure::read('Newsletter.smtpOptions');
 		if(!empty($smtpOptions)){
@@ -1078,6 +1298,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$this->Email->delivery = 'smtp';
 		}
 		$this->Email->lineLength = 1000;
+		
+		//// get recipient (to) ////
 		if(isset($email['name']) && $email['name']){
 			$this->Email->to = $email['name'].' <'.$email['email'].'>';
 			$recipient_name = $email['name'];
@@ -1086,28 +1308,38 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$recipient_name = __d('newsletter','Mister/Miss',true);
 		}
 		$this->Email->subject = $newsletter['Newsletter']['title'];
+		
+		//// get sender (from) ////
+		if(!empty($sending['NewsletterSending']['sender_email'])){
+			$sender = $sending['NewsletterSending']['sender_email'];
+			if(!empty($sending['NewsletterSending']['sender_name'])){
+				$sender = $sending['NewsletterSending']['sender_name'].' <'.$sending['NewsletterSending']['sender_email'].'>';
+			}
+		}elseif(!empty($newsletter['Newsletter']['sender'])){
+			$sender = $newsletter['Newsletter']['sender'];
+		}elseif(Configure::read('Newsletter.sendEmail')){
+			$sender = Configure::read('Newsletter.sendEmail');
+			if(is_array($sender)){
+				$sender = reset($sender);
+			}
+		}else{
+			$sender = $this->EmailUtils->defaultEmail();
+		}
+		$this->Email->from = $sender;
+		
+		//// get replyTo ////
 		if(Configure::read('Newsletter.replyTo')){
 			$this->Email->replyTo = Configure::read('Newsletter.replyTo');
-		}elseif(Configure::read('Newsletter.sendEmail')){
-			$this->Email->replyTo = Configure::read('Newsletter.sendEmail');
 		}else{
-			$this->Email->replyTo = $this->EmailUtils->defaultEmail();
+			$this->Email->replyTo = $sender;
 		}
-		if(!empty($sending['NewsletterSending']['sender_email'])){
-			$this->Email->from = $sending['NewsletterSending']['sender_email'];
-			if(!empty($sending['NewsletterSending']['sender_name'])){
-				$this->Email->from = $sending['NewsletterSending']['sender_name'].' <'.$sending['NewsletterSending']['sender_email'].'>';
-			}
-		}else{
-			if(Configure::read('Newsletter.sendEmail')){
-				$this->Email->from = Configure::read('Newsletter.sendEmail');
-			}else{
-				$this->Email->from = $this->EmailUtils->defaultEmail();
-			}
-		}
+		
+		//// get errorReturn ////
 		if(Configure::read('Newsletter.errorReturn')){
 			$this->Email->return = Configure::read('Newsletter.errorReturn');
 		}
+		
+		//// Replace content placeholders ////
 		$this->Email->sendAs = 'html';
 		//$this->Email->template = 'newsletter';
 		//$this->Email->delivery = 'debug';
@@ -1116,7 +1348,6 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$cur_content = str_replace('%recipient_name%',$recipient_name,$cur_content);
 		$cur_content = str_replace('%recipient_email%',$email['email'],$cur_content);
 		$cur_content = str_replace('%recipient_email%',$email['email'],$cur_content);
-		
 		if(isset($email['data'])){
 			preg_match_all('/%mdata\:([\w.]+)%/', $cur_content, $matches, PREG_SET_ORDER);
 			foreach($matches as $matche){
@@ -1137,6 +1368,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 		}
 		
+		//// Send ////
 		if(!empty($sending['NewsletterSending']['wrapper'])){
 			$this->Email->template = $sending['NewsletterSending']['wrapper'];
 			$this->set(compact('email','sending','newsletter'));

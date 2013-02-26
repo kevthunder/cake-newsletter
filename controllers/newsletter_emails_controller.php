@@ -3,7 +3,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 
 	var $name = 'NewsletterEmails';
 	var $helpers = array('Html', 'Form');
-	var $components = array('Email','Newsletter.Funct');
+	var $components = array('Email','Newsletter.Funct','Newsletter.EmailUtils');
 
 	/*function index() {
 		$this->NewsletterEmail->recursive = 0;
@@ -104,9 +104,13 @@ class NewsletterEmailsController extends NewsletterAppController {
 		if(Configure::read('Newsletter.ConfirmEmail.sender')){
 			$this->Email->from = Configure::read('Newsletter.ConfirmEmail.sender');
 		}else if(Configure::read('Newsletter.sendEmail')){
-			$this->Email->from = Configure::read('Newsletter.sendEmail');
+			$sender = Configure::read('Newsletter.sendEmail');
+			if(is_array($sender)){
+				$sender = reset($sender);
+			}
+			$this->Email->from = $sender;
 		}else{
-			$this->Email->from = 'info@'.$this->Funct->get_base_server_name();
+			$this->Email->from = $this->EmailUtils->defaultEmail();
 		}
 		if(Configure::read('Newsletter.ConfirmEmail.replyTo')){
 			$this->Email->replyTo = Configure::read('Newsletter.ConfirmEmail.replyTo');
@@ -115,9 +119,13 @@ class NewsletterEmailsController extends NewsletterAppController {
 		}else if(Configure::read('Newsletter.replyTo')){
 			$this->Email->replyTo = Configure::read('Newsletter.replyTo');
 		}else if(Configure::read('Newsletter.sendEmail')){
-			$this->Email->replyTo = Configure::read('Newsletter.sendEmail');
+			$sender = Configure::read('Newsletter.sendEmail');
+			if(is_array($sender)){
+				$sender = reset($sender);
+			}
+			$this->Email->replyTo = $sender;
 		}else{
-			$this->Email->replyTo = 'info@'.$this->Funct->get_base_server_name();
+			$this->Email->replyTo = $this->EmailUtils->defaultEmail();
 		}
 		$this->Email->template = 'confirm';
 		if(Configure::read('Newsletter.ConfirmEmail.sendAs')){

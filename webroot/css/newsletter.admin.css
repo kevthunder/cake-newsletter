@@ -71,14 +71,71 @@ td.actions a.stats {
     text-indent: -99999px;
     width: 17px;
 }
+td.actions a.schedule {
+    background: url("../img/icon_schedule.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 17px;
+}
 
-.newsletters td.actions a.icon{
+td.actions a.continue {
+    background: url("../img/icon_refresh.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 17px;
+}
+
+td.actions a.test {
+    background: url("../img/icon_test.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 17px;
+}
+td.actions.labeled a.icon.warning,
+td.actions a.warning {
+    background: url("../img/icon_warning.png") no-repeat scroll top left transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: 0px;
+    width: auto;
+	padding: 0 0 0 15px;
+	margin: 0 6px;
+	text-decoration:none;
+}
+td.actions.labeled a.icon.warning span.nb,
+td.actions a.warning span.nb{
+    display:block;
+	position:relative;
+	right: 0px;
+	bottom: 0px;
+	width:auto;
+	padding: 0 4px 0 2px;
+	font-size: 8px;
+	line-height: 10px;
+	color: #ffffff;
+	background: none #dd5555;
+	margin: 3px 0 0 0;
+}
+
+td.actions.labeled a.icon{
 	position:relative;
 	margin: 0;
 	padding: 0 6px;
+    text-indent: 0px;
 }
 
-.newsletters td.actions a.icon span {
+td.actions.labeled a.icon span {
     display:none;
 	width:auto;
 	position:absolute;
@@ -90,12 +147,16 @@ td.actions a.stats {
 	background: url("../img/tool_tips.png") no-repeat scroll bottom right transparent;
 }
 
-.newsletters td.actions a.icon:hover span {
+td.actions.labeled a.icon:hover span {
     display:block;
 }
 
+.newsletterSendings td.actions {
+    width: 150px;
+}
+
 .newsletters td.actions {
-    width: 200px;
+    width: 250px;
 }
 
 #edit_zone{
@@ -393,6 +454,58 @@ td.actions a.stats {
 }
 
 /************************ NewsletterSending ************************/
+#NewsletterSendingAdminEditForm .listList:after,
+#NewsletterSendingAdminAddForm .listList:after {
+	visibility: hidden;
+	display: block;
+	font-size: 0;
+	content: " ";
+	clear: both;
+	height: 0;
+}
+* html              #NewsletterSendingAdminEditForm .listList,
+* html              #NewsletterSendingAdminAddForm .listList { zoom: 1; } /* IE6 */
+*:first-child+html  #NewsletterSendingAdminEditForm .listList,
+*:first-child+html  #NewsletterSendingAdminAddForm .listList { zoom: 1; } /* IE7 */
+
+#NewsletterSendingAdminEditForm .listList .col,
+#NewsletterSendingAdminAddForm .listList .col{
+	margin:0;
+	padding:0;
+	float: left;
+	width:33%;
+	clear:none;
+}
+#NewsletterSendingAdminAddForm div.schedule:after {
+	visibility: hidden;
+	display: block;
+	font-size: 0;
+	content: " ";
+	clear: both;
+	height: 0;
+}
+* html              #NewsletterSendingAdminAddForm div.schedule { zoom: 1; } /* IE6 */
+*:first-child+html  #NewsletterSendingAdminAddForm div.schedule { zoom: 1; } /* IE7 */
+#NewsletterSendingAdminAddForm div.schedule div.input{
+	float:left;
+	clear:none;
+}
+	#NewsletterSendingAdminAddForm div.schedule div.input.checkbox{
+		margin-top:3px;
+	}
+	#NewsletterSendingAdminAddForm div.schedule div.input label{
+		float:left;
+	}
+
+#NewsletterSendingAdminAddForm div.submit{
+	float: left;
+}
+#NewsletterSendingAdminAddForm .validated{
+	background: url(../img/checked.png) bottom left no-repeat;
+	display:block;
+	padding: 23px 0 0 22px;
+	float: left;
+}
 
 #NewsletterSendingAdminTestForm div.ajax_testing input{
 	width:300px;
@@ -434,6 +547,10 @@ td.actions a.stats {
 	display:none;
 }
 
+.sendForm .note{
+	margin:-1.2em 0 1.2em 0;
+}
+
 
 /************************ Sending console ************************/
 div.NewsletterSending div.consoleContainer div.console_box{
@@ -446,7 +563,9 @@ div.NewsletterSending div.consoleContainer div.console_box{
 	overflow : auto;
 }
 div.NewsletterSending div.consoleContainer a.button{
-	background: -moz-linear-gradient(center top , #3A88E2, #1C63B6) repeat scroll 0 0 #1C63B6;
+	background:#1c63b6;
+	background: -webkit-gradient(linear, left top, left bottom, from(#3a88e2), to(#1c63b6));
+	background-image: -moz-linear-gradient(top, #3a88e2, #1c63b6);
     border: 1px solid #1862B8;
     border-radius: 6px 6px 6px 6px;
     color: #FFFFFF;
@@ -462,7 +581,9 @@ div.NewsletterSending div.consoleContainer a.button:hover{
 }
 div.NewsletterSending div.consoleContainer a.highlight_button{
 	border-color : #9B095E;
-	background: -moz-linear-gradient(center top , #EA068D, #9B095E) repeat scroll 0 0 #1C63B6;
+	background:#9B095E;
+	background: -webkit-gradient(linear, left top, left bottom, from(#EA068D), to(#9B095E));
+	background-image: -moz-linear-gradient(top, #EA068D, #9B095E);
 }
 div.NewsletterSending div.consoleContainer a.highlight_button:hover{
 	background: none repeat scroll 0 0 #EA068D;

@@ -1,11 +1,15 @@
 <div class="NewsletterSending form">
 	<fieldset>
- 		<legend><?php __('Testing your Newsletter');?></legend>
+ 		<legend><?php echo str_replace('%title%',$newsletter['Newsletter']['title'],__d('newsletter','Testing the "%title%" Newsletter',true)); ?></legend>
 		<?php 
 			echo $form->create('NewsletterSending',array('action'=>'admin_test'));
-			echo $form->input('id');
+			if(!empty($newsletterSending)){
+				echo $form->input('id');
+			}else{
+				echo $form->hidden('newsletter_id',array('value'=>$newsletter['Newsletter']['id']));
+			}
 			echo $form->input('test_email');
-			echo $form->end(__('Send',true));
+			echo $form->end(__d('newsletter','Send',true));
 		?>
 		</div>
 	</fieldset>
