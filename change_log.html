@@ -263,6 +263,48 @@ pre{
         <li>Dans l'envoie, résolution du bug d'affichage des boutons</li>
         <li>Résolution d'un bug avec l'édition de bloc avec firebug</li>
     </ul>
+    <h1>v0.1.2.5.0</h1>
+    <ul>
+        <li>Envoie par mail gun
+			<ul>
+				<li>La class qui envoie les mail peux être setter dans les config
+					<pre>Configure::write('Newsletter.sender', 'Newsletter.Mailgun');</pre>
+				</li>
+				<li>Créé une campagne par infolettre</li>
+				<li>Transparent pour l'utilisateur</li>
+				<li>Vas chercher les informations de bounces quand on afiche les stats</li>
+			</ul>
+		</li>
+        <li>Config pour les Box
+			<ul>
+				<li>Label : sont affiché dans le combobox d'ajout et dans l'entête</li>
+				<li>Find callbacks</li>
+				<li>Render callback</li>
+			</ul>
+		</li>
+        <li>Config pour les templates uniformisé</li>
+        <li>la config "hiddenTemplates" pour empeche l'affichage de certains templates</li>
+        <li>Mise à jours des js
+			<ul>
+				<li>Jquery</li>
+				<li>Jquery UI</li>
+				<li>Colorbox</li>
+				<li>jquery.form</li>
+			</ul>
+		</li>
+        <li>EntryFinder
+			<ul>
+				<li>Si une liste est présenter dans les variables de la view, ce seras utiliser pour faire un combobox</li>
+				<li>Les vue généric peuvent maitanant faire afficher plus de champs si la variable commonFields est présente dans le model</li>
+				<li>Bug fix</li>
+			</ul>
+		</li>
+        <li>Ajout d'un loader au submit d'une boite</li>
+		<li>Bug fix : redirection d'un envoie en shedule quand l'infolettre est déjà testé</li>
+        <li>Les requete des stats sont maintenant faite avec les normes de cake</li>
+        <li>Amélioration de la compatibilité avec des anciennes données</li>
+        <li>Encapsulation de plusieurs erreurs possible dans les js</li>
+    </ul>
 </div>
 </body>
 </html>
