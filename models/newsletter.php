@@ -71,16 +71,26 @@ class Newsletter extends NewsletterAppModel {
 		return $fields;
 	}
 	
-	function beforeConfig(){
-		if(isset($this->data[$this->alias]['TemplateConfig'])){
-			$this->data[$this->alias]['TemplateConfig']->beforeConfig($this);
+	function getConfig($data= null){
+		if(empty($data)){
+			$data = $this->data;
 		}
-	}
-	
-	function beforeRender(){
-		if(isset($this->data[$this->alias]['TemplateConfig'])){
-			$this->data[$this->alias]['TemplateConfig']->beforeRender($this);
+		if(!empty($data['TemplateConfig'])){
+			return $data['TemplateConfig'];
+		}elseif(!empty($data[$this->alias]['TemplateConfig'])){
+			return $data[$this->alias]['TemplateConfig'];
 		}
+		$template = null;
+		if(!empty($data['template'])){
+			$template = $data['template'];
+		}
+		if(!empty($data[$this->alias]['template'])){
+			$template = $data[$this->alias]['template'];
+		}
+		if(!empty($template)){
+			return ClassCollection::getObject('NewsletterConfig',$template);
+		}
+		return null;
 	}
 	
 	/*function beforeSave($options) {
@@ -124,8 +134,12 @@ class Newsletter extends NewsletterAppModel {
 				$res =& $resRoot;
 			}
 			
-			if(!empty($res['template'])){
-				$res['TemplateConfig'] = ClassCollection::getObject('NewsletterConfig',$res['template']);
+			$res['TemplateConfig'] = $this->getConfig($res);
+			if(!empty($res['TemplateConfig'])){
+				$result = $res['TemplateConfig']->afterFind($this,$res);
+				if(!empty($result)){
+					$res = $result;
+				}
 			}
 			
 			if(!empty($resRoot['NewsletterAssoc'])){

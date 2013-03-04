@@ -2,7 +2,7 @@
 class NewsletterAssetsController extends NewsletterAppController {
 
 	var $name = 'NewsletterAssets';
-	var $helpers = array('Html', 'Form', 'Newsletter.Newsletter', 'Javascript');
+	var $helpers = array('Html', 'Form', 'Newsletter.NewsletterMaker', 'Javascript');
 	var $uses = array();
 	var $components = array('Newsletter.Funct');
 	
@@ -65,14 +65,21 @@ class NewsletterAssetsController extends NewsletterAppController {
 		$showFields = array(
 			'id',
 			'displayField',
-			'title','title_fre',
-			'desc','desc_fre'
+			'title',
+			'desc',
 		);
+		if(!empty($modelObj->commonFields)){
+			$showFields = array_merge($showFields,(array)$modelObj->commonFields);
+		}
+		$lang = Configure::read('Config.language');
 		$finalShowFields = array();
 		array_search('displayField',$finalShowFields);
 		foreach($showFields as $field){
 			if($modelObj->hasField($field)){
 				$finalShowFields[] = $field;
+			}
+			if($lang && $modelObj->hasField($field.'_'.$lang)){
+				$finalShowFields[] = $field.'_'.$lang;
 			}
 		}
 		if(in_array('displayField',$showFields) && !in_array($modelObj->displayField,$finalShowFields)){

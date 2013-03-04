@@ -10,19 +10,19 @@ class NewsletterTemplateConfig extends Object {
 	
 	
 	
-	function beforeConfig(&$model){
+	function beforeConfig($data,$controller){ //deprecated
+	}
+	
+	function beforeRender($data,$controller){
 	
 	}
 	
-	function beforeRender(&$model){
-	
+	function beforeRenderEdit($data,$controller){
+		return $this->beforeConfig($data,$controller);//deprecated
 	}
 	
 	
-	function beforeFind(&$model, $queryData){
-	}
-	
-	function afterFind(&$model, $results,  $primary){
+	function afterFind(&$model, $result){
 	}
 	
 	function beforeValidate(&$model){

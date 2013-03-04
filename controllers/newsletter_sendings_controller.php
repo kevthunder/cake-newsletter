@@ -217,7 +217,11 @@ class NewsletterSendingsController extends NewsletterAppController {
 				if ($this->NewsletterSending->save($this->data)) {
 					$this->Session->setFlash(__('The newsletter sending has been saved', true));
 					if(!empty($this->data['NewsletterSending']['confirm'])){
-						$this->redirect(array('action' => 'send', $this->NewsletterSending->id));
+						if($this->data['NewsletterSending']['scheduled']){
+							$this->redirect(array('action' => 'scheduled',$this->NewsletterSending->id));
+						}else{
+							$this->redirect(array('action' => 'send',$this->NewsletterSending->id));
+						}
 					}else{
 						$this->redirect(array('action' => 'confirm', $this->NewsletterSending->id));
 					}
@@ -566,7 +570,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 	
 	function cron_tcheck_send(){
 		if(NewsletterConfig::load('cron') || NewsletterConfig::load('_cronAuto')){
-			//$this->layout = false;
+			$this->layout = false;
 			$this->autoRender = false;
 			
 			Cache::write('newsletter_autocron',1,'cron_cache');
@@ -608,7 +612,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			
 			$this->_console_render();
 			
-			$this->render(false);
+			//$this->render(false);
 		}
 	}
 	
@@ -734,7 +738,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		return true;
 	}
 	
-	function _send($sending, $max = 1000){
+	function _send($sending, $max = 10000){
 		if(is_numeric($sending)){
 			$sending = $this->NewsletterSending->read(null,$sending);
 		}
@@ -747,50 +751,57 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$id = $sending['NewsletterSending']['id'];
 	
 		if(!$max){
-			$max = 1000;
+			$max = 10000;
 		}
 		$i = 0;
-		$chunk = Configure::read('Newsletter.sending_chunck');
-		if(empty($chunk)){
-			$chunk = 10;
-		}
 		$belongsToTmp = $this->NewsletterSended->belongsTo;
 		$this->NewsletterSended->recursive = -1;
 		$this->NewsletterSended->belongsTo = array();
 		$this->NewsletterSended->Behaviors->attach('Containable');
 		$continue = $this->_valid_sending($id);
 		$done = false;
-		while($i<$max && $continue){
+		
+		
+		//// init sender class ////
+		App::import('Lib', 'Newsletter.ClassCollection');
+		$senderOpt = NewsletterConfig::load('sender');
+		if(!is_array($senderOpt)){
+			$senderOpt = array('name' => $senderOpt);
+		}
+		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
+		$sender->init($this,$senderOpt);
+		
+		//// parse global option ////
+		$opt = $this->_parseGlobalOpt($sending);
+		if(method_exists($sender,'editGlobalOpt')){
+			$opt = $sender->editGlobalOpt($opt);
+		}
+		
+		//// get chunk/batch size ////
+		$chunk = Configure::read('Newsletter.sending_chunck');
+		if(empty($chunk)){
+			if(!empty($sender->batchSize)){
+				$chunk = $sender->batchSize;
+			}else{
+				$chunk = 10;
+			}
+		}
+		
+		while($i*$chunk<$max && $continue){
 			$this->NewsletterSended->belongsTo = $belongsToTmp;
 			$toSend = $this->NewsletterSended->find('all',array('conditions'=>array('NewsletterSended.active'=>1,'NewsletterSended.status'=>'ready','NewsletterSended.sending_id'=>$id),'limit'=>$chunk,'contain'=>'NewsletterEmail'));
 			$this->NewsletterSended->belongsTo = array();
+			$mailsOptions = array();
 			$ids = array();
 			if(!empty($toSend)){
 				foreach($toSend as $mail){
+					$mailsOptions[$mail['NewsletterSended']['id']] = $this->_parseRecipientOpt($mail,$opt);
 					$ids[] = $mail['NewsletterSended']['id'];
 				}
 				//debug($toSend);
 				$this->NewsletterSended->recursive = -1;
-				
 				if($this->NewsletterSended->updateAll($this->Funct->valFields(array('status'=>'reserved')),array('id'=>$ids,'active'=>1,'status'=>'ready')) && $this->NewsletterSended->getAffectedRows() == count($ids)){
-					foreach($toSend as $mail){
-						$this->_consoleOut($id,sprintf(__d('newsletter','sending to %s...', true),$mail['NewsletterSended']['email']));
-						$this->NewsletterSended->create();
-						$data = array('id'=>$mail['NewsletterSended']['id']);
-						if($this->_sendEmail($mail,$sending)){
-							$this->_consoleOut($id,__d('newsletter','Done', true),null,false);
-							$data['status'] = 'sent';
-						}else{
-							$this->_consoleOut($id,__d('newsletter','Error', true),null,false);
-							if(!empty($this->Email->smtpError)){
-								$data['error'] = $this->Email->smtpError;
-							}
-							$data['status'] = 'error';
-						}
-						$this->NewsletterSended->save($data);
-						$this->_updateProcessTime($id,true);
-					}
-					//$this->NewsletterSended->updateAll($this->Funct->valFields(array('status'=>'ready')),array('id'=>$ids));
+					$this->_sendBatch($sender,$opt,$mailsOptions);
 				}else{
 					$this->_consoleOut($id,
 						__d('newsletter','Could not reserve email, there may be an another process using this sending', true),
@@ -823,6 +834,55 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}
 		
 		return true;
+	}
+	
+	function _sendBatch($sender,$opt,$mailsOptions){
+		$id = $opt['sending']['NewsletterSending']['id'];
+		if(method_exists($sender,'sendBatch')){
+			$this->_consoleOut($id,sprintf(__d('newsletter','sending a batch of %s emails...', true),count($mailsOptions)));
+			$res = $sender->sendBatch($opt,$mailsOptions);
+			$this->NewsletterSended->recursive = -1;
+			$okIds = array();
+			$errorIds = array();
+			if(is_array($res)){
+				foreach($res as $mailId => $success){
+					if($success){
+						$okIds[] = $mailId;
+					}else{
+						$errorIds[] = $mailId;
+					}
+				}
+			}elseif($res){
+				$okIds = array_keys($mailsOptions);
+			}else{
+				$errorIds = array_keys($mailsOptions);
+			}
+			if(!empty($okIds)){
+				$this->NewsletterSended->updateAll($this->Funct->valFields(array('status'=>'sent')),array('id'=>$okIds));
+			}
+			if(!empty($errorIds)){
+				$this->NewsletterSended->updateAll($this->Funct->valFields(array('status'=>'error')),array('id'=>$okIds));
+			}
+			$this->_consoleOut($id,sprintf(__d('newsletter','%s sent, %s errors', true),count($okIds),count($errorIds)));
+		}else{
+			foreach($mailsOptions as $mailId => $mail){
+				$this->_consoleOut($id,sprintf(__d('newsletter','sending to %s...', true),$mail['email']['NewsletterSended']['email']));
+				$this->NewsletterSended->create();
+				$data = array('id'=>$mailId);
+				if($this->_sendSingle($sender,$opt,$mail)){
+					$this->_consoleOut($id,__d('newsletter','Done', true),null,false);
+					$data['status'] = 'sent';
+				}else{
+					$this->_consoleOut($id,__d('newsletter','Error', true),null,false);
+					if(!empty($this->Email->smtpError)){
+						$data['error'] = $this->Email->smtpError;
+					}
+					$data['status'] = 'error';
+				}
+				$this->NewsletterSended->save($data);
+				$this->_updateProcessTime($id,true);
+			}
+		}
 	}
 	
 	function _build($sending){
@@ -1245,8 +1305,9 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}
 	}
 	
-	function _sendEmail($email,$sending,$newsletter=null){
-	
+	function _parseGlobalOpt($sending,$newsletter=null){
+		$opt = array();
+		
 		//// get data ////
 		if(is_numeric($sending)){
 			$sending = $this->NewsletterSending->read(null,$sending);
@@ -1261,14 +1322,61 @@ class NewsletterSendingsController extends NewsletterAppController {
 		if(is_numeric($newsletter)){
 			$newsletter = $this->NewsletterSending->Newsletter->read(null,$newsletter);
 		}
-		$content = '';
+		$opt['content'] = '';
 		if(!empty($sending['NewsletterSending']['html'])){
-			$content = $sending['NewsletterSending']['html'];
-		}elseif(!empty($sending['Newsletter']['html'])){
-			$content = $sending['Newsletter']['html'];
+			$opt['content']  = $sending['NewsletterSending']['html'];
+		}elseif(!empty($newsletter['Newsletter']['html'])){
+			$opt['content']  = $newsletter['Newsletter']['html'];
+		}
+		$opt['sending'] = $sending;
+		$opt['newsletter'] = $newsletter;
+		
+		
+		//// get sender (from) ////
+		if(!empty($sending['NewsletterSending']['sender_email'])){
+			$opt['from'] = $sending['NewsletterSending']['sender_email'];
+			if(!empty($sending['NewsletterSending']['sender_name'])){
+				$opt['from'] = $sending['NewsletterSending']['sender_name'].' <'.$sending['NewsletterSending']['sender_email'].'>';
+			}
+		}elseif(!empty($newsletter['Newsletter']['sender'])){
+			$opt['from'] = $newsletter['Newsletter']['sender'];
+		}elseif(Configure::read('Newsletter.sendEmail')){
+			$opt['from'] = Configure::read('Newsletter.sendEmail');
+			if(is_array($opt['from'])){
+				$opt['from'] = reset($opt['from']);
+			}
+		}else{
+			$opt['from'] = $this->EmailUtils->defaultEmail();
 		}
 		
-		if(empty($email) || empty($content)){
+		//// get replyTo ////
+		if(Configure::read('Newsletter.replyTo')){
+			$opt['replyTo'] = Configure::read('Newsletter.replyTo');
+		}else{
+			$opt['replyTo'] = $opt['from'] ;
+		}
+		
+		//// get errorReturn ////
+		if(Configure::read('Newsletter.errorReturn')){
+			$opt['return'] = Configure::read('Newsletter.errorReturn');
+		}
+		
+		//// get subject ////
+		$opt['subject'] = $newsletter['Newsletter']['title'];
+		
+		//// wrapper ////
+		if(!empty($sending['NewsletterSending']['wrapper'])){
+			$opt['content'] = $this->_renderWrapper($sending['NewsletterSending']['wrapper'],$opt);
+		}
+		
+		return $opt;
+	}
+	
+	function _parseRecipientOpt($email,$globalOpt){
+		$opt = array();
+		
+		//// get data ////
+		if(empty($email)){
 			return false;
 		}
 		if(!is_array($email)){
@@ -1277,7 +1385,6 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$sended_id = 0;
 		if(!empty($email['NewsletterSended'])){
 			$fullData = $email;
-			//debug($fullData);
 			$email = $email['NewsletterSended'];
 			if(!empty($fullData['NewsletterEmail'])){
 				$email = array_merge($fullData['NewsletterEmail'],$email);
@@ -1288,68 +1395,26 @@ class NewsletterSendingsController extends NewsletterAppController {
 		if(!empty($email['sended_id'])){
 			$sended_id = $email['sended_id'];
 		}
+		$opt['email'] = $email;
+		$opt['sended_id'] = $sended_id;
 		
-		//// options ////
-		$this->Email->reset();
-		$smtpOptions = Configure::read('Newsletter.smtpOptions');
-		if(!empty($smtpOptions)){
-			//debug($smtpOptions);
-			$this->Email->smtpOptions = $smtpOptions;
-			$this->Email->delivery = 'smtp';
-		}
-		$this->Email->lineLength = 1000;
 		
 		//// get recipient (to) ////
 		if(isset($email['name']) && $email['name']){
-			$this->Email->to = $email['name'].' <'.$email['email'].'>';
+			$opt['to'] = $email['name'].' <'.$email['email'].'>';
 			$recipient_name = $email['name'];
 		}else{
-			$this->Email->to = $email['email'];
+			$opt['to'] = $email['email'];
 			$recipient_name = __d('newsletter','Mister/Miss',true);
-		}
-		$this->Email->subject = $newsletter['Newsletter']['title'];
-		
-		//// get sender (from) ////
-		if(!empty($sending['NewsletterSending']['sender_email'])){
-			$sender = $sending['NewsletterSending']['sender_email'];
-			if(!empty($sending['NewsletterSending']['sender_name'])){
-				$sender = $sending['NewsletterSending']['sender_name'].' <'.$sending['NewsletterSending']['sender_email'].'>';
-			}
-		}elseif(!empty($newsletter['Newsletter']['sender'])){
-			$sender = $newsletter['Newsletter']['sender'];
-		}elseif(Configure::read('Newsletter.sendEmail')){
-			$sender = Configure::read('Newsletter.sendEmail');
-			if(is_array($sender)){
-				$sender = reset($sender);
-			}
-		}else{
-			$sender = $this->EmailUtils->defaultEmail();
-		}
-		$this->Email->from = $sender;
-		
-		//// get replyTo ////
-		if(Configure::read('Newsletter.replyTo')){
-			$this->Email->replyTo = Configure::read('Newsletter.replyTo');
-		}else{
-			$this->Email->replyTo = $sender;
-		}
-		
-		//// get errorReturn ////
-		if(Configure::read('Newsletter.errorReturn')){
-			$this->Email->return = Configure::read('Newsletter.errorReturn');
 		}
 		
 		//// Replace content placeholders ////
-		$this->Email->sendAs = 'html';
-		//$this->Email->template = 'newsletter';
-		//$this->Email->delivery = 'debug';
-		$cur_content = $content;
-		$cur_content = str_replace('%sended_id%',$sended_id,$cur_content);
-		$cur_content = str_replace('%recipient_name%',$recipient_name,$cur_content);
-		$cur_content = str_replace('%recipient_email%',$email['email'],$cur_content);
-		$cur_content = str_replace('%recipient_email%',$email['email'],$cur_content);
+		$opt['replace'] = array(
+			'%sended_id%' => $sended_id,
+			'%recipient_name%' => $recipient_name,
+		);
 		if(isset($email['data'])){
-			preg_match_all('/%mdata\:([\w.]+)%/', $cur_content, $matches, PREG_SET_ORDER);
+			preg_match_all('/%mdata\:([\w.]+)%/', $globalOpt['content'], $matches, PREG_SET_ORDER);
 			foreach($matches as $matche){
 				$path = explode('.',$matche[1]);
 				if(count($path)==1){
@@ -1364,18 +1429,63 @@ class NewsletterSendingsController extends NewsletterAppController {
 						break;
 					}
 				}
-				$cur_content = str_replace($matche[0],$val,$cur_content);
+				$opt['replace'][$matche[0]] = $val;
 			}
 		}
 		
-		//// Send ////
-		if(!empty($sending['NewsletterSending']['wrapper'])){
-			$this->Email->template = $sending['NewsletterSending']['wrapper'];
-			$this->set(compact('email','sending','newsletter'));
-			$this->set('newsletterContent',$cur_content);
-			return $this->Email->send();
+		return $opt;
+	}
+	
+	function _renderWrapper($wrapper,$opt){
+		$viewClass = $this->view;
+
+		if ($viewClass != 'View') {
+			list($plugin, $viewClass) = pluginSplit($viewClass);
+			$viewClass = $viewClass . 'View';
+			App::import('View', $this->view);
+		}
+
+		$View = new $viewClass($this, false);
+		$View->layout = false;
+		
+		$opt['newsletterContent'] = $opt['content'];
+		
+		return $View->element('email' . DS . 'html' . DS . $wrapper, $opt, true);
+	}
+	
+	function _sendEmail($email,$sending,$newsletter=null){
+		
+		//// init sender class ////
+		App::import('Lib', 'Newsletter.ClassCollection');
+		$senderOpt = NewsletterConfig::load('sender');
+		if(!is_array($senderOpt)){
+			$senderOpt = array('name' => $senderOpt);
+		}
+		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
+		$sender->init($this,$senderOpt);
+		
+		//// parse global option ////
+		$opt = $this->_parseGlobalOpt($sending,$newsletter);
+		if(method_exists($sender,'editGlobalOpt')){
+			$opt = $sender->editGlobalOpt($opt);
+		}
+		
+		
+		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
+		$sender->init($this,$senderOpt);
+		
+		$mailOpt = $this->_parseRecipientOpt($email,$opt);
+	
+		return $this->_sendSingle($sender,$opt,$mailOpt);
+	}
+	
+	function _sendSingle($sender,$opt,$mailOpt = array()){
+		if(method_exists($sender,'send')){
+			return $sender->send(array_merge($opt,$mailOpt));
+		}elseif(method_exists($sender,'sendBatch')){
+			return $sender->sendBatch($opt,array($mailOpt));
 		}else{
-			return $this->Email->send($cur_content);
+			return false;
 		}
 	}
 

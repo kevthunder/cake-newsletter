@@ -340,6 +340,16 @@ td.actions.labeled a.icon:hover span {
 	margin-right:0px;
 	width:100%
 }
+#edit_zone .edit_form div.ajax_loader{
+	border: #cccccc 1px solid;
+	background:url(../img/ajax-loader.gif) #EEEEEE center center no-repeat;
+	height:50px;
+	width:50px;
+	top:50%;
+	left:50%;
+	position: absolute;
+	margin: -25px 0 0 -25px !important;
+}
 #edit_zone .edit_form div.input{
 	padding-right:6px;
 }
@@ -415,8 +425,9 @@ td.actions.labeled a.icon:hover span {
 /************************ box edit : Entry finder ************************/
 #edit_zone .entry_finder input{
 }
+#edit_zone .entry_finder select.id_input,
 #edit_zone .entry_finder input.id_input{
-	width:30%;
+	width:50%;
 	float:left;
 	clear:none;
 }

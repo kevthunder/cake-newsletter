@@ -1,6 +1,8 @@
 <?php
 class ClassCollection extends Object {
 
+	//App::import('Lib', 'Newsletter.ClassCollection'); 
+
 	var $types = array(
 		'NewsletterConfig'=>array(
 			'classSufix'=>'NewsletterConf',
@@ -26,6 +28,15 @@ class ClassCollection extends Object {
 				'name'=>'Newsletter.NewsletterTemplateConfig'
 			)
 		),
+		'NewsletterSender'=>array(
+			'classSufix'=>'NewsletterSender',
+			'fileSufix'=>null,
+			'paths'=>'%app%/libs/sender/',
+			'ext'=>'php',
+			'parent'=>array(
+				'name'=>'Newsletter.NewsletterSender'
+			)
+		),
 	);
 	var $defaultOptions = array(
 		'plugin'=>null,
@@ -34,6 +45,7 @@ class ClassCollection extends Object {
 		'paths'=>'%app%/libs/',
 		'ext'=>'php',
 		'parent'=>null,
+		'pluginPassthrough'=>false,
 		'defaultByParent'=>false,
 		'throwException'=>true,
 		'setName'=>false,
@@ -52,7 +64,7 @@ class ClassCollection extends Object {
 	}
 	
 	function parseClassName($options){
-		$name = $options['name'];
+		$name = Inflector::camelize($options['name']);
 		if(!empty($options['classSufix'])){
 			$name .= $options['classSufix'];
 		}
@@ -69,6 +81,7 @@ class ClassCollection extends Object {
 	function parseImportOption($options){
 		$_this =& ClassCollection::getInstance();
 		$options = Set::Merge($_this->defaultOptions,$options);
+		
 		if(strpos($options['name'],'.') !== false){
 			list($options['plugin'],$options['name']) = explode('.',$options['name'],2);
 		}
@@ -82,22 +95,94 @@ class ClassCollection extends Object {
 		}
 		$importOpt['file'] .= '.'.$options['ext'];
 		if(!empty($options['paths'])){
-			$paths = array();
-			$appPath = APP;
-			if(!empty($options['plugin'])){
-				$appPath = App::pluginPath( $options['plugin'] );
-			}
-			foreach((array)$options['paths'] as $path){
-				$path = str_replace('%app%',$appPath,$path);
-				$path = str_replace('/',DS,$path);
-				$path = str_replace(DS.DS,DS,$path);
-				$paths[] = $path;
-			}
-			$importOpt['search'] = $paths;
+			$importOpt['search'] = $_this->_getPaths($options);
 		}
 		//debug($importOpt);
 		
 		return $importOpt;
+	}
+	
+	function getPaths($typeOpt){
+		$_this =& ClassCollection::getInstance();
+		$opt = Set::Merge($_this->defaultOptions,$typeOpt);
+		return $_this->_getPaths($opt);
+	}
+	function _getPaths($typeOpt,$namedPlugin = false){
+		$paths = array();
+		if(!empty($typeOpt['paths'])){
+			if(empty($typeOpt['plugin'])){
+				if((!isset($typeOpt['plugin']) || $typeOpt['plugin'] !== false) && ($typeOpt['pluginPassthrough'] || $namedPlugin)){
+					$plugins = array_merge(array(null),App::objects('plugin'));
+				}else{
+					$plugins = array(null);
+				}
+			}elseif(!is_array($typeOpt['plugin'])){
+				$plugins = array($typeOpt['plugin']);
+			}
+			foreach((array)$typeOpt['paths'] as $path){
+				foreach($plugins as $p){
+					if(empty($p)){
+						$app = APP;
+						$p = 'app';
+					}else{
+						$app = App::pluginPath($p);
+					}
+					if(!empty($app)){
+						$ppath = str_replace('%app%',$app,$path);
+						$ppath = str_replace('/',DS,$ppath);
+						$ppath = str_replace(DS.DS,DS,$ppath);
+						if($namedPlugin){
+							$paths[$p][] = $ppath;
+						}else{
+							$paths[] = $ppath;
+						}
+					}
+				}
+			}
+		}
+		return $paths;
+	}
+	
+	function getList($type,$named=false){
+		$_this =& ClassCollection::getInstance();
+		$opt = $_this->types[$type];
+		$opt = Set::Merge($_this->defaultOptions,$opt);
+		
+		$ppaths = $_this->_getPaths($opt,true);
+		//debug($ppaths);
+		
+		$endsWith = $opt['fileSufix'].'.'.$opt['ext'];
+		
+		$items = array();
+		foreach($ppaths as $plugin => $paths){
+		foreach($paths as $path){
+			$Folder =& new Folder($path);
+			$contents = $Folder->read(false, true);
+			foreach ($contents[1] as $item) {
+				if (substr($item, - strlen($endsWith)) === $endsWith) {
+					$item = substr($item, 0, strlen($item) - strlen($endsWith));
+					if($named){
+							if($plugin != 'app'){
+								if($named === 'flat'){
+									$items[$plugin.'.'.$item] = Inflector::humanize($item);
+								}else{
+									$items[$plugin][$plugin.'.'.$item] = Inflector::humanize($item);
+								}
+							}else{
+						$items[$item] = Inflector::humanize($item);
+							}
+						}else{
+							if($plugin != 'app'){
+								$items[] = $plugin.'.'.$item;
+					}else{
+						$items[] = $item;
+					}
+				}
+			}
+		}
+			}
+		}
+		return $items;
 	}
 	
 	function getOption($type,$name){
@@ -128,10 +213,9 @@ class ClassCollection extends Object {
 		
 		$options = $_this->getOption($type,$name);
 		
-		$class = $_this->parseClassName($options);
-		$exitent = ClassRegistry::getObject($class);
-		if($exitent){
-			return $exitent;
+		$exitant = ClassRegistry::getObject($type.'.'.$name);
+		if($exitant){
+			return $exitant;
 		}
 		$isParent = false;
 		$class = $_this->getClass($type,$options,$isParent);
@@ -142,7 +226,7 @@ class ClassCollection extends Object {
 				$created->name = $options['name'];
 			}
 			if($created && !$isParent){
-				ClassRegistry::addObject($class, $created);
+				$success = ClassRegistry::addObject($type.'.'.$name, $created);
 			}
 			return $created;
 		}
@@ -164,6 +248,7 @@ class ClassCollection extends Object {
 		};
 		
 		$importOpt = $_this->parseImportOption($options);
+		//debug($importOpt);
 		
 		if(App::import($importOpt)){
 			return $importOpt['name'];

@@ -25,6 +25,7 @@
 		$(".newsletter_box .del_box_link").click(del_box_click);
 		$(".nltr_column > tbody").sortable({items: 'tr.box_row', connectWith: '.nltr_column > tbody', placeholder: 'placeholder',stop: order_change});
 		$("#edit_form_zone").draggable({handle:".edit_box_title"});
+		//$("#edit_form_zone").bind('contentAdded',addTinyMce);
 		
 		$("#NewsletterLang").change(updateLangInputs);
 		updateLangInputs();
@@ -144,7 +145,7 @@
 		$(this).attr("id","box"+id);
 		$(this).prepend('<a name="box'+id+'"></a>');
 		try{
-			w.location.href=w.location+"#box"+id;
+			w.location.href=w.location.toString().split('#')[0]+"#box"+id;
 		}catch(e){
 			if(window.console){
 				console.log('could not change url',e,e.message);
@@ -212,9 +213,13 @@
 		var edit_form = $("#edit_form_zone .edit_form");
 		var boxid = edit_form.attr("boxid");
 		var url = root+"admin/newsletter/newsletter/edit_box/"+edit_form.attr("boxid")+"/"+new Date().getTime();
-		if(window.tinyMCE){
-			tinyMCE.triggerSave();
-		}
+		submitTinyMCE();
+		$('input[type="file"]',edit_form).each(function(){
+			if(!$(this).val()){
+				$(this).remove();
+			}
+		});
+		edit_form.append('<div class="ajax_loader"></div>');
 		edit_form.find("form").ajaxForm({"url":url,"success":function(data){edit_form_sended(data,boxid)}});
 		edit_form.find("form").submit();
 		
@@ -245,28 +250,35 @@
 			preloader.css('right',10);
 			$(this).before(preloader);
 		});
-		$(window).error(tinyMceError);
-		tinyMCE.init({
-			mode : "specific_textareas",
-			plugins : "paste,template, table",
-			paste_remove_styles : true,
-			editor_selector : "tinymce",
-			theme : "advanced",
-			entities : "160,nbsp,38,amp,34,quot,162,cent,8364,euro,163,pound,165,yen,169,copy,174,reg,8482,trade,8240,permil,60,lt,62,gt,8804,le,8805,ge,176,deg,8722,minus",
-			entity_encoding : "named",
-			theme_advanced_resizing : true,
-			theme_advanced_statusbar_location : "bottom",
-			theme_advanced_toolbar_location : "top",
-			theme_advanced_toolbar_align : "left",
-			content_css : root+"css/admin/tinymce.css",
-			theme_advanced_buttons3_add : "pastetext, template, separator, tablecontrols",
-			paste_auto_cleanup_on_paste: true,
-			table_inline_editing : true,
-			paste_text_sticky: true,
-			relative_urls : false,
-			setupcontent_callback : tinyMceLoaded,
-			document_base_url : root
-		});
+		//$(window).error(tinyMceError);
+		try{
+			tinyMCE.init({
+				mode : "specific_textareas",
+				plugins : "paste,template, table",
+				paste_remove_styles : true,
+				editor_selector : "tinymce",
+				theme : "advanced",
+				entities : "160,nbsp,38,amp,34,quot,162,cent,8364,euro,163,pound,165,yen,169,copy,174,reg,8482,trade,8240,permil,60,lt,62,gt,8804,le,8805,ge,176,deg,8722,minus",
+				entity_encoding : "named",
+				theme_advanced_resizing : true,
+				theme_advanced_statusbar_location : "bottom",
+				theme_advanced_toolbar_location : "top",
+				theme_advanced_toolbar_align : "left",
+				content_css : root+"css/admin/tinymce.css",
+				theme_advanced_buttons3_add : "pastetext, template, separator, tablecontrols",
+				paste_auto_cleanup_on_paste: true,
+				table_inline_editing : true,
+				paste_text_sticky: true,
+				relative_urls : false,
+				setupcontent_callback : tinyMceLoaded,
+				document_base_url : root
+			});
+		}catch(e){
+			if(window.console){
+				console.log("Error while initing tinyMCE :",e,e.message);
+			}
+			tinyMceError();
+		}
 	};
 	function tinyMceError(){
 		$(window).unbind( 'error', tinyMceError );
@@ -278,6 +290,21 @@
 	}
 	function tinyMceLoaded(){
 		$('.tinymce_preloader').remove();
+	}
+	function submitTinyMCE(){
+		if(window.tinyMCE){
+			try{
+				tinyMCE.triggerSave();
+				/*$('textarea.tinymce').each(function(){
+					$(this).html(window.tinyMCE.get($(this).attr('id')).getContent());
+				});*/
+			}catch(e){
+				if(window.console){
+					console.log("Error while saving tinyMCE content :",e,e.message);
+				}
+				tinyMceError();
+			}
+		}
 	}
 	////////////////////////// box_edit EntriesSelect functions //////////////////////////
 	function entries_select_init($edit_box){
@@ -314,23 +341,31 @@
 	var $cur_entryFinder = null;
 	function entry_finder_init($edit_box){
 		//$(".entry_finder .bt_search",$edit_box).colorbox({onOpen:function(){alert("test0")},onLoad:function(){alert("test1")},onComplete:function(){alert("test2")}});
-		var entry_popup_init = function (){
-			$('#cboxLoadedContent a:not(.bt_select)').colorbox(colorbox_options);
-			$('#cboxLoadedContent a.bt_select').click(entry_select_bt_click);
-			$('#cboxLoadedContent form').ajaxForm({"success":function(data){
-				var opts = {'html':data};
-				$.colorbox($.extend({},colorbox_options,opts));
-			}});
+		if($(".entry_finder").length){
+			if($.colorbox){
+				var entry_popup_init = function (){
+					$('#cboxLoadedContent a:not(.bt_select)').colorbox(colorbox_options);
+					$('#cboxLoadedContent a.bt_select').click(entry_select_bt_click);
+					$('#cboxLoadedContent form').ajaxForm({"success":function(data){
+						var opts = {'html':data};
+						$.colorbox($.extend({},colorbox_options,opts));
+					}});
+				}
+				var colorbox_options = {maxHeight:"95%",onComplete:entry_popup_init};
+				
+				$(".entry_finder .bt_search",$edit_box).click(function(){
+					var $entryFinder = $(this).closest(".entry_finder");
+					$cur_entryFinder = $entryFinder;
+				});
+				$(".entry_finder .bt_search",$edit_box).colorbox(colorbox_options);
+				
+				$(".entry_finder .bt_load",$edit_box).click(entry_load_bt_click);
+			}else{
+				if(window.console){
+					console.log("Colorbox not loaded");
+				}
+			}
 		}
-		var colorbox_options = {maxHeight:"95%",onComplete:entry_popup_init};
-		
-		$(".entry_finder .bt_search",$edit_box).click(function(){
-			var $entryFinder = $(this).closest(".entry_finder");
-			$cur_entryFinder = $entryFinder;
-		});
-		$(".entry_finder .bt_search",$edit_box).colorbox(colorbox_options);
-		
-		$(".entry_finder .bt_load",$edit_box).click(entry_load_bt_click);
 	}
 	function entry_load_bt_click(){
 		var $entryFinder = $(this).closest(".entry_finder");

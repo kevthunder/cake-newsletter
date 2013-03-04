@@ -50,6 +50,7 @@ class NewsletterController extends NewsletterAppController {
 			$visite = array();
 			$visite['sended_id'] = $sended_id;
 			$visite['date'] = date('Y-m-d H:i:s');
+			$visite['action'] = 'click';
 			$visite['url'] = $url;
 			$visite['ip_address'] = $_SERVER['REMOTE_ADDR'];
 			$visite['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
@@ -70,6 +71,7 @@ class NewsletterController extends NewsletterAppController {
 			$visite = array();
 			$visite['sended_id'] = $sended_id;
 			$visite['date'] = date('Y-m-d H:i:s');
+			$visite['action'] = 'view';
 			$visite['ip_address'] = $_SERVER['REMOTE_ADDR'];
 			$visite['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
 			$this->NewsletterStat->save($visite);
@@ -258,7 +260,7 @@ class NewsletterController extends NewsletterAppController {
 		// Views
 		$dates = array();
 		$values = array();
-		$sql = "select count(*),DATE(NewsletterStats.date) as date from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is NULL group by DATE(NewsletterStats.date) order by DATE(NewsletterStats.date)";
+		$sql = "select count(*),DATE(NewsletterStats.date) as date from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is NULL AND (`action` IS NULL or `action` = 'view') group by DATE(NewsletterStats.date) order by DATE(NewsletterStats.date)";
 		$views = $this->NewsletterSended->query($sql);
 		$min_value = 99999999;
 		$max_value = 0;
@@ -275,6 +277,7 @@ class NewsletterController extends NewsletterAppController {
 			$max_value++;
 			$min_value--;
 		}
+		$min_value = 0;
 		//pr($dates);
 		$min_date = strtotime($views[0][0]["date"]);
 		$max_date = strtotime($views[sizeof($views) - 1][0]["date"]);
@@ -351,47 +354,198 @@ class NewsletterController extends NewsletterAppController {
 		set_time_limit(120);
 		//Configure::write('debug', 2);
 		
-		if (!$id) {
+		$newsletter = null;
+		if($id){
+			$newsletter = $this->Newsletter->read(null, $id);
+		}
+		
+		if (empty($newsletter)) {
 			$this->Session->setFlash(__d('newsletter','Invalid Newsletter.', true));
 			debug('Invalid Newsletter.');
 			$this->redirect(array('action'=>'index'));
 		}
-		$Newsletter = $this->Newsletter->read(null, $id);
-		//print_r($Newsletter);
-		//$Newsletter = array();
-		$this->set('Newsletter', $Newsletter);
 		
-		$sended_count = $this->NewsletterSended->find('count',array('conditions'=>array('NewsletterSended.newsletter_id'=>$id)));
-		$this->set("sended_count",$sended_count);
+		//// init sender class ////
+		App::import('Lib', 'Newsletter.ClassCollection');
+		$senderOpt = NewsletterConfig::load('sender');
+		if(!is_array($senderOpt)){
+			$senderOpt = array('name' => $senderOpt);
+		}
+		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
 		
-		$sql = "select count(*) from newsletter_stats NewsletterStats LEFT JOIN newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is NULL";
-		$views = $this->NewsletterSended->query($sql);
-		$this->set("allviews",$views[0][0]['count(*)']);
+		$queries = array(
+			'sended_count' => array(
+				'conditions'=>array(
+					'NewsletterSended.newsletter_id'=>$id
+				),
+				'type' => 'count'
+			),
+			"allviews" => array(
+				'conditions'=>array(
+					'NewsletterSended.newsletter_id'=>$id,
+					'or' => array(
+						'NewsletterStat.action' => 'view',
+						array(
+							'NewsletterStat.action IS NULL',
+							'NewsletterStat.url' => null,
+						)
+					)
+				),
+				'model'=>'NewsletterStat',
+				'type' => 'count'
+			),
+			"uniqueviews" => array(
+				'fields'=>array(
+					'count(DISTINCT NewsletterStat.sended_id) as uniqueviews'
+				),
+				'conditions'=>array(
+					'NewsletterSended.newsletter_id'=>$id,
+					'or' => array(
+						'NewsletterStat.action' => 'view',
+						array(
+							'NewsletterStat.action IS NULL',
+							'NewsletterStat.url' => null,
+						)
+					)
+				),
+				'model'=>'NewsletterStat',
+				'type' => 'first'
+			),
+			"clickedlinks"  => array(
+				'conditions'=>array(
+					'NewsletterSended.newsletter_id'=>$id,
+					'or' => array(
+						'NewsletterStat.action' => 'click',
+						array(
+							'NewsletterStat.action IS NULL',
+							'NewsletterStat.url IS NOT NULL',
+						)
+					)
+				),
+				'model'=>'NewsletterStat',
+				'type' => 'count'
+			),
+			"uniqueclics"  => array(
+				'fields'=>array(
+					'count(DISTINCT NewsletterStat.sended_id) as uniqueviews'
+				),
+				'conditions'=>array(
+					'NewsletterSended.newsletter_id'=>$id,
+					'or' => array(
+						'NewsletterStat.action' => 'click',
+						array(
+							'NewsletterStat.action IS NULL',
+							'NewsletterStat.url IS NOT NULL',
+						)
+					)
+				),
+				'model'=>'NewsletterStat',
+				'type' => 'first'
+			),
+			'toppages' => array(
+				'fields'=>array(
+					'count(*)',
+					'NewsletterStat.url'
+				),
+				'conditions'=>array(
+					'NewsletterSended.newsletter_id'=>$id,
+					'or' => array(
+						'NewsletterStat.action' => 'click',
+						array(
+							'NewsletterStat.action IS NULL',
+							'NewsletterStat.url IS NOT NULL',
+						)
+					)
+				),
+				'model'=>'NewsletterStat',
+				'group' => 'NewsletterStat.url',
+				'order' => 'count(*) DESC',
+				'limit' => 10,
+				'type' => 'all'
+			)
+		);
+		
+		if(method_exists($sender,'beforeStats')){
+			$res = $sender->beforeStats($this,$newsletter,$queries);
+			if(!empty($res) && is_array($res)){
+				$queries = $res;
+			}
+		}
+		
+		//print_r($newsletter);
+		//$newsletter = array();
+		
+		foreach($queries as $key => $q){
+			if(is_string($q) || !empty($q['sql'])){
+				if(is_string($q)){
+					$q = array('sql' => $q);
+				}
+				$res = $this->NewsletterSended->query($sql);
+				if(!empty($q['extract'])){
+					$stats[$key] = Set::extract($q['extract'],$res);
+				}else{
+					$stats[$key] = $res;
+				}
+			}else{
+				$type = 'all';
+				if(!empty($q['type'])) $type = $q['type'];
+				unset($q['type']);
+				$model = $this->NewsletterSended;
+				if(!empty($q['model'])) $model = $q['model'];
+				unset($q['model']);
+				if(is_string($model)){
+					if(!empty($this->{$model})) {
+						$model = $this->{$model};
+					}else{
+						$model = ClassRegistry::init($model);
+					}
+				}
+				$res = $model->find($type,$q);
+				if($type == 'count'){
+					$stats[$key] = $res;
+				}elseif($type == 'first'){
+					if(!empty($q['fields'])){
+						foreach($q['fields'] as $fkey => $f){
+							if(is_numeric($fkey)){
+								$fkey = $key;
+							}
+							$val = null;
+							if(preg_match('/^([0-9a-z_]+).([0-9a-z_]+)$/i',$f,$match)){
+								$val = Set::extract($f,$res);
+							}elseif(preg_match('/ as ([0-9a-z_]+)$/i',$f,$match)){
+								$val = $res[0][$match[1]];
+							}elseif(!empty($res[$model->alias][$f])){
+								$val = $res[$model->alias][$f];
+							}elseif(!empty($res[0][$f])){
+								$val = $res[0][$f];
+							}
+							$stats[$fkey] = $val;
+						}
+					}else{
+						$stats[$key] = $res;
+					}
+				}else{
+					$stats[$key] = $res;
+				}
+			}
+		}
+		
+		//debug($stats);
 		
 		
-		//$sql = "select count(*) from newsletter_sended NewsletterSended  where NewsletterSended.newsletter_id = '".$id."' and (select count(*) from newsletter_stats NewsletterStats where NewsletterStats.sended_id = NewsletterSended.id ) > 0";
-		$sql = "SELECT count(DISTINCT NewsletterStats.sended_id) as uniqueviews FROM newsletter_stats NewsletterStats LEFT JOIN newsletter_sended NewsletterSended ON  NewsletterSended.id = NewsletterStats.sended_id WHERE NewsletterSended.newsletter_id = '".$id."' AND url is NULL";
-		$unique = $this->NewsletterSended->query($sql);
-		$this->set("uniqueviews",$unique[0][0]['uniqueviews']);
-		//print_r($views);
-	
-		$sql = "select count(*) from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is not NULL";
-		$views = $this->NewsletterSended->query($sql);
-		$this->set("clickedlinks",$views[0][0]['count(*)']);
-		
-		//$sql = "select count(*) from newsletter_sended NewsletterSended  where NewsletterSended.newsletter_id = '".$id."' and (select count(*) from newsletter_stats NewsletterStats where NewsletterStats.sended_id = NewsletterSended.id AND url is not NULL) > 0";
-		$sql = "select count(DISTINCT NewsletterStats.sended_id) as uniqueclics from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is not NULL";
-		$unique = $this->NewsletterSended->query($sql);
-		$this->set("uniqueclics",$unique[0][0]['uniqueclics']);
-		
-		
-		$sql = "select count(*),url from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is not NULL group by url order by count(*) desc limit 10";
-		$views = $this->NewsletterSended->query($sql);
-		//print_r($views);
-		$this->set("toppages",$views);
-	
 		//$unique_views = $this->NewsletterStats->find('count',array('conditions'=>array('newsletter_id'=>$id)));
 		//$this->set("sended_count",$sended_count);
+		
+		
+		if(method_exists($sender,'afterStats')){
+			$res = $sender->afterStats($this,$newsletter,$stats);
+			if(!empty($res)){
+				$stats = $res;
+			}
+		}
+		
+		$this->set('Newsletter', $newsletter);
+		$this->set($stats);
 		
 		//$newsletterSended = $this->NewsletterSended->find('all', array('conditions'=>array('newsletter_id'=>$id)));
 		$newsletterSended = array();
@@ -465,8 +619,8 @@ class NewsletterController extends NewsletterAppController {
 		$this->layout = "newsletter";
 		if (!$id) {
 			$this->Session->setFlash(__d('newsletter','Invalid Newsletter.', true));
-			debug('Invalid Newsletter.');
-			//$this->redirect(array('action'=>'index'));
+			//debug('Invalid Newsletter.');
+			$this->redirect(array('action'=>'index'));
 		}
 		//debug($this->params);
 		$newsletter = $this->Newsletter->read(null, $id);
@@ -475,7 +629,10 @@ class NewsletterController extends NewsletterAppController {
 		foreach($newsletter_boxes as $box){
 			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
 		}
-		$this->Newsletter->beforeRender();
+		$config = $this->Newsletter->getConfig($this->Newsletter->data);
+		if(!empty($config)){
+			$config->beforeRender($this->Newsletter->data,$this);
+		}
 		$this->set('newsletter', $this->Newsletter->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);
 		$this->set('newsletter_data', $this->Newsletter->data);
@@ -500,7 +657,10 @@ class NewsletterController extends NewsletterAppController {
 			foreach($newsletter_boxes as $box){
 				$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
 			}
-			$this->Newsletter->beforeRender();
+			$config = $this->Newsletter->getConfig($this->Newsletter->data);
+			if(!empty($config)){
+				$config->beforeRender($this->Newsletter->data,$this);
+			}
 			$this->set('newsletter',$this->Newsletter->data);
 			$this->set('boxes_by_zone',$boxes_by_zone);
 			$this->set('newsletter_data', $this->Newsletter->data);
@@ -570,7 +730,10 @@ class NewsletterController extends NewsletterAppController {
 			$newsletterByLang = $this->Newsletter->find('list',array('fields'=>array('id','title','lang'),'conditions'=>array('id NOT'=>$id,'Newsletter.lang IS NOT NULL'), 'recursive' => -1));
 			$this->set('newsletterByLang',$newsletterByLang);
 		}
-		$this->Newsletter->beforeConfig();
+		$config = $this->Newsletter->getConfig($this->data);
+		if(!empty($config)){
+			$config->beforeRenderEdit($this->data,$this);
+		}
 		$this->set('newsletter',$this->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);
 		$this->set('templates',$this->Funct->getTemplates());
@@ -586,6 +749,11 @@ class NewsletterController extends NewsletterAppController {
 		$this->set('newsletter_box',$newsletter_box);
 		$this->data = $newsletter_box;
 		$this->set('newsletter',$newsletter);
+		
+		$config = $this->NewsletterBox->getConfig($newsletter_box);
+		if(!empty($config)){
+			$config->beforeRenderEdit($newsletter_box,$this);
+		}
 		$this->render(array('/elements/newsletter_box/'.$newsletter['Newsletter']['template'].'/'.$newsletter_box["NewsletterBox"]["template"].'_edit','/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"].'_edit'));
 		//$this->render('/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"]."_edit");
 	}
@@ -627,6 +795,7 @@ class NewsletterController extends NewsletterAppController {
 			}
 			//////// Gestion de fichiers ////////
 			if(isset($this->data["NewsletterBox"]["file"])){
+				//debug($this->data);
 				if(isset($newsletter_box["NewsletterBox"]["file"])){
 					$uploaded_files = $newsletter_box["NewsletterBox"]["file"];
 				}else{
@@ -634,13 +803,11 @@ class NewsletterController extends NewsletterAppController {
 				}
 				$files = $this->data["NewsletterBox"]["file"];
 				foreach($files as $name => $file){
-					if($file['error'] == 0) {
+					if(isset($file['error']) && $file['error'] == 0) {
 						$uploaded_files[$name] = $this->Funct->upload($file);
 						//debug($uploaded_files[$name]);
-					} else {
-						if(isset($file['del']) && $file['del']){
-							unset($uploaded_files[$name]);
-						}
+					} elseif(isset($file['del']) && $file['del']){
+						unset($uploaded_files[$name]);
 					}
 				}
 				if(count($uploaded_files)){
@@ -721,7 +888,7 @@ class NewsletterController extends NewsletterAppController {
 		
 		if($available){
 			if (!empty($this->data)) {
-				debug($this->data);
+				//debug($this->data);
 				if(!empty($this->data['Newsletter']['zip_file']) && $this->data['Newsletter']['zip_file']['error'] == 0  && $this->data['Newsletter']['zip_file']['type'] == 'application/zip'){
 					$i = 0;
 					while(file_exists(TMP.'newsletter'.DS.'import_'.$i.'.zip')){

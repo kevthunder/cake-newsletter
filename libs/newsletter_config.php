@@ -10,7 +10,9 @@ class NewsletterConfig extends Object {
 		'defaultSendlist' => 1,
 		'EmailAdd.confirm' => true,
 		'selfSending' => false,
+		'sender' => 'Newsletter.PhpMail',
 		'langs' => array(), //array('fre'=>'Français','eng'=>'English')
+		'hiddenTemplates' => array(),
 		'multimedia' => true,
 		'cron' => 'auto',
 	);

@@ -45,6 +45,28 @@ class NewsletterBox extends NewsletterAppModel {
 		return true;
 	}
 	
+	function getConfig($data= null){
+		if(empty($data)){
+			$data = $this->data;
+		}
+		if(!empty($data['TemplateConfig'])){
+			return $data['TemplateConfig'];
+		}elseif(!empty($data[$this->alias]['TemplateConfig'])){
+			return $data[$this->alias]['TemplateConfig'];
+		}
+		$template = null;
+		if(!empty($data['template'])){
+			$template = $data['template'];
+		}
+		if(!empty($data[$this->alias]['template'])){
+			$template = $data[$this->alias]['template'];
+		}
+		if(!empty($template)){
+			return ClassCollection::getObject('NewsletterBoxConfig',$template);
+		}
+		return null;
+	}
+	
 	function afterFind($results, $primary){
 		$doubleMulti = isset($results[0][$this->alias][0]);
 		if($doubleMulti){
@@ -87,6 +109,13 @@ class NewsletterBox extends NewsletterAppModel {
 				if(isset($box["data"]["file"])){
 					$box["file"] = $box["data"]["file"];
 					unset($box["data"]["file"]);
+				}
+			}
+			$box['TemplateConfig'] = $this->getConfig($box);
+			if(!empty($box['TemplateConfig'])){
+				$res = $box['TemplateConfig']->afterFind($this,$box);
+				if(!empty($res)){
+					$box = $res;
 				}
 			}
 			if($boxnamed){
@@ -146,7 +175,8 @@ class NewsletterBox extends NewsletterAppModel {
 	
 	
 	function json_dec($value){
-		return $this->recur_utf8_decode(json_decode($value,true));
+		//return $this->recur_utf8_decode(json_decode($value,true));
+		return json_decode($value,true);
 	}
 	function recur_utf8_decode($value){
 		if(is_string($value)){

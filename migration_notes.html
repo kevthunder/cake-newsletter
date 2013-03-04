@@ -129,7 +129,15 @@ ALTER TABLE `newsletters` ADD `tested` BOOLEAN NOT NULL AFTER `template`;
 ALTER TABLE `newsletters` ADD `sender` VARCHAR( 255 ) NULL AFTER `lang`;
 ALTER TABLE `newsletter_sendings` ADD `scheduled` BOOLEAN NULL AFTER `date`;
 </pre></li>
-        <li>Database : <pre></pre></li>
+    </ol>
+</div>
+<div class="section">
+    <h1>De v0.1.2.4.0 à v0.1.2.5.0</h1>
+    <ol>
+        <li>Database : <pre>
+ALTER TABLE `newsletters` ADD `external_key` VARCHAR( 255 ) NULL AFTER `tested`;
+ALTER TABLE `newsletter_stats` ADD `action` VARCHAR( 255 ) NULL AFTER `date`;
+</pre></li>
     </ol>
 </div>
 </body>

@@ -85,7 +85,7 @@ class NewsletterMakerHelper extends AppHelper {
 		
 		$boxList = NULL;
 		if($editMode){
-			$box_elements = $this->view->getVar('box_elements');
+			$box_elements = array_keys($this->view->getVar('box_elements'));
 			if(isset($options['allowedBox'])){
 				if(!is_array($options['allowedBox'])){
 					$options['allowedBox'] = array($options['allowedBox']);
@@ -450,7 +450,7 @@ class NewsletterMakerHelper extends AppHelper {
 				$between .= '<img src="'.$this->Photo->path($file['path'],$file["file"], array('size'=>'50x50', 'method'=>'resize')).'">';
 			}
 			$between .= '<p>Fichier actuel : '.$file['file'].'</p>';
-			$between .= $this->Form->input($name, array('type' => 'checkbox', 'label' => 'Effacer le fichier','name' => 'data[NewsletterBox][file]['.$name.'][del]'));
+			$between .= $this->Form->input($name, array('type' => 'checkbox', 'id'=>'NewsletterBox'.Inflector::camelize($name).'Del', 'label' => 'Effacer le fichier','name' => 'data[NewsletterBox][file]['.$name.'][del]'));
 		}
 		$options['between'] = $between;
 		$options['type'] = 'file';
@@ -490,7 +490,15 @@ class NewsletterMakerHelper extends AppHelper {
 		$options['after'] = $bt.$options['after'].'<br style="clear:both" />';
 		
 		if(!isset($options['field_name'])){
-			$options['field_name'] = $modelName."_id";
+			$options['field_name'] = Inflector::underscore($modelName."_id");
+		}
+		
+		if(empty($options['type']) && empty($options['options'])){
+			$values = $this->view->getVar(Inflector::tableize($modelName));
+			if(!empty($values) && empty($options['type']) && empty($options['options'])){
+				$options['type'] = 'select';
+				$options['options'] = $values;
+			}
 		}
 		
 		echo $this->editInput($options['field_name'],$options);

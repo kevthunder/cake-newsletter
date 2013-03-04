@@ -8,7 +8,7 @@ $script = '
 ';
 $javascript->codeBlock($script,array('inline'=>false));
 
-$javascript->link('/newsletter/js/jquery-1.4.2.min.js', false);
+//$javascript->link('/newsletter/js/jquery-1.9.1.min.js', false);
 $javascript->link('/newsletter/js/jquery-ui-1.7.2.custom.min', false);
 $javascript->link('/newsletter/js/jquery.form.js', false);
 //$javascript->link('tiny_mce/jquery.tinymce', false);
@@ -17,12 +17,12 @@ $javascript->link('/newsletter/js/newsletter', false);
 if(isset($multimedia) && NewsletterConfig::load('multimedia')){
 	$multimedia->display('NewsletterBox.empty');
 }
-?>
 
-<?php $html->css('/newsletter/css/newsletter.admin',null,array('inline'=>false)); ?>
+$html->css('/newsletter/css/newsletter.admin',null,array('inline'=>false)); 
+$html->css('/newsletter/css/colorbox.css',null,array('inline'=>false)); 
+$javascript->link('/newsletter/js/jquery.colorbox-min', false);
 
-<?php $html->css('/newsletter/css/colorbox.css',null,array('inline'=>false)); ?>
-<?php $javascript->link('/newsletter/js/jquery.colorbox-min', false) ?>
+ ?>
 <div style="display:none" class="ajax_loader"></div>
 <div class="newsletters form">
 <?php echo $form->create('Newsletter',array('onsubmit'=>'return newsletter_submit();','url'=>array('plugin' => 'newsletter', 'controller' => 'newsletter', 'action' => 'edit')));?>

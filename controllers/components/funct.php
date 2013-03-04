@@ -53,8 +53,12 @@ class FunctComponent extends Object
 	function getTemplates(){
 		$configs = $this->getTemplatesConfig();
 		
+		$templates = array();
+		$ignores = NewsletterConfig::load('hiddenTemplates');
 		foreach($configs as $name=>$config) {
-			$templates[$name] = $config->getLabel();
+			if(empty($ignores) || !in_array($name,$ignores)){
+				$templates[$name] = $config->getLabel();
+			}
 		}
 		return $templates;
 	}
@@ -84,7 +88,10 @@ class FunctComponent extends Object
 					$templateFiles = $this->Folder->find('.+\.ctp$');
 					foreach($templateFiles as &$file){
 						if(!preg_match("/_edit.ctp$/",$file)){
-							$boxElements[basename($file, ".ctp")] = basename($file, ".ctp");
+							$name = basename($file, ".ctp");
+							$config = ClassCollection::getObject('NewsletterBoxConfig',$name);
+							$boxElements[$name] = $config->getLabel();
+							//$boxElements[$name] = $name;
 						}
 					}
 				}
@@ -94,10 +101,12 @@ class FunctComponent extends Object
 		return $boxElements;
 	}
 	function json_enc($value){
-		return json_encode($this->recur_utf8_encode($value));
+		//return json_encode($this->recur_utf8_encode($value));
+		return json_encode($value);
 	}
 	function json_dec($value){
-		return $this->recur_utf8_decode(json_decode($value,true));
+		//return $this->recur_utf8_decode(json_decode($value,true));
+		return json_decode($value,true);
 	}
 	function recur_utf8_encode($value){
 		if(is_string($value)){
@@ -503,7 +512,7 @@ class FunctComponent extends Object
 			}
 		}
 		if($email == strval($email*1)){
-			debug($email);
+			//debug($email);
 			if(!empty($tableSendlist)){
 				$Model = $tableSendlist['modelClass'];
 				$mail = $Model->read(null,$email);

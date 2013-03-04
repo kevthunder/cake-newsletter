@@ -1,4 +1,4 @@
-<?php $html->css('/newsletter/css/newsletter.admin',null,null,false); ?>
+<?php $this->Html->css('/newsletter/css/newsletter.admin',null,array('inline'=>false)); ?>
 <?php 
 	$urlOptions = array();
 	$urlOptions[] = $modelName;

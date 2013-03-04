@@ -74,6 +74,7 @@ swfobject.embedSWF(
 	<?php } ?>
     <li><div class="label"><?php __d('newsletter','Unique views');?></div><?php echo $nbUniqueViews; ?> (<?php echo ($ndSended?round($nbUniqueViews/$ndSended*100, 2):0); ?>%)</li>
     <li><div class="label"><?php __d('newsletter','Cliqued links');?></div><?php echo $nbClick ?>
+
     <br >
     Top urls : 
     	<ul>
@@ -85,6 +86,9 @@ swfobject.embedSWF(
     	</ul>
     </li>
     <li><div class="label"><?php __d('newsletter','Unique visits');?></div><?php echo $nbVisite; ?> (<?php echo ($ndSended?round($nbVisite/$ndSended*100, 2):0); ?>%)</li>
+	<?php if( isset($bounces) ) { ?>
+		<li><div class="label"><?php __d('newsletter','Email bounced');?></div><?php echo $bounces ?>
+	<?php }?>
     <?php  
     /*ini_get('browscap')
 	if(ini_get('browscap')){

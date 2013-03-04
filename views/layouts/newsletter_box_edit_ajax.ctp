@@ -24,6 +24,6 @@
 ?>
 <?php header('Content-Type: text/html; charset='.(($charset = Configure::read('App.encoding'))?$charset:"utf-8"));  ?>
 <a class="close_link">x</a>
-<div class="edit_box_title"><?php echo ucfirst($newsletter_box["NewsletterBox"]["template"]); ?></div>
+<div class="edit_box_title"><?php echo ucfirst($newsletter_box["NewsletterBox"]["TemplateConfig"]->getLabel()); ?></div>
 <?php echo $content_for_layout; ?>
 
