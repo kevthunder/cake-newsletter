@@ -97,6 +97,6 @@ foreach ($newsletterEmails as $newsletterEmail):
 			$action['list_id'] = $sendlist['NewsletterSendlist']['id']; 
 		}
 		echo $html->link(__d('newsletter','New NewsletterEmail', true), $action); ?></li>
-        <li><?php echo $html->link('Toutes les listes de diffusion', array('plugin'=>'newsletter','controller' => 'newsletter_sendlists', 'action' => 'index')); ?></li>
+        <li><?php echo $html->link(__d('newsletter','Back to Sendlists', true), array('plugin'=>'newsletter','controller' => 'newsletter_sendlists', 'action' => 'index')); ?></li>
 	</ul>
 </div>

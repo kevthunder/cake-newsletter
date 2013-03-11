@@ -35,9 +35,9 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
 		echo $form->input('date');
 		$senders = Configure::read('Newsletter.sendEmail');
 		if(is_array($senders)){
-			echo $form->input('sender',array('options' =>array_combine($senders,$senders)));
+			echo $form->input('sender',array('options' =>array_combine($senders,$senders),'label'=>__d('newsletter','Sender',true)));
 		}
-		echo $form->input('template',array('options' =>$templates));
+		echo $form->input('template',array('options' =>$templates,'label'=>__d('newsletter','Template',true)));
 		$langs = NewsletterConfig::load('langs');
 		if(!empty($langs)){
 			if(count($langs) > 1){
@@ -88,6 +88,6 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
 <div class="actions">
 	<ul>
 		<li><?php echo $html->link(__d('newsletter','Delete', true), array('action' => 'delete', $form->value('Newsletter.id')), null, sprintf(__d('newsletter','Are you sure you want to delete # %s?', true), $form->value('Newsletter.id'))); ?></li>
-		<li><?php echo $html->link(__d('newsletter','List Newsletters', true), array('action' => 'index'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Back to Newsletters List', true), array('action' => 'index'));?></li>
 	</ul>
 </div>

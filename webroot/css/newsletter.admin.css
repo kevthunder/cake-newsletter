@@ -100,6 +100,15 @@ td.actions a.test {
     text-indent: -99999px;
     width: 17px;
 }
+td.actions a.add {
+    background: url("../img/icon_add.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 16px;
+}
 td.actions.labeled a.icon.warning,
 td.actions a.warning {
     background: url("../img/icon_warning.png") no-repeat scroll top left transparent;
@@ -149,6 +158,10 @@ td.actions.labeled a.icon span {
 
 td.actions.labeled a.icon:hover span {
     display:block;
+}
+
+.newsletterSendlists td.actions {
+    width: 150px;
 }
 
 .newsletterSendings td.actions {
@@ -562,6 +575,11 @@ td.actions.labeled a.icon:hover span {
 	margin:-1.2em 0 1.2em 0;
 }
 
+/************************ SendlLists ************************/
+.newsletterSendlists .input.importFirstRow{
+	margin: 10px 0 0 0;
+	padding-bottom: 0px;
+}
 
 /************************ Sending console ************************/
 div.NewsletterSending div.consoleContainer div.console_box{

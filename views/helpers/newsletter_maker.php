@@ -484,7 +484,7 @@ class NewsletterMakerHelper extends AppHelper {
 			$options['after'] = '';
 		}
 		$searchUrl = $this->html->url(array('plugin'=>'newsletter','controller' => 'newsletter_assets', 'action' => 'popup_entry_search',$model));
-		$bt = '<a class="bt_load newsletter_bt">'.__d('newsletter',"Load",true).'</a>';
+		$bt = '<a class="bt_load newsletter_bt">'.__d('newsletter',"Load Data",true).'</a>';
 		$bt .= '<a class="bt_search newsletter_bt" href="'.$searchUrl.'">'.__d('newsletter',"Search",true).'</a>';
 		$bt .= '<div class="loading" style="display:none"></div>';
 		$options['after'] = $bt.$options['after'].'<br style="clear:both" />';

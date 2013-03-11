@@ -1,5 +1,6 @@
 <div class="newsletterSendlists form">
 <?php
+	$html->css('/newsletter/css/newsletter.admin',null,array('inline'=>false));
 	$this->Html->scriptBlock('
 		(function( $ ) {
 			$(function(){
@@ -32,21 +33,27 @@
 ?>
 <?php echo $form->create('NewsletterSendlist',array('type'=>'file'));?>
 	<fieldset>
- 		<legend><?php __('Import NewsletterSendlist');?></legend>
+ 		<legend><?php __d('newsletter','Import NewsletterSendlist');?></legend>
 		<?php echo $this->Form->input('list_id',array(
-			'empty'=>'('.__('New',true).')',
+			'label'=>__d('newsletter','List were emails will be added',true),
+			'empty'=>'('.__d('newsletter','Create New List',true).')',
 		)); ?>
 		<?php echo $this->Form->input('new_list',array(
+			'label'=>__d('newsletter','Sendlist title',true),
 			'default'=>$this->data['NewsletterSendlist']['filename']
 		)); ?>
         <?php echo $this->Form->input('filename',array('type' => 'hidden')); ?>
 		
-		<h3><?php __('Columns mapping') ?></h3>
+		<h3><?php __d('newsletter','Columns mapping') ?></h3>
         <?php 
 		if(!array_key_exists('import_first_row',$this->data['NewsletterSendlist'])){
 			$this->Form->data['NewsletterSendlist']['import_first_row'] = $showFirst;
 		}
-		echo $this->Form->input('import_first_row',array('type' => 'checkbox')); ?>
+		echo $this->Form->input('import_first_row',array(
+			'label' => __d('newsletter','Import first row',true),
+			'type' => 'checkbox',
+			'div'=>array('class'=>'input checkbox importFirstRow'))
+		); ?>
         <?php $first_line = $teaser[0]; ?>
 		<table id="ImportMappingTable">
 			<tr>
@@ -59,7 +66,7 @@
 						echo $this->Form->input('NewsletterSendlist.cols.'.$key,array(
 							'label'=>false,
 							'options' => $fields,
-							'empty'=>'('.__('Ignore',true).')',
+							'empty'=>'('.__d('newsletter','Ignore',true).')',
 							'default'=>!empty($cols[$key])?$cols[$key]:null,
 						)); 
 					?>
@@ -96,5 +103,5 @@
 			</tr>
 		</table>
 	</fieldset>
-<?php echo $form->end('Submit');?>
+<?php echo $form->end(__('Submit',true));?>
 </div>

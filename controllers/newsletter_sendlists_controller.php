@@ -140,7 +140,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			$defFieldsAlias = array();
 			$fieldsList = array();
 			foreach($fields as $f => $opt){
-				$fieldsList[$f] = __($f,true);
+				$fieldsList[$f] = __(Inflector::humanize($f),true);
 				$defFieldsAlias[$f] = array($f);
 				$langTmp = Configure::read('Config.language');
 				foreach($langs as $l){
@@ -323,25 +323,25 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		if (!empty($this->data)) {
 			$this->NewsletterSendlist->create();
 			if ($this->NewsletterSendlist->save($this->data)) {
-				$this->Session->setFlash(__('The NewsletterSendlist has been saved', true));
+				$this->Session->setFlash(__d('newsletter','The NewsletterSendlist has been saved', true));
 				$this->redirect(array('action'=>'index'));
 			} else {
-				$this->Session->setFlash(__('The NewsletterSendlist could not be saved. Please, try again.', true));
+				$this->Session->setFlash(__d('newsletter','The NewsletterSendlist could not be saved. Please, try again.', true));
 			}
 		}
 	}
 
 	function admin_edit($id = null) {
 		if (!$id && empty($this->data)) {
-			$this->Session->setFlash(__('Invalid NewsletterSendlist', true));
+			$this->Session->setFlash(__d('newsletter','Invalid NewsletterSendlist', true));
 			$this->redirect(array('action'=>'index'));
 		}
 		if (!empty($this->data)) {
 			if ($this->NewsletterSendlist->save($this->data)) {
-				$this->Session->setFlash(__('The NewsletterSendlist has been saved', true));
+				$this->Session->setFlash(__d('newsletter','The NewsletterSendlist has been saved', true));
 				$this->redirect(array('action'=>'index'));
 			} else {
-				$this->Session->setFlash(__('The NewsletterSendlist could not be saved. Please, try again.', true));
+				$this->Session->setFlash(__d('newsletter','The NewsletterSendlist could not be saved. Please, try again.', true));
 			}
 		}
 		if (empty($this->data)) {
@@ -351,11 +351,11 @@ class NewsletterSendlistsController extends NewsletterAppController {
 
 	function admin_delete($id = null) {
 		if (!$id) {
-			$this->Session->setFlash(__('Invalid id for NewsletterSendlist', true));
+			$this->Session->setFlash(__d('newsletter','Invalid id for NewsletterSendlist', true));
 			$this->redirect(array('action'=>'index'));
 		}
 		if ($this->NewsletterSendlist->delete($id)) {
-			$this->Session->setFlash(__('NewsletterSendlist deleted', true));
+			$this->Session->setFlash(__d('newsletter','NewsletterSendlist deleted', true));
 			$this->redirect(array('action'=>'index'));
 		}
 	}

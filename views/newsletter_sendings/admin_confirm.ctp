@@ -47,7 +47,7 @@
 		<?php 
 			echo $form->create('NewsletterSending',array('class'=>'test_form','action'=>'admin_test'));
 			echo $form->input('id');
-			echo $form->input('test_email',array('div'=>array('class'=>'input text ajax_testing clearfix'),'after'=>$form->submit(__d('newsletter','Send',true))));
+			echo $form->input('test_email',array('label'=>__('Email',true),'div'=>array('class'=>'input text ajax_testing clearfix'),'after'=>$form->submit(__d('newsletter','Send',true))));
 			echo $form->end();
 		?>
 		</div>
@@ -55,7 +55,7 @@
 			echo $form->create('NewsletterSending',array('onsubmit'=>'return confirmSend();'));
 			echo $form->input('id');
 			echo $form->input('confirm',array('type'=>'hidden','value'=>1));
-			echo $html->link('<< '.__d('newsletter','Edit Newsletter', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'edit', $newsletterSending['NewsletterSending']['newsletter_id']));
+			echo $html->link('<< '.__d('newsletter','Edit back the Newsletter', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'edit', $newsletterSending['NewsletterSending']['newsletter_id']));
 			echo $form->submit(__d('newsletter','Continue Without testing',true),array('div'=>array('class'=>'submit submit_ignore')));
 			echo $form->submit(__d('newsletter','The email looks good, Continue',true),array('div'=>array('class'=>'submit submit_normal')));
 			echo $form->end();
@@ -64,6 +64,6 @@
 </div>
 <div class="actions">
 	<ul>
-		<li><?php echo $html->link(__('List Newsletters', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'index'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Back to Newsletters List', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'index'));?></li>
 	</ul>
 </div>

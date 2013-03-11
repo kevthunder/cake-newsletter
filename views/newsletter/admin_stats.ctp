@@ -48,6 +48,10 @@
 	return $stats;
 }*/
 $ndSended = $sended_count;
+$validSended = $sended_count;
+if( isset($bounces) ) {
+	$validSended -= $bounces;
+}
 $nbViews = $allviews;
 $nbUniqueViews = $uniqueviews;
 $nbClick = $clickedlinks;
@@ -72,7 +76,7 @@ swfobject.embedSWF(
   );
 </script>
 	<?php } ?>
-    <li><div class="label"><?php __d('newsletter','Unique views');?></div><?php echo $nbUniqueViews; ?> (<?php echo ($ndSended?round($nbUniqueViews/$ndSended*100, 2):0); ?>%)</li>
+    <li><div class="label"><?php __d('newsletter','Unique views');?></div><?php echo $nbUniqueViews; ?> (<?php echo ($ndSended?round($nbUniqueViews/$validSended*100, 2):0); ?>%)</li>
     <li><div class="label"><?php __d('newsletter','Cliqued links');?></div><?php echo $nbClick ?>
 
     <br >
@@ -85,7 +89,7 @@ swfobject.embedSWF(
     	}?>
     	</ul>
     </li>
-    <li><div class="label"><?php __d('newsletter','Unique visits');?></div><?php echo $nbVisite; ?> (<?php echo ($ndSended?round($nbVisite/$ndSended*100, 2):0); ?>%)</li>
+    <li><div class="label"><?php __d('newsletter','Unique visits');?></div><?php echo $nbVisite; ?> (<?php echo ($ndSended?round($nbVisite/$validSended*100, 2):0); ?>%)</li>
 	<?php if( isset($bounces) ) { ?>
 		<li><div class="label"><?php __d('newsletter','Email bounced');?></div><?php echo $bounces ?>
 	<?php }?>
@@ -152,7 +156,7 @@ swfobject.embedSWF(
 </div>
 <div class="actions">
 	<ul>
-		<li><?php echo $html->link(__('Generate Excel', true), array('action' => 'excel'));?></li>
-		<li><?php echo $html->link(__('List Newsletters', true), array('action' => 'index'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Generate Excel', true), array('action' => 'excel'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Back to Newsletters List', true), array('action' => 'index'));?></li>
 	</ul>
 </div>

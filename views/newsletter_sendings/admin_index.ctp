@@ -8,7 +8,18 @@
 		echo $this->Form->input('q', array('class' => 'keyword', 'label' => false, 'after' => $form->submit(__('Search', true), array('div' => false))));
 		echo $this->Form->end();
 	?>	
-	<h2><?php __('Newsletter Sendings');?></h2>
+	<?php  ?>
+	<h2>
+	<?php
+		if( !empty($scheduled) ) {
+			__d('newsletter','Scheduled Sendings list');
+		}elseif( !empty($pending) ) {
+			__d('newsletter','Incomplete Sendings list');
+		}else{
+			__d('newsletter','Newsletter Sendings');
+		}
+	?>
+	</h2>
 	
 	<table cellpadding="0" cellspacing="0">
 		<tr>
@@ -17,12 +28,12 @@
 			<?php if( empty($newsletter) ) { ?>
 			<th><?php echo $this->Paginator->sort('newsletter_id');?></th>			
 			<?php }?>
-			<th><?php echo $this->Paginator->sort('selected_lists');?></th>			
-			<th><?php echo $this->Paginator->sort(__d('newsletter','Additional Emails',true),'additional_emails');?></th>		
-			<th><?php echo $this->Paginator->sort('status');?></th>
+			<th><?php echo $this->Paginator->sort(__d('newsletter','Selected Sendlist(s)',true),'selected_lists');?></th>			
+			<th><?php echo $this->Paginator->sort(__d('newsletter','Additional Email(s)',true),'additional_emails');?></th>		
+			<th><?php echo $this->Paginator->sort(__d('newsletter','Status',true),'status');?></th>
 			<?php if( empty($pending) ) { ?>
-			<th><?php echo $this->Paginator->sort('started');?></th>
-			<th><?php echo $this->Paginator->sort('confirm');?></th>
+			<th><?php echo $this->Paginator->sort(__d('newsletter','Started',true),'started');?></th>
+			<th><?php echo $this->Paginator->sort(__d('newsletter','Confirmed',true),'confirm');?></th>
 			<?php }?>	
 			<th><?php __d('newsletter','Failed deliveries');?></th>
 			<th><?php __d('newsletter','Completion (%)');?></th>
@@ -42,7 +53,7 @@
 						<td class="date"><?php echo $newsletterSending['NewsletterSending']['date']; ?>&nbsp;</td>
 						<?php if( empty($newsletter) ) { ?>
 						<td>
-							<?php echo $this->Html->link($newsletterSending['Newsletter']['title'], array('controller' => 'newsletters', 'action' => 'edit', $newsletterSending['Newsletter']['id'])); ?>
+							<?php echo $this->Html->link($newsletterSending['Newsletter']['title'], array('plugin'=>'newsletter','controller' => 'newsletters', 'action' => 'edit', $newsletterSending['Newsletter']['id'])); ?>
 						</td>	
 						<?php }?>
 						<td class="selected_lists"><?php 
@@ -116,7 +127,9 @@
 </div>
 <div class="actions">
 	<ul>
-		<li><?php echo $this->Html->link(sprintf(__('New %s', true), __('Newsletter Sending', true)), array('action' => 'add')); ?></li>		<li><?php echo $this->Html->link(sprintf(__('List %s', true), __('Newsletters', true)), array('controller' => 'newsletters', 'action' => 'index')); ?> </li>
-		<li><?php echo $this->Html->link(sprintf(__('New %s', true), __('Newsletter', true)), array('controller' => 'newsletters', 'action' => 'add')); ?> </li>
+		<?php if( !empty($newsletter) ) { ?>	
+		<li><?php echo $this->Html->link(__d('newsletter','New Newsletter sending', true), array('action' => 'add',$newsletter['Newsletter']['id'])); ?></li>
+		<?php }?>
+		<li><?php echo $this->Html->link(__d('newsletter','Back to Newsletters List', true), array('plugin'=>'newsletter','controller' => 'newsletters', 'action' => 'index')); ?> </li>
 	</ul>
 </div>

@@ -27,7 +27,7 @@ echo $paginator->counter(array(
 	<th><?php echo $paginator->sort('id');?></th>
 	<th><?php echo $paginator->sort('title');?></th>
 	<th><?php echo $paginator->sort('date');?></th>
-	<th><?php echo $paginator->sort('template');?></th>
+	<th><?php echo $paginator->sort(__d('newsletter','Template',true),'template');?></th>
 	<th><?php echo $paginator->sort('active');?></th>
 	<!--
 	<th><?php echo $paginator->sort('created');?></th>

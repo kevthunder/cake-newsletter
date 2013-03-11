@@ -12,6 +12,6 @@
 </div>
 <div class="actions">
 	<ul>
-		<li><?php echo $html->link(__d('newsletter','List NewsletterSendlists', true), array('action' => 'index'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Back to Sendlists', true), array('action' => 'index'));?></li>
 	</ul>
 </div>

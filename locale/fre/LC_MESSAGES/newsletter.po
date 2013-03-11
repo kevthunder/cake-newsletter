@@ -63,8 +63,14 @@ msgstr "Liste"
 msgid "List Newsletters"
 msgstr "Liste des Newsletters"
 
+msgid "Back to Newsletters List"
+msgstr "Retour à la liste des infolettres"
+
 msgid "Edit Newsletter"
-msgstr "Éditer la Newsletter"
+msgstr "Édition de l'infolettre"
+
+msgid "Edit back the Newsletter"
+msgstr "Retour à l'édition de l'infolettre"
 
 msgid "Delete"
 msgstr "Effacer"
@@ -73,7 +79,7 @@ msgid "Are you sure you want to delete # %s?"
 msgstr "Voulez-vous vraiment effacer # %s?"
 
 msgid "Page %page% of %pages%, showing %current% records out of %count% total, starting on record %start%, ending on %end%"
-msgstr "Page %page% de %pages%, %current% entrés montrées sur un total de %count%, commençant à  %start%, finissant à  %end%"
+msgstr "Page %page% de %pages%, %current% entrées montrées sur un total de %count%, commençant à  %start%, finissant à  %end%"
 
 msgid "Send"
 msgstr "Envoyer"
@@ -94,10 +100,10 @@ msgid "next"
 msgstr "suivant"
 
 msgid "New Newsletter"
-msgstr "Nouvelle Newsletter"
+msgstr "Nouvelle infolettre"
 
 msgid "Add Newsletter"
-msgstr "Ajouter Newsletter"
+msgstr "Nouvelle infolettre"
 
 msgid "Send Newsletter"
 msgstr "Envoyer la Newsletter"
@@ -136,7 +142,7 @@ msgid "Newsletter deleted"
 msgstr "Newsletter Effacé"
 
 msgid "The Newsletter has been saved"
-msgstr "La Newsletter à été sauvegardée"
+msgstr "Infolettre sauvegardée"
 
 msgid "Add NewsletterSendlist"
 msgstr "Ajouter une liste de diffusion"
@@ -153,8 +159,8 @@ msgstr "Nouvelle liste de diffusion"
 msgid "NewsletterSendlist"
 msgstr "Liste de diffusion"
 
-msgid "View Emails"
-msgstr "Voir Emails"
+msgid "View Emails List"
+msgstr "Voir la liste des courriels"
 
 msgid "Mister/Miss"
 msgstr "Monsieur/madame"
@@ -163,10 +169,10 @@ msgid "Stats"
 msgstr "Statistiques"
 
 msgid "Newsletters Stats"
-msgstr "Statistiques Newsletters"
+msgstr "Statistiques d'envoi"
 
 msgid "Newsletters title"
-msgstr "Titre de la Newsletters"
+msgstr "Titre de l'infolettre"
 
 msgid "Sended to %d people"
 msgstr "Envoyée à %d personnes"
@@ -217,34 +223,40 @@ msgid "Invalid email."
 msgstr "Courriel invalide."
 
 msgid "Additional Emails"
-msgstr "Emails supplementaire"
+msgstr "Courriels supplementaires"
 
-msgid "Separate multiple emails by commas(,). eg: email1@server.com, email2@server.com"
-msgstr "Séparez plusieurs emails par des virgules(,); ex: email1@serveur.com, email2@serveur.com"
+msgid "Separate by commas"
+msgstr "Séparer pas des virgules"
+
+msgid "Eg: email1@server.com, email2@server.com"
+msgstr "Ex: email1@serveur.com, email2@serveur.com"
 
 msgid "Ignore contacts to whom this newsletter has already been sent"
-msgstr "Ignorer les contacts à qui cette infolettre a déjà été envoyé"
+msgstr "Ignorer les contacts à qui cette infolettre a déjà été envoyée"
+
+msgid "The newsletter sending has been saved"
+msgstr "Les paramètres d'envoi ont été sauvegardés"
 
 msgid "The Newsletter has been sended.(%s/%s)"
-msgstr "La Newsletter a été envoyée.(%s/%s)"
+msgstr "L'infolettre a été envoyée.(%s/%s)"
 
 msgid "You have uncompleted sendings"
 msgstr "Vous avez des envois inachevée"
 
 msgid "This Newsletter must be active in order to send it."
-msgstr "Cette Newsletter doit être activée afin d'être envoyée."
+msgstr "Cette infolettre doit être activée afin d'être envoyée."
 
 msgid "Test your newsletter"
-msgstr "Tester votre Newsletter"
+msgstr "Tester votre infolettre"
 
 msgid "Testing the \"%title%\" Newsletter"
-msgstr "Tester la Newsletter \"%title%\""
+msgstr "Tester l'infolettre \"%title%\""
 
 msgid "Send the \"%title%\" Newsletter"
-msgstr "Envoyer la Newsletter \"%title%\""
+msgstr "Envoyer l'infolettre \"%title%\""
 
 msgid "Failed deliveries"
-msgstr "Envois ayant échoué"
+msgstr "Courriels ayant échoués"
 
 msgid "Completion (%)"
 msgstr "Progression (%)"
@@ -253,13 +265,13 @@ msgid "Continue Without testing"
 msgstr "Continuer sans tester"
 
 msgid "The email looks good, Continue"
-msgstr "Le courriel est beaux, Continuer"
+msgstr "L'infolettre est parfaite, Continuer l'envoie"
 
 msgid "Do you really want to send the newsletter without testing it first ?"
-msgstr "Voulez-vous vraiment envoyer la Newsletter sans la tester d'abord ?"
+msgstr "Voulez-vous vraiment envoyer l'infolettre sans la tester d'abord ?"
 
 msgid "It is highly recommended to test your newsletter before sending it."
-msgstr "Il est grandement conseillé de tester votre newsletter avant de l'envoyé."
+msgstr "Il est grandement conseillé de tester votre infolettre avant de l'envoyé."
 
 msgid "Start"
 msgstr "Commencer"
@@ -273,11 +285,110 @@ msgstr "Annuler"
 msgid "Do you really want to send the newsletter now?"
 msgstr "Voulez-vous vraiment envoyer la Newsletter maintenant?"
 
-msgid "The "%title%" Newsletter is scheduled to be sent around the %date%"
-msgstr "La Newsletter "%title%" est prévu pour être envoyé dans les environs du %date%."
+msgid "The "%title%" Newsletter will be sent the %date%"
+msgstr "L'infolettre "%title%" sera envoyée le %date%."
 
-msgid "This time can vary depending on your server configuration and performance."
-msgstr "Ce temps peut varier selon la configuration de votre serveur et de ses performances"
+msgid "You can schedule some more sendings by repeating the last steps."
+msgstr "Vous pouvez refaire la même opération pour pré-programmer un autre envoi."
+
+msgid "Template"
+msgstr "Gabarit"
+
+msgid "Sender"
+msgstr "Expéditeur"
+
+msgid "Search"
+msgstr "Recherche"
+
+msgid "Load Data"
+msgstr "Importer"
+
+msgid "Schedule"
+msgstr "Horaire d'envois"
+
+msgid "Send automatically at :"
+msgstr "Envoyer automatiquement à :"
+
+msgid "Test email sent."
+msgstr "Test envoyé."
+
+msgid "Please check your inbox to review the newsletter."
+msgstr "Veuillez vérifier l'infolettre dans votre boîte courriel"
+
+msgid "Scheduled Sendings list"
+msgstr "Liste des envois pré-programmés"
+
+msgid "New Newsletter sending"
+msgstr "Configurer un nouvelle envoi"
+
+msgid "Selected Sendlists"
+msgstr "Listes de diffusion sélectionnées"
+
+msgid "Selected Sendlist(s)"
+msgstr "Liste(s) de diffusion sélectionnée(s)"
+
+msgid "Additional Email(s)"
+msgstr "Courriel(s) supplementaire(s)"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Started"
+msgstr "Démarré"
+
+msgid "Confirmed"
+msgstr "Confirmé"
+
+msgid "Paused"
+msgstr "En pause"
+
+msgid "Waiting"
+msgstr "En attente"
+
+msgid "Generate Excel"
+msgstr "Exporter les statistiques en format Excel"
+
+msgid "Email bounced"
+msgstr "Nombre de rebond(s)"
+
+msgid "Email count"
+msgstr "Nombre de courriels"
+
+msgid "Back to Sendlists"
+msgstr "Retour aux listes de diffusion"
+
+msgid "The NewsletterSendlist has been saved"
+msgstr "La liste de diffusion à été sauvegardée"
+
+msgid "NewsletterSendlist deleted"
+msgstr "La liste de diffusion à été supprimée"
+
+msgid "File to import"
+msgstr "Sélectionnez le fichier à importer"
+
+msgid "Import NewsletterSendlist"
+msgstr "Importation d'une liste de diffusion"
+
+msgid "Create New List"
+msgstr "Créer un nouvelle liste"
+
+msgid "List were emails will be added"
+msgstr "Liste de diffusion où les courriels vont être ajouté"
+
+msgid "Sendlist title"
+msgstr "Titre de la liste de diffusion"
+
+msgid "Columns mapping"
+msgstr "Choissez l'ordre des collonnes"
+
+msgid "Ignore"
+msgstr "Ignorer"
+
+msgid "Import first row"
+msgstr "Importer la première ligne du fichier"
+
+msgid ""
+msgstr ""
 
 msgid ""
 msgstr ""

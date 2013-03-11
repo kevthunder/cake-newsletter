@@ -14,6 +14,6 @@
 <div class="actions">
 	<ul>
 		<li><?php echo $html->link(__d('newsletter','Delete', true), array('action' => 'delete', $form->value('NewsletterSendlist.id')), null, sprintf(__('Are you sure you want to delete # %s?', true), $form->value('NewsletterSendlist.id'))); ?></li>
-		<li><?php echo $html->link(__d('newsletter','List NewsletterSendlists', true), array('action' => 'index'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Back to Sendlists', true), array('action' => 'index'));?></li>
 	</ul>
 </div>

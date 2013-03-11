@@ -57,10 +57,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 				//debug($this->data);
 				$allowed = array('sender_name','sender_email','additional_emails','newsletter_id','active','html','status','date','confirm','started','self_sending','wrapper','data');
 				if ($this->NewsletterSending->save($this->data,true,$allowed)) {
-					$this->Session->setFlash(__('The newsletter sending has been saved', true));
+					$this->Session->setFlash(__d('newsletter','The newsletter sending has been saved', true));
 					$this->redirect(array('action' => 'send',$this->NewsletterSending->id));
 				} else {
-					$this->Session->setFlash(__('The newsletter sending could not be saved. Please, try again.', true));
+					$this->Session->setFlash(__d('newsletter','The newsletter sending could not be saved. Please, try again.', true));
 				}
 			}else{
 				$this->Session->setFlash(__d('newsletter','Invalid Newsletter', true));
@@ -215,7 +215,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 				}
 				//debug($this->data);
 				if ($this->NewsletterSending->save($this->data)) {
-					$this->Session->setFlash(__('The newsletter sending has been saved', true));
+					$this->Session->setFlash(__d('newsletter','The newsletter sending has been saved', true));
 					if(!empty($this->data['NewsletterSending']['confirm'])){
 						if($this->data['NewsletterSending']['scheduled']){
 							$this->redirect(array('action' => 'scheduled',$this->NewsletterSending->id));
@@ -226,7 +226,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 						$this->redirect(array('action' => 'confirm', $this->NewsletterSending->id));
 					}
 				} else {
-					$this->Session->setFlash(__('The newsletter sending could not be saved. Please, try again.', true));
+					$this->Session->setFlash(__d('newsletter','The newsletter sending could not be saved. Please, try again.', true));
 				}
 			}else{
 				$this->Session->setFlash(__d('newsletter','Invalid Newsletter', true));
@@ -300,14 +300,14 @@ class NewsletterSendingsController extends NewsletterAppController {
 		if (!empty($this->data)) {
 			$this->data['NewsletterSending']['html'] = $sending['Newsletter']['html'];
 			if ($this->NewsletterSending->save($this->data)) {
-				$this->Session->setFlash(__('The newsletter sending has been saved', true));
+				$this->Session->setFlash(__d('newsletter','The newsletter sending has been saved', true));
 				if($sending['NewsletterSending']['scheduled']){
 					$this->redirect(array('action' => 'scheduled',$this->NewsletterSending->id));
 				}else{
 					$this->redirect(array('action' => 'send',$this->NewsletterSending->id));
 				}
 			} else {
-				$this->Session->setFlash(__('The newsletter sending could not be saved. Please, try again.', true));
+				$this->Session->setFlash(__d('newsletter','The newsletter sending could not be saved. Please, try again.', true));
 			}
 		}
 		
@@ -372,7 +372,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 			unset($sending['NewsletterSending']['html']);
 			if($this->_sendEmail($this->data['NewsletterSending']['test_email'],$sending)){
-				$msg = __d('newsletter','Test email sent.', true);
+				$msg = __d('newsletter','Test email sent.', true).' '.__d('newsletter','Please check your inbox to review the newsletter.', true);
 			}else{
 				$msg = __d('newsletter','Error, Test email could not be sent.', true);
 			}

@@ -45,7 +45,7 @@ $this->Html->scriptBlock('
 		if(!empty($this->O2form)){
 			echo $this->O2form->input('additional_emails', array('label'=>__d('newsletter','Additional Emails',true),'type' => 'multiple','fields'=>array('name','email'),'minRows'=>1));
 		}else{
-			echo $form->input('additional_emails', array('label'=>__d('newsletter','Additional Emails',true),'class'=>'noTinyMce','type' => 'textarea','after'=>'<div class="help">'.__d('newsletter','Separate multiple emails by commas(,). eg: email1@server.com, email2@server.com',true).'</div>'));
+			echo $form->input('additional_emails', array('label'=>__d('newsletter','Additional Emails',true).' ('.__d('newsletter','Separate by commas',true).')','class'=>'noTinyMce','type' => 'textarea','after'=>'<div class="help">'.__d('newsletter','Eg: email1@server.com, email2@server.com',true).'</div>'));
 		}
 		echo $form->input('check_sended', array('label'=>__d('newsletter','Ignore contacts to whom this newsletter has already been sent',true),'type' => 'checkbox', 'checked' => true));
 		
@@ -68,6 +68,6 @@ $this->Html->scriptBlock('
 </div>
 <div class="actions">
 	<ul>
-		<li><?php echo $html->link(__('List Newsletters', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'index'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Back to Newsletters List', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'index'));?></li>
 	</ul>
 </div>

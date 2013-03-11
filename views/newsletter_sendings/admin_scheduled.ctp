@@ -4,13 +4,13 @@
 		echo str_replace(
 				array('%title%','%date%'),
 				array($newsletterSending['Newsletter']['title'],date_('jS F Y G\hi',strtotime($newsletterSending['NewsletterSending']['date']))),
-				__d('newsletter','The "%title%" Newsletter is scheduled to be sent around the %date%',true)
+				__d('newsletter','The "%title%" Newsletter will be sent the %date%',true)
 			); 
 	?></h2>
-	<p><?php __d('newsletter','This time can vary depending on your server configuration and performance.'); ?></p>
+	<p><?php __d('newsletter','You can schedule some more sendings by repeating the last steps.'); ?></p>
 </div>
 <div class="actions">
 	<ul>
-		<li><?php echo $html->link(__('List Newsletters', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'index'));?></li>
+		<li><?php echo $html->link(__d('newsletter','Back to Newsletters List', true), array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action' => 'index'));?></li>
 	</ul>
 </div>
