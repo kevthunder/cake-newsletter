@@ -1,6 +1,6 @@
 <?php 
 /* SVN FILE: $Id$ */
-/* App schema generated on: 2013-02-21 14:02:42 : 1361455542*/
+/* App schema generated on: 2013-03-14 14:03:10 : 1363271590*/
 class AppSchema extends CakeSchema {
 	var $name = 'App';
 
@@ -30,7 +30,7 @@ class AppSchema extends CakeSchema {
 		'zone' => array('type' => 'string', 'null' => false, 'default' => NULL),
 		'order' => array('type' => 'integer', 'null' => false, 'default' => '0'),
 		'template' => array('type' => 'string', 'null' => false, 'default' => NULL),
-		'data' => array('type' => 'text', 'null' => false, 'default' => NULL),
+		'data' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'multimedia' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1)),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
@@ -76,6 +76,7 @@ class AppSchema extends CakeSchema {
 		'additional_emails' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'check_sended' => array('type' => 'boolean', 'null' => true, 'default' => NULL),
 		'date' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
+		'scheduled' => array('type' => 'boolean', 'null' => true, 'default' => NULL),
 		'html' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'sender_name' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'sender_email' => array('type' => 'string', 'null' => true, 'default' => NULL),
@@ -107,6 +108,7 @@ class AppSchema extends CakeSchema {
 		'id' => array('type' => 'integer', 'null' => false, 'default' => NULL, 'key' => 'primary'),
 		'sended_id' => array('type' => 'integer', 'null' => false, 'default' => NULL, 'key' => 'index'),
 		'date' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
+		'action' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'url' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'ip_address' => array('type' => 'string', 'null' => false, 'default' => NULL),
 		'user_agent' => array('type' => 'string', 'null' => false, 'default' => NULL),
@@ -120,8 +122,12 @@ class AppSchema extends CakeSchema {
 		'modified' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'title' => array('type' => 'string', 'null' => false, 'default' => NULL),
 		'date' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
+		'lang' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'sender' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'html' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'template' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'tested' => array('type' => 'boolean', 'null' => false, 'default' => NULL),
+		'external_key' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'cache_file' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1)),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
