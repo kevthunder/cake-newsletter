@@ -9,9 +9,9 @@ echo $form->create('NewsletterEmail', array('url'=>$url));?>
  		<legend><?php __d('newsletter','Add NewsletterEmail');?></legend>
 	<?php
 		echo $form->input('active', array('checked'=>1));
-		echo $form->input('name');
+		echo $form->input('name',array('label'=>__d('newsletter','Name',true)));
 		echo $form->input('email');
-		echo $form->input('sendlist_id');
+		echo $form->input('sendlist_id',array('label'=>__d('newsletter','Sendlist',true)));
 	?>
 	</fieldset>
 <?php echo $form->end(__d('newsletter','Submit',true));?>

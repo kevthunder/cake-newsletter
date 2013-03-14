@@ -50,7 +50,12 @@
 				?>
 					<tr<?php echo $class;?>>
 						<td class="id"><?php echo $newsletterSending['NewsletterSending']['id']; ?>&nbsp;</td>
-						<td class="date"><?php echo $newsletterSending['NewsletterSending']['date']; ?>&nbsp;</td>
+						<td class="date">
+			<?php 
+			if(strtotime($newsletter['Newsletter']['date']) != 0){
+				echo date_('jS F Y, G\hi',strtotime($newsletter['Newsletter']['date'])); 
+			}
+			?></td>
 						<?php if( empty($newsletter) ) { ?>
 						<td>
 							<?php echo $this->Html->link($newsletterSending['Newsletter']['title'], array('plugin'=>'newsletter','controller' => 'newsletters', 'action' => 'edit', $newsletterSending['Newsletter']['id'])); ?>

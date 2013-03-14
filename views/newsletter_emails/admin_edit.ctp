@@ -10,7 +10,7 @@ echo $form->create('NewsletterEmail', array('url'=>$url));?>
 	<?php
 		echo $form->input('id');
 		echo $form->input('active');
-		echo $form->input('name');
+		echo $form->input('name',array('label'=>__d('newsletter','Name',true)));
 		echo $form->input('email');
 	?>
 	</fieldset>

@@ -52,7 +52,11 @@ foreach ($newsletters as $newsletter):
 			<?php echo $newsletter['Newsletter']['title']; ?>
 		</td>
 		<td>
-			<?php echo $newsletter['Newsletter']['date']; ?>
+			<?php 
+			if(strtotime($newsletter['Newsletter']['date']) != 0){
+				echo date_('jS F Y',strtotime($newsletter['Newsletter']['date'])); 
+			}
+			?>
 		</td>
 		<td>
 			<?php if(!empty($newsletter['Newsletter']['TemplateConfig'])) echo $newsletter['Newsletter']['TemplateConfig']->getLabel(); ?>

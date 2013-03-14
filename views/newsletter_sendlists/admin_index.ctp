@@ -14,7 +14,6 @@ echo $paginator->counter(array(
 	<th><?php echo $paginator->sort('description');?></th>
 	<th><?php echo $paginator->sort('active');?></th>
 	<th><?php echo $paginator->sort(__d('newsletter','Created',true),'created');?></th>
-	<th><?php echo $paginator->sort(__d('newsletter','Modified',true),'modified');?></th>
 	<th><?php __d('newsletter','Email count');?></th>
 	<th class="actions"><?php __d('newsletter','Actions');?></th>
 </tr>
@@ -40,10 +39,11 @@ foreach ($newsletterSendlists as $newsletterSendlist):
 			<?php echo $newsletterSendlist['NewsletterSendlist']['active']; ?>
 		</td>
 		<td>
-			<?php echo $newsletterSendlist['NewsletterSendlist']['created']; ?>
-		</td>
-		<td>
-			<?php echo $newsletterSendlist['NewsletterSendlist']['modified']; ?>
+			<?php 
+			if(strtotime($newsletterSendlist['NewsletterSendlist']['created']) != 0){
+				echo date_('jS F Y',strtotime($newsletterSendlist['NewsletterSendlist']['created'])); 
+			}
+			?>
 		</td>
 		<td>
 			<?php echo $newsletterSendlist['NewsletterSendlist']['nb_email']; ?>
@@ -67,7 +67,7 @@ foreach ($newsletterSendlists as $newsletterSendlist):
 					array('class'=>'icon delete','escape' => false)
 				);
 				echo $html->link(
-					'<span>'.__d('newsletter','Nouveau Email', true).'</span>', 
+					'<span>'.__d('newsletter','Add Email', true).'</span>', 
 					array('plugin'=>'newsletter', 'controller'=>'newsletter_emails', 'action' => 'add', 'list_id'=>$newsletterSendlist['NewsletterSendlist']['id']),
 					array('class'=>'icon add','escape' => false)
 				);

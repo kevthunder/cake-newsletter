@@ -62,7 +62,7 @@ $this->Html->scriptBlock('
 	</fieldset>
 	<?php echo $form->submit(__d('newsletter','Continue',true));?>
 	<?php if( !empty($newsletter['Newsletter']['tested'] ) ) { ?>
-		<span class="validated"><?php __('This newsletter has been tested'); ?></span>
+		<span class="validated"><?php __d('newsletter','This newsletter has been tested'); ?></span>
 	<?php }?>
 <?php echo $form->end();?>
 </div>

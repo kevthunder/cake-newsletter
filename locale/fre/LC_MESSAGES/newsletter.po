@@ -61,7 +61,7 @@ msgid "List"
 msgstr "Liste"
 
 msgid "List Newsletters"
-msgstr "Liste des Newsletters"
+msgstr "Liste des Infolettes"
 
 msgid "Back to Newsletters List"
 msgstr "Retour à la liste des infolettres"
@@ -106,7 +106,7 @@ msgid "Add Newsletter"
 msgstr "Nouvelle infolettre"
 
 msgid "Send Newsletter"
-msgstr "Envoyer la Newsletter"
+msgstr "Envoyer l'infolettre"
 
 msgid "Active"
 msgstr "Actif"
@@ -124,7 +124,7 @@ msgid "Text"
 msgstr "Texte"
 
 msgid "Delete Newsletter"
-msgstr "Effacer Newsletter"
+msgstr "Effacer l'infolettre"
 
 msgid "Continue"
 msgstr "Continuer"
@@ -139,7 +139,7 @@ msgid "Content"
 msgstr "Contenu"
 
 msgid "Newsletter deleted"
-msgstr "Newsletter Effacé"
+msgstr "Infolettre Effacé"
 
 msgid "The Newsletter has been saved"
 msgstr "Infolettre sauvegardée"
@@ -184,7 +184,7 @@ msgid "Unsubscribe"
 msgstr "Se désabonner"
 
 msgid "Are you sure you want to unsubscribe from our newletter ?"
-msgstr "Êtes-vous sûr de vouloir vous désabonner de notre newsletter?"
+msgstr "Êtes-vous sûr de vouloir vous désabonner de notre infolettre?"
 
 msgid "Your email"
 msgstr "Votre e-mail"
@@ -196,13 +196,13 @@ msgid "This email has allready been disabled."
 msgstr "Ce e-mail a déjà été désactivé."
 
 msgid "Subscribe to our Newletter"
-msgstr "Inscrivez-vous à notre newsletter"
+msgstr "Inscrivez-vous à notre infolettre"
 
 msgid "Subscribe"
 msgstr "S'inscrire"
 
 msgid "You are now subscribed to our newsletter."
-msgstr "Vous êtes maintenant inscrit à notre newsletter."
+msgstr "Vous êtes maintenant inscrit à notre infolettre."
 
 msgid "Unique visits"
 msgstr "Visites uniques"
@@ -223,10 +223,10 @@ msgid "Invalid email."
 msgstr "Courriel invalide."
 
 msgid "Additional Emails"
-msgstr "Courriels supplementaires"
+msgstr "Courriels supplémentaires"
 
 msgid "Separate by commas"
-msgstr "Séparer pas des virgules"
+msgstr "Séparer par des virgules"
 
 msgid "Eg: email1@server.com, email2@server.com"
 msgstr "Ex: email1@serveur.com, email2@serveur.com"
@@ -283,7 +283,7 @@ msgid "Cancel"
 msgstr "Annuler"
 
 msgid "Do you really want to send the newsletter now?"
-msgstr "Voulez-vous vraiment envoyer la Newsletter maintenant?"
+msgstr "Voulez-vous vraiment envoyer l'infolettre maintenant?"
 
 msgid "The "%title%" Newsletter will be sent the %date%"
 msgstr "L'infolettre "%title%" sera envoyée le %date%."
@@ -386,6 +386,45 @@ msgstr "Ignorer"
 
 msgid "Import first row"
 msgstr "Importer la première ligne du fichier"
+
+msgid "The NewsletterEmail has been saved"
+msgstr "L'adresse courriel a été sauvegardée"
+
+msgid "Add NewsletterEmail"
+msgstr "Ajouter une adresse courriel"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Add Email"
+msgstr "Ajouter un courriel"
+
+msgid "Sendlist"
+msgstr "Liste de diffusion"
+
+msgid "Newsletters"
+msgstr "Infolettres"
+
+msgid "Subscription date"
+msgstr "Date d'inscription"
+
+msgid "NewsletterEmails"
+msgstr "Courriels"
+
+msgid "Emails for the \"%title%\" sendlist"
+msgstr "Courriels pour la liste de diffusion \"%title%\""
+
+msgid "New NewsletterEmail"
+msgstr "Ajouter un courriel"
+
+msgid "This newsletter has been tested"
+msgstr "Cette infolettre a été testée."
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""
 
 msgid ""
 msgstr ""

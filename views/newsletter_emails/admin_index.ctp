@@ -9,9 +9,11 @@ if(isset($this->data['q'])){
 $paginator->options(array('url' => $urlOptions)); 
 ?>
 <div class="newsletterEmails index">
-<h2><?php __d('newsletter','NewsletterEmails');
-if(isset($sendlist)){
-	echo ' - Liste : '.$sendlist['NewsletterSendlist']['title'];
+<h2>
+<?php if(isset($sendlist)) { 
+	echo str_replace('%title%',$sendlist['NewsletterSendlist']['title'],__d('newsletter','Emails for the "%title%" sendlist',true));
+ }else{
+	__d('newsletter','NewsletterEmails');
 }
 ?></h2>
 <?php
@@ -32,9 +34,8 @@ echo $paginator->counter(array(
 <tr>
 	<th><?php echo $paginator->sort('id');?></th>
 	<th><?php echo $paginator->sort('active');?></th>
-	<th><?php echo $paginator->sort('created');?></th>
-	<th><?php echo $paginator->sort('modified');?></th>
-	<th><?php echo $paginator->sort('name');?></th>
+	<th><?php echo $paginator->sort(__d('newsletter','Subscription date',true),'created');?></th>
+	<th><?php echo $paginator->sort(__d('newsletter','Name',true),'name');?></th>
 	<th><?php echo $paginator->sort('email');?></th>
 	<th class="actions"><?php __d('newsletter','Actions');?></th>
 </tr>
@@ -54,10 +55,11 @@ foreach ($newsletterEmails as $newsletterEmail):
 			<?php echo $newsletterEmail['NewsletterEmail']['active']; ?>
 		</td>
 		<td>
-			<?php echo $newsletterEmail['NewsletterEmail']['created']; ?>
-		</td>
-		<td>
-			<?php echo $newsletterEmail['NewsletterEmail']['modified']; ?>
+			<?php 
+			if(strtotime($newsletterEmail['NewsletterEmail']['created']) != 0){
+				echo date_('jS F Y',strtotime($newsletterEmail['NewsletterEmail']['created'])); 
+			}
+			?>
 		</td>
 		<td>
 			<?php echo $newsletterEmail['NewsletterEmail']['name']; ?>
