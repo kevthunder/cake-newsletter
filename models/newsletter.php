@@ -118,33 +118,35 @@ class Newsletter extends NewsletterAppModel {
 	}
 	
 	function afterFind($results,  $primary){
-		if(!Set::numeric(array_keys($results))){
-			$tmp = array(&$results);
-			$myResults =& $tmp;
-		}else{
-			$myResults =& $results;
-		}
-		foreach($myResults as &$resRoot){
-			
-			
-			////// get updated Data //////
-			if(isset($resRoot[$this->alias])){
-				$res =& $resRoot[$this->alias];
+		if(!empty($results)){
+			if(!Set::numeric(array_keys($results))){
+				$tmp = array(&$results);
+				$myResults =& $tmp;
 			}else{
-				$res =& $resRoot;
+				$myResults =& $results;
 			}
-			
-			$res['TemplateConfig'] = $this->getConfig($res);
-			if(!empty($res['TemplateConfig'])){
-				$result = $res['TemplateConfig']->afterFind($this,$res);
-				if(!empty($result)){
-					$res = $result;
+			foreach($myResults as &$resRoot){
+				
+				
+				////// get updated Data //////
+				if(isset($resRoot[$this->alias])){
+					$res =& $resRoot[$this->alias];
+				}else{
+					$res =& $resRoot;
 				}
-			}
-			
-			if(!empty($resRoot['NewsletterAssoc'])){
-				foreach($resRoot['NewsletterAssoc'] as $assoc){
-					$res['associated'][$assoc['type']] = $assoc['newsletter_id'];
+				
+				$res['TemplateConfig'] = $this->getConfig($res);
+				if(!empty($res['TemplateConfig'])){
+					$result = $res['TemplateConfig']->afterFind($this,$res);
+					if(!empty($result)){
+						$res = $result;
+					}
+				}
+				
+				if(!empty($resRoot['NewsletterAssoc'])){
+					foreach($resRoot['NewsletterAssoc'] as $assoc){
+						$res['associated'][$assoc['type']] = $assoc['newsletter_id'];
+					}
 				}
 			}
 		}

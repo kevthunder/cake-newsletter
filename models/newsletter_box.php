@@ -68,71 +68,72 @@ class NewsletterBox extends NewsletterAppModel {
 	}
 	
 	function afterFind($results, $primary){
-		$doubleMulti = isset($results[0][$this->alias][0]);
-		if($doubleMulti){
-			$results = $results[0];
-		}
-		$test = $results;
-		$rootnamed = isset($results[$this->alias]);
-		if($rootnamed){
-			$results = $results[$this->alias];
-		}
-		$multi = Set::numeric(array_keys($results));
-		if(!$multi){
-			$results = array($results);
-		}
-		foreach ($results as $key => $box) {
-			$boxnamed = isset($box[$this->alias]);
-			if($boxnamed){
-				$box = $box[$this->alias];
+		if(!empty($results)){
+			$doubleMulti = isset($results[0][$this->alias][0]);
+			if($doubleMulti){
+				$results = $results[0];
 			}
-			if(isset($box["data"]) && empty($box["data"])){
-				$box["data"] = array();
+			$test = $results;
+			$rootnamed = isset($results[$this->alias]);
+			if($rootnamed){
+				$results = $results[$this->alias];
 			}
-			if(!empty($box["data"]) && !is_array($box["data"])){
-				if(preg_match('/^{"/',$box["data"])){
-					//old format
-					$box["data"] = $this->json_dec($box["data"]);
-				}else{
-					$box["data"] = unserialize($box["data"]);
+			$multi = Set::numeric(array_keys($results));
+			if(!$multi){
+				$results = array($results);
+			}
+			foreach ($results as $key => $box) {
+				$boxnamed = isset($box[$this->alias]);
+				if($boxnamed){
+					$box = $box[$this->alias];
 				}
-				if(!empty($box['data']['types'])){
-					foreach($box['data']['types'] as $field => $type){
-						if(method_exists($this,'_'.$type.'_after')){
-							$res = $this->{'_'.$type.'_after'}($box['data'][$field],$box);
-							if(!is_null($res)){
-								$box['data'][$field] = $res;
+				if(isset($box["data"]) && empty($box["data"])){
+					$box["data"] = array();
+				}
+				if(!empty($box["data"]) && !is_array($box["data"])){
+					if(preg_match('/^{"/',$box["data"])){
+						//old format
+						$box["data"] = $this->json_dec($box["data"]);
+					}else{
+						$box["data"] = unserialize($box["data"]);
+					}
+					if(!empty($box['data']['types'])){
+						foreach($box['data']['types'] as $field => $type){
+							if(method_exists($this,'_'.$type.'_after')){
+								$res = $this->{'_'.$type.'_after'}($box['data'][$field],$box);
+								if(!is_null($res)){
+									$box['data'][$field] = $res;
+								}
 							}
 						}
 					}
+					if(isset($box["data"]["file"])){
+						$box["file"] = $box["data"]["file"];
+						unset($box["data"]["file"]);
+					}
 				}
-				if(isset($box["data"]["file"])){
-					$box["file"] = $box["data"]["file"];
-					unset($box["data"]["file"]);
+				$box['TemplateConfig'] = $this->getConfig($box);
+				if(!empty($box['TemplateConfig'])){
+					$res = $box['TemplateConfig']->afterFind($this,$box);
+					if(!empty($res)){
+						$box = $res;
+					}
 				}
-			}
-			$box['TemplateConfig'] = $this->getConfig($box);
-			if(!empty($box['TemplateConfig'])){
-				$res = $box['TemplateConfig']->afterFind($this,$box);
-				if(!empty($res)){
-					$box = $res;
+				if($boxnamed){
+					$box = array($this->alias=>$box);
 				}
+				$results[$key] = $box;
 			}
-			if($boxnamed){
-				$box = array($this->alias=>$box);
+			if(!$multi){
+				$results = $results[0];
 			}
-			$results[$key] = $box;
+			if($rootnamed){
+				$results = array($this->alias=>$results);
+			}
+			if($doubleMulti){
+				$results = array($results);
+			}
 		}
-		if(!$multi){
-			$results = $results[0];
-		}
-		if($rootnamed){
-			$results = array($this->alias=>$results);
-		}
-		if($doubleMulti){
-			$results = array($results);
-		}
-		
 		//debug($test);
 		//debug($results);
 		
