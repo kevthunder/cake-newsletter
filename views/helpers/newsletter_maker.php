@@ -467,6 +467,10 @@ class NewsletterMakerHelper extends AppHelper {
 			$options['div']['onloaddata'] = $options['onLoadData'];
 			unset($options['onLoadData']);
 		}
+		if(isset($options['map'])){
+			$options['div']['map'] = json_encode($options['map']);
+			unset($options['map']);
+		}
 		$options['div']['model'] = $model;
 		if(!isset($options['div']['class'])){
 			$options['div']['class'] = array('input','text');

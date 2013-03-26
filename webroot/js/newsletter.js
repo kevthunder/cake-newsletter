@@ -1,16 +1,38 @@
 (function( $ ) {
-	Array.prototype.in_array = function(p_val) {
-		for(var i = 0, l = this.length; i < l; i++) {
-			if(this[i] == p_val) {
-				return true;
+	jQuery.extend (Array.prototype, {
+		in_array: function(p_val) {
+			for(var i = 0, l = this.length; i < l; i++) {
+				if(this[i] == p_val) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
-	}
-	String.prototype.ucfirst = function() {
-		str = this;
-		var f = str.charAt(0).toUpperCase();
-		return f + str.substr(1);
+	});
+	jQuery.extend (String.prototype, {
+		ucfirst: function() {
+			str = this;
+			var f = str.charAt(0).toUpperCase();
+			return f + str.substr(1);
+		},
+		camelize: function () {
+			return this.replace (/(?:^|[-_])(\w)/g, function (_, c) {
+				return c ? c.toUpperCase () : '';
+			})
+		},
+		startsWith: function (str){
+			return this.slice(0, str.length) == str;
+		},
+		endsWith: function (str){
+			return this.slice(-str.length) == str;
+		}
+	});
+	
+	function dotExtract(obj,path){
+		path = path.split(".");
+		for (var i = 0; i < path.length && typeof obj !== "undefined"; i++)
+			obj = obj[path[i]];
+		return obj;
 	}
 
 	var last_id = 0;
@@ -37,6 +59,15 @@
 	});
 
 	////////////////////////// general newsletter functions //////////////////////////
+	function getLang(){
+		if($("#NewsletterLang").length){
+			return $("#NewsletterLang").val();
+		}else if(window.defLang){
+			return window.defLang;
+		}else{
+			return 'fre1';
+		}
+	}
 	function updateLangInputs(){
 		var lang = $("#NewsletterLang").val();
 		if(lang){
@@ -396,18 +427,28 @@
 				}else{
 					data = eval('(' + jsonData + ')');
 				}
-				if(window.console){
+				/*if(window.console){
 					window.console.log(data);
-				}
+				}*/
 				
 				var loadCallback = false;
 				try{
 					loadCallback = eval('(' + $entryFinder.attr("onloaddata") + ')');
-				}catch(e){
-				}
-				if(!$.isFunction(loadCallback) || loadCallback(data)!==false){
+				}catch(e){}
+				
+				var event = jQuery.Event("loaddata");
+				$entryFinder.trigger(event,[data]);
+				if(!event.isDefaultPrevented() && (!$.isFunction(loadCallback) || loadCallback(data)!==false)){
+					///// try to extract maching fields /////
 					for(var i in data[model]){
-						var $input = $("#NewsletterBoxData"+i.ucfirst(),$edit_box);
+						var selector = "#NewsletterBoxData"+i.camelize();
+						if(i.endsWith("_"+getLang())){
+							selector += ', '+selector.substr(0,selector.length-(getLang()).length);
+						}
+						var $input = $(selector,$edit_box);
+						/*if(window.console){
+							console.log(selector);
+						}*/
 						if($input.length){
 							//alert(i);
 							if(data[model][i]==null){
@@ -417,7 +458,41 @@
 							}
 						}
 					}
-					if(data["newsletterbox_media"]){
+					///// if a mapping is defined, use it to fill fields /////
+					if($entryFinder.attr("map")){
+						map = false;
+						try{
+							map = $.parseJSON( $entryFinder.attr("map") );
+						}catch(e){}
+						if(typeof map == 'object'){
+							for(var i in map){
+								var val = dotExtract(data[model],i);
+								if(typeof val === "undefined"){
+									val = dotExtract(data,i);
+								}
+								if(typeof val === "undefined"){
+									val = dotExtract(data[model],i+"_"+getLang());
+								}
+								if(typeof val !== "undefined"){
+									var selector;
+									if(map[i].indexOf('#') != -1 || map[i].indexOf('.') != -1){
+										selector = map[i];
+									}else{
+										selector = "#NewsletterBoxData"+map[i].camelize();
+									}
+									var $input = $(selector,$edit_box);
+									if($input.length){
+										if(val==null){
+											$input.val("");
+										}else{
+											$input.val(val);
+										}
+									}
+								}
+							}
+						}
+					}
+					if(data["newsletterbox_media"] && $('table.multimedia',$edit_box).length){
 						$('table.multimedia',$edit_box).multimedia.clear();
 						$.each(data["newsletterbox_media"], function(index, value) { 
 							$('table.multimedia',$edit_box).multimedia.add(value);

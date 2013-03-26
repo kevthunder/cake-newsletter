@@ -5,6 +5,7 @@ $javascript->codeBlock($script,array('inline'=>false));
 $script = '
 	var root = "'.$html->url('/').'";
 	var tinymce_url = "'.$html->url('/js/tiny_mce/tiny_mce.js').'";
+	var defLang = "'.Configure::read('Config.language').'";
 ';
 $javascript->codeBlock($script,array('inline'=>false));
 
@@ -38,6 +39,7 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
 			echo $form->input('sender',array('options' =>array_combine($senders,$senders),'label'=>__d('newsletter','Sender',true)));
 		}
 		echo $form->input('template',array('options' =>$templates,'label'=>__d('newsletter','Template',true)));
+		
 		$langs = NewsletterConfig::load('langs');
 		if(!empty($langs)){
 			if(count($langs) > 1){
