@@ -1,18 +1,4 @@
-<?php
-$javascript->link('/newsletter/js/jquery-1.4.2.min.js', false);
-$script = '
-$(function(e){
-	$(".sendto_link").click(function(e){
-		$(this).closest(".actions").find(".send_lists").show();
-		return false;
-	});
-});
-';
-$javascript->codeBlock($script,array('inline'=>false));
 
-
-//debug($newsletters);
-?>
 <?php $html->css('/newsletter/css/newsletter.admin',null,array('inline'=>false)); ?>
 <div class="newsletters index">
 <h2><?php __d('newsletter','Newsletters');?></h2>
