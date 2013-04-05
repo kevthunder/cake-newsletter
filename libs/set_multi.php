@@ -239,6 +239,8 @@ class SetMulti {
 				$val = $data;
 			}elseif(in_array($path,$modifKeys)){
 				$val = $data;
+			}elseif(array_key_exists($path,$data)){
+				$val = $data[$path];
 			}else{
 				$op = Operations::parseStringOperation($path,array('mode'=>'left','type'=>'bool','sepPattern'=>'\h+'));
 				if($op){
