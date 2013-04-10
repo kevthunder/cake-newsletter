@@ -72,6 +72,11 @@ foreach ($newsletterSendlists as $newsletterSendlist):
 					array('class'=>'icon add','escape' => false)
 				);
 			}
+			echo $html->link(
+				'<span>'.__d('newsletter','Export to Excel', true).'</span>', 
+				array('action' => 'xls', $newsletterSendlist['NewsletterSendlist']['id']), 
+				array('class'=>'icon excel','escape' => false)
+			);
 		?>
 		</td>
 	</tr>

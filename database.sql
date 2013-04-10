@@ -75,12 +75,6 @@ CREATE TABLE IF NOT EXISTS `newsletter_emails` (
   `sendlist_id` int(11) NOT NULL,
   `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `sex` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `address` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `town` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `postalcode` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `phone` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `birthdate` date DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
 

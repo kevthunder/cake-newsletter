@@ -319,6 +319,86 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		$this->set('newsletterSendlist', $this->NewsletterSendlist->read(null, $id));
 	}
 
+	function admin_xls($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid NewsletterSendlist.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if($this->Funct->isTableSendlist($id)){
+			$tableSendlist = $this->Funct->getTableSendlistID($id,true);
+			$Model = $tableSendlist['modelClass'];
+			$Model->recursive = -1;
+			$findOptions = $this->Funct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
+			$mails = $Model->find('all',$findOptions);
+			$newsletterEmails = array();
+			foreach($mails as $mail){
+				$newsletterEmails[] = $this->Funct->tabledEmailGetFields($mail,$tableSendlist,'NewsletterEmail');
+			}
+		}else{
+			$newsletterEmails = $this->NewsletterSendlist->NewsletterEmail->find('all',array('conditions'=>array('NewsletterEmail.sendlist_id'=>$id)));
+		}
+		$sendlist = $this->NewsletterSendlist->read(null, $id);
+		
+		if(!empty($newsletterEmails)){
+			App::import('Vendor', 'Newsletter.PHPExcel',array('file' => 'PHPExcel.php'));
+			App::import('Vendor', 'Newsletter.PHPExcel_Writer_Excel2007',array('file' => 'PHPExcel/Writer/Excel2007.php'));
+			
+			/////// set document properties ///////
+			$objPHPExcel = new PHPExcel();
+			$title = $sendlist['NewsletterSendlist']['title'];
+			if(strlen($title) > 30){
+				$title = substr($title,0,30);
+			}
+			$objPHPExcel->getProperties()->setTitle($title);
+			$objPHPExcel->getProperties()->setSubject($title);
+			$objPHPExcel->getProperties()->setDescription(str_replace(
+				array('%title%','%id%'),
+				array($sendlist['NewsletterSendlist']['title'],$sendlist['NewsletterSendlist']['id']),
+				__('Export of the "%title%" sendlist (ID %id%).',true)
+			));
+			$objPHPExcel->setActiveSheetIndex(0);
+			$objPHPExcel->getActiveSheet()->setTitle($title);
+			
+			/////// set headers ///////
+			$i = 0;
+			$exclude = array('id','data','sendlist_id','modified');
+			foreach($newsletterEmails[0]['NewsletterEmail'] as $key => $val){
+				if(!in_array($key,$exclude)){
+					$objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($i,1, Inflector::humanize($key));
+					$objPHPExcel->getActiveSheet()->getStyleByColumnAndRow($i,1)->getFont()->setBold(true);
+					$objPHPExcel->getActiveSheet()->getColumnDimensionByColumn($i)->setAutoSize(true);
+					$i++;
+				}
+			}
+			
+			/////// write data ///////
+			foreach($newsletterEmails as $row => $mail){
+				$i = 0;
+				foreach($mail['NewsletterEmail'] as $key => $val){
+					if(!in_array($key,$exclude)){
+						$objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($i,$row+2, $val);
+						$i++;
+					}
+				}
+			}
+			
+			/////// output ///////
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="'.Inflector::slug($sendlist['NewsletterSendlist']['title']).'.xlsx"');
+			header('Cache-Control: max-age=0');
+			
+			$objWriter = new PHPExcel_Writer_Excel2007($objPHPExcel);
+			$objWriter->save('php://output');
+		}else{
+			$this->Session->setFlash(__('The NewsletterSendlist is empty, nothing to export.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		
+		//debug( $newsletterEmails);
+		//$this->render(false);
+	}
+	
+
 	function admin_add() {
 		if (!empty($this->data)) {
 			$this->NewsletterSendlist->create();
