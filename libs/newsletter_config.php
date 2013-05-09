@@ -11,6 +11,7 @@ class NewsletterConfig extends Object {
 		'EmailAdd.confirm' => true,
 		'selfSending' => false,
 		'sender' => 'Newsletter.PhpMail',
+		'maxSend' => null, //defaults to 10000 for PhpMail and 200 000 for Mailgun
 		'langs' => array(), //array('fre'=>'Français','eng'=>'English')
 		'hiddenTemplates' => array(),
 		'multimedia' => true,

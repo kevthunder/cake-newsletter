@@ -6,6 +6,7 @@ class MailgunNewsletterSender extends NewsletterSender {
 	var $key = '198yqxluossf7sicp7skiag3tpjlmif5';
 
 	var $batchSize = 500;
+	var $maxSend = '200000';
 	
 	function editGlobalOpt($opt){
 		if(empty($opt['newsletter']['Newsletter']['external_key'])){

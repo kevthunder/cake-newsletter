@@ -738,7 +738,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		return true;
 	}
 	
-	function _send($sending, $max = 10000){
+	function _send($sending, $max = null){
 		if(is_numeric($sending)){
 			$sending = $this->NewsletterSending->read(null,$sending);
 		}
@@ -750,9 +750,6 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}
 		$id = $sending['NewsletterSending']['id'];
 	
-		if(!$max){
-			$max = 10000;
-		}
 		$i = 0;
 		$belongsToTmp = $this->NewsletterSended->belongsTo;
 		$this->NewsletterSended->recursive = -1;
@@ -787,7 +784,19 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 		}
 		
-		while($i*$chunk<$max && $continue){
+		//// get max sending ////
+		if(is_null($max)){
+			$confMax = NewsletterConfig::load('maxSend');
+			if(!is_null($confMax)){
+				$max = $confMax;
+			}elseif(isset($sender->maxSend)){
+				$max = $sender->maxSend;
+			}else{
+				$max = 10000;
+			}
+		}
+		
+		while(($max === false || $i*$chunk<$max) && $continue){
 			$this->NewsletterSended->belongsTo = $belongsToTmp;
 			$toSend = $this->NewsletterSended->find('all',array('conditions'=>array('NewsletterSended.active'=>1,'NewsletterSended.status'=>'ready','NewsletterSended.sending_id'=>$id),'limit'=>$chunk,'contain'=>'NewsletterEmail'));
 			$this->NewsletterSended->belongsTo = array();
@@ -818,7 +827,6 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$i++;
 		}
 		
-		
 		//=========================== Done ===========================
 		if($done){
 			$this->NewsletterSending->create();
@@ -831,6 +839,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 					array('exit'=>true)
 				);
 			}
+		}elseif($max && $i*$chunk >= $max){
+			$this->_consoleOut($id,__('Hard limit reached.',true));
 		}
 		
 		return true;
