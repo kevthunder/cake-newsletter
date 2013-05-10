@@ -83,10 +83,12 @@ swfobject.embedSWF(
     Top urls : 
     	<ul>
     	
-    	<?php foreach($toppages as $top){
-    		//print_r($toppages);
-    		echo "<li>".$top["NewsletterStats"]['url']." : <b>".$top[0]['count(*)']." clics</b></li>";
-    	}?>
+    	<?php 
+		//debug($toppages);
+		foreach($toppages as $top){
+    		echo "<li>".$top["NewsletterStat"]['url']." : <b>".$top[0]['count(*)']." clics</b></li>";
+    	}
+		?>
     	</ul>
     </li>
     <li><div class="label"><?php __d('newsletter','Unique visits');?></div><?php echo $nbVisite; ?> (<?php echo ($ndSended?round($nbVisite/$validSended*100, 2):0); ?>%)</li>

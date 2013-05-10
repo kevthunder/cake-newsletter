@@ -246,8 +246,8 @@ class NewsletterController extends NewsletterAppController {
 		$this->set('Newsletter', $Newsletter);
 	}
 	function admin_graphs($id = null) {
-		Configure::write('debug', 0);
-		$this->layout = null;
+		//Configure::write('debug', 0);
+		//$this->layout = null;
 		// generate some random data
 		srand((double)microtime()*1000000);
 		$title = new title( __d("newsletter","Views per time",true));
@@ -255,22 +255,66 @@ class NewsletterController extends NewsletterAppController {
 		$chart->set_title($title);
 		
 		
+		$newsletter = $this->Newsletter->read(null, $id);
 		
 		
 		// Views
 		$dates = array();
 		$values = array();
-		$sql = "select count(*),DATE(NewsletterStats.date) as date from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is NULL AND (`action` IS NULL or `action` = 'view') group by DATE(NewsletterStats.date) order by DATE(NewsletterStats.date)";
-		$views = $this->NewsletterSended->query($sql);
+		
+		
+		//// init sender class ////
+		App::import('Lib', 'Newsletter.ClassCollection');
+		$senderOpt = NewsletterConfig::load('sender');
+		if(!is_array($senderOpt)){
+			$senderOpt = array('name' => $senderOpt);
+		}
+		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
+		
+		//// query ////
+		$query = array(
+			'fields' => array('count(*) as nb','DATE(NewsletterStat.date) as date'),
+			'conditions'=>array(
+				'NewsletterSended.newsletter_id'=>$id,
+				'or' => array(
+					'NewsletterStat.action' => 'view',
+					array(
+						'NewsletterStat.action IS NULL',
+						'NewsletterStat.url' => null,
+					)
+				)
+			),
+			'group' => 'DATE(NewsletterStat.date)',
+			'order' => 'DATE(NewsletterStat.date)',
+			'model'=>'NewsletterStat',
+		);
+		
+		//// beforeGraph callback ////
+		if(method_exists($sender,'beforeGraph')){
+			$res = $sender->beforeGraph($this,$newsletter,$query);
+			if(!empty($res) ){
+				$query = $res;
+			}
+		}
+		
+		//// Execute Query ////
+		
+		//$sql = "select count(*) as nb,DATE(NewsletterStats.date) as date from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is NULL AND (`action` IS NULL or `action` = 'view') group by DATE(NewsletterStats.date) order by DATE(NewsletterStats.date)";
+		//$views = $this->NewsletterSended->query($sql);
+		
+		//debug($query);
+		$views = $this->_stat_query($query);
+		//debug($views);
+		
 		$min_value = 99999999;
 		$max_value = 0;
 		foreach($views as $view){
-			$dates[$view[0]["date"]] = $view[0]["count(*)"];
-			if($view[0]["count(*)"] < $min_value){
-				$min_value = $view[0]["count(*)"];
+			$dates[$view[0]["date"]] = $view[0]["nb"];
+			if($view[0]["nb"] < $min_value){
+				$min_value = $view[0]["nb"];
 			}
-			if($view[0]["count(*)"] > $max_value){
-				$max_value = $view[0]["count(*)"];
+			if($view[0]["nb"] > $max_value){
+				$max_value = $view[0]["nb"];
 			}
 		}
 		if($max_value == $min_value){
@@ -349,6 +393,8 @@ class NewsletterController extends NewsletterAppController {
 
 		echo $chart->toPrettyString();
 		exit();
+		
+		//$this->render(false);
 	}
 	function admin_stats($id = null) {
 		set_time_limit(120);
@@ -373,6 +419,7 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
 		
+		//// queries ////
 		$queries = array(
 			'sended_count' => array(
 				'conditions'=>array(
@@ -427,7 +474,7 @@ class NewsletterController extends NewsletterAppController {
 			),
 			"uniqueclics"  => array(
 				'fields'=>array(
-					'count(DISTINCT NewsletterStat.sended_id) as uniqueviews'
+					'count(DISTINCT NewsletterStat.sended_id) as uniqueclics'
 				),
 				'conditions'=>array(
 					'NewsletterSended.newsletter_id'=>$id,
@@ -465,6 +512,7 @@ class NewsletterController extends NewsletterAppController {
 			)
 		);
 		
+		//// beforeStats callback ////
 		if(method_exists($sender,'beforeStats')){
 			$res = $sender->beforeStats($this,$newsletter,$queries);
 			if(!empty($res) && is_array($res)){
@@ -475,35 +523,13 @@ class NewsletterController extends NewsletterAppController {
 		//print_r($newsletter);
 		//$newsletter = array();
 		
+		//// Execute Queries ////
+		
 		foreach($queries as $key => $q){
-			if(is_string($q) || !empty($q['sql'])){
-				if(is_string($q)){
-					$q = array('sql' => $q);
-				}
-				$res = $this->NewsletterSended->query($sql);
-				if(!empty($q['extract'])){
-					$stats[$key] = Set::extract($q['extract'],$res);
-				}else{
+			$res = $this->_stat_query($q);
+			if($q['type'] == 'count'){
 					$stats[$key] = $res;
-				}
-			}else{
-				$type = 'all';
-				if(!empty($q['type'])) $type = $q['type'];
-				unset($q['type']);
-				$model = $this->NewsletterSended;
-				if(!empty($q['model'])) $model = $q['model'];
-				unset($q['model']);
-				if(is_string($model)){
-					if(!empty($this->{$model})) {
-						$model = $this->{$model};
-					}else{
-						$model = ClassRegistry::init($model);
-					}
-				}
-				$res = $model->find($type,$q);
-				if($type == 'count'){
-					$stats[$key] = $res;
-				}elseif($type == 'first'){
+			}elseif($q['type'] == 'first'){
 					if(!empty($q['fields'])){
 						foreach($q['fields'] as $fkey => $f){
 							if(is_numeric($fkey)){
@@ -528,7 +554,6 @@ class NewsletterController extends NewsletterAppController {
 					$stats[$key] = $res;
 				}
 			}
-		}
 		
 		//debug($stats);
 		
@@ -551,6 +576,36 @@ class NewsletterController extends NewsletterAppController {
 		$newsletterSended = array();
 		$this->set('newsletterSended', $newsletterSended);
 	}
+	
+	function _stat_query(&$q){
+		if(is_string($q) || !empty($q['sql'])){
+			if(is_string($q)){
+				$q = array('sql' => $q);
+			}
+			$q['type'] = 'all';
+			$res = $this->NewsletterSended->query($sql);
+			if(!empty($q['extract'])){
+				$res = Set::extract($q['extract'],$res);
+			}
+		}else{
+			$final = $q;
+			unset($final['type']);
+			unset($final['model']);
+			if(empty($q['type'])) $q['type'] = 'all';
+			if(empty($q['model'])) $q['model'] = $this->NewsletterSended;
+			if(is_string($q['model'])){
+				if(!empty($this->{$q['model']})) {
+					$q['model'] = $this->{$q['model']};
+				}else{
+					$q['model'] = ClassRegistry::init($q['model']);
+				}
+			}
+			$res = $q['model']->find($q['type'],$q);
+		}
+		
+		return $res;
+	}
+	
 	function admin_excel($id = null){
 		//echo getcwd();
 		//$excel = new PHPExcel();

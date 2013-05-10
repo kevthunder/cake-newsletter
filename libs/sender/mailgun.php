@@ -133,63 +133,9 @@ class MailgunNewsletterSender extends NewsletterSender {
 	
 	function beforeStats($controller,$newsletter,$queries){
 		if(!empty($newsletter['Newsletter']['external_key'])){
-			$campaign_id = $newsletter['Newsletter']['external_key'];
-			$go = true;
-			$last = $controller->NewsletterStat->find('first',array('conditions'=>array('NewsletterStat.action'=>'bounce','NewsletterSended.newsletter_id'=>$newsletter['Newsletter']['id']),'order'=>'NewsletterStat.date DESC'));
-			if(!empty($last)){
-				$lTime = strtotime($last['NewsletterStat']['date']);
-			}
-			$format = $controller->NewsletterStat->getDataSource()->columns['datetime']['format'];
-			$i = 1;
+		
+			$this->syncEvent($newsletter,'bounced','bounce');
 			
-			while($go){
-				$req = $this->_initReq('campaigns/'.$campaign_id.'/events?event=bounced&page='.$i,'GET');
-				$result = $this->_sendReq($req);
-				//debug($result);
-				if(!empty($result)){
-					foreach($result as $r){
-						$rTime = strtotime($r['timestamp']);
-						if(empty($last) || $rTime>=$lTime){
-							if($rTime==$lTime){
-								$exists = $controller->NewsletterStat->find('first',array(
-									'conditions'=>array(
-										'NewsletterStat.action'=>'bounce',
-										'NewsletterSended.newsletter_id'=>$newsletter['Newsletter']['id'],
-										'LOWER(`NewsletterSended`.`email`)'=>$r['recipient'],
-										'NewsletterStat.date' => date($format,$rTime),
-									)
-								));
-								if(!empty($exists)){
-									$go = false;
-									break;
-								}
-							}
-							$sended = $controller->NewsletterSended->find('first',array(
-								'conditions'=>array(
-									'NewsletterSended.newsletter_id'=>$newsletter['Newsletter']['id'],
-									'LOWER(`NewsletterSended`.`email`)'=>$r['recipient'],
-								),
-								'order'=>'NewsletterSended.date DESC'
-							));
-							//debug($sended);
-							if(!empty($sended)){
-								$controller->NewsletterStat->create();
-								$controller->NewsletterStat->save(array(
-									 'sended_id' => $sended['NewsletterSended']['id'],
-									 'date' => date($format,$rTime),
-									 'action' => 'bounce'
-								));
-							}
-						}else{
-							$go = false;
-							break;
-						}
-					}
-				}else{
-					$go = false;
-				}
-				$i++;
-			}
 			
 			$queries["bounces"] = array(
 				'conditions'=>array(
@@ -200,8 +146,107 @@ class MailgunNewsletterSender extends NewsletterSender {
 				'type' => 'count'
 			);
 			
+			$this->syncEvent($newsletter,'opened',array('localEvent' => 'mailgun-view' /*,'full'=>true,'startPage'=>30*/));
+			
+			$queries['uniqueviews']['conditions'] = $queries['allviews']['conditions'] = array(
+				'NewsletterSended.newsletter_id' => $newsletter['Newsletter']['id'],
+				'NewsletterStat.action' => 'mailgun-view'
+			);
+			
+			//debug($queries);
+			
 			return $queries;
 		}
+	}
+	
+	function beforeGraph($controller,$newsletter,$query){
+	
+		$query['conditions'] = $queries['allviews']['conditions'] = array(
+			'NewsletterSended.newsletter_id' => $newsletter['Newsletter']['id'],
+			'NewsletterStat.action' => 'mailgun-view'
+		);
+		
+		return $query;
+	}
+	
+	function syncEvent($newsletter,$event,$options = array()){
+		$defOpt = array(
+			'localEvent' => $event,
+			'full' => false,
+			'startPage' => 1,
+		);
+		if(!is_array($options)) $options = array('localEvent' =>$options);
+		$opt = array_merge($defOpt,$options);
+		
+		$NewsletterStat = ClassRegistry::init('Newsletter.NewsletterStat');
+		$NewsletterSended = ClassRegistry::init('Newsletter.NewsletterSended');
+		
+		$campaign_id = $newsletter['Newsletter']['external_key'];
+		$go = true;
+		$last = $NewsletterStat->find('first',array('conditions'=>array('NewsletterStat.action'=>$opt['localEvent'],'NewsletterSended.newsletter_id'=>$newsletter['Newsletter']['id']),'order'=>'NewsletterStat.date DESC'));
+		if(!empty($last)){
+			$lTime = strtotime($last['NewsletterStat']['date']);
+		}
+		$format = $NewsletterStat->getDataSource()->columns['datetime']['format'];
+		$i = $opt['startPage'];
+		
+		while($go){
+			$req = $this->_initReq('campaigns/'.$campaign_id.'/events?event='.$event.'&page='.$i,'GET');
+			$result = $this->_sendReq($req);
+			//debug($result);
+			if(!empty($result)){
+				foreach($result as $r){
+					$rTime = strtotime($r['timestamp']);
+					if($opt['full'] || empty($last) || $rTime>=$lTime){
+						if(!empty($last) && $rTime <= $lTime){
+							$exists = $NewsletterStat->find('first',array(
+								'conditions'=>array(
+									'NewsletterStat.action'=>$opt['localEvent'],
+									'NewsletterSended.newsletter_id'=>$newsletter['Newsletter']['id'],
+									'LOWER(`NewsletterSended`.`email`)'=>$r['recipient'],
+									'NewsletterStat.date' => date($format,$rTime),
+								)
+							));
+							if(!empty($exists)){
+								if($opt['full']){
+									continue;
+								}else{
+									$go = false;
+									break;
+								}
+							}
+						}
+						$sended = $NewsletterSended->find('first',array(
+							'conditions'=>array(
+								'NewsletterSended.newsletter_id'=>$newsletter['Newsletter']['id'],
+								'LOWER(`NewsletterSended`.`email`)'=>$r['recipient'],
+							),
+							'order'=>'NewsletterSended.date DESC'
+						));
+						//debug($sended);
+						if(!empty($sended)){
+							$NewsletterStat->create();
+							$data = array(
+								 'sended_id' => $sended['NewsletterSended']['id'],
+								 'date' => date($format,$rTime),
+								 'action' => $opt['localEvent']
+							);
+							if(!empty($r['ip'])){
+								$data['ip_address'] = $r['ip'];
+							}
+							$NewsletterStat->save($data);
+						}
+					}else{
+						$go = false;
+						break;
+					}
+				}
+			}else{
+				$go = false;
+			}
+			$i++;
+		}
+		
 	}
 	
 	
