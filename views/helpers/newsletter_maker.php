@@ -438,7 +438,10 @@ class NewsletterMakerHelper extends AppHelper {
 	}
 	function filterRichtext($text, $options = array()){
 		$defOpt = array(
-			'pToBr' => false
+			'pToBr' => false,
+			'wrap' => array(),	// array(
+								//   'selector'=>'<font color="#393939">%s</font>', 
+								// )
 		);
 		$opt = array_merge($defOpt,$options);
 		//filter urls
@@ -452,6 +455,18 @@ class NewsletterMakerHelper extends AppHelper {
 			}
 			$text = substr($text,0,$matches[0][1]).'="'.$fullUrl.'"'.substr($text,$matches[0][1]+strlen($matches[0][0]));
 			//debug($matches);
+		}
+		if(!empty($opt['wrap'])){
+			App::import('Vendor', 'Newsletter.simple_html_dom_node',array('file'=>'simple_html_dom.php'));
+			
+			$html = str_get_html($text);
+
+			foreach($opt['wrap'] as $selector => $wrapper){
+				foreach($html->find($selector) as $element){
+					$element->innertext = str_replace('%s',$element->innertext,$wrapper);
+				}
+			}
+			$text = (string)$html;
 		}
 		if($opt['pToBr']){
 			$text = $this->pToBr($text);
