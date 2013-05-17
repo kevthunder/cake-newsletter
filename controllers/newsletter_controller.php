@@ -8,7 +8,7 @@ class NewsletterController extends NewsletterAppController {
 	var $name = 'Newsletter';
 	var $helpers = array('Html', 'Form', 'Newsletter.NewsletterMaker', 'Javascript');
 	var $uses = array('Newsletter.Newsletter','Newsletter.NewsletterBox','Newsletter.NewsletterSendlist','Newsletter.NewsletterEmail','Newsletter.NewsletterSended','Newsletter.NewsletterStat');
-	var $components = array('Email','Newsletter.Funct', 'RequestHandler', 'Session');
+	var $components = array('Email','Newsletter.Funct', 'RequestHandler', 'Session','Acl');
 	
 	function index() {
 		$this->paginate['order'] = 'date DESC';
@@ -23,7 +23,15 @@ class NewsletterController extends NewsletterAppController {
 			debug('Invalid Newsletter.');
 			$this->redirect(array('action'=>'index'));
 		}
+		if(
+			isset($this->user['User']['id']) 
+			&& is_numeric($this->user['User']['id']) 
+			&& $this->Acl->check(array('model' => 'User', 'foreign_key' => $this->user['User']['id']), 'admin')
+		) {
+				$this->Newsletter->checkActive = false;
+		}
 		$Newsletter = $this->Newsletter->read(null, $id);
+		if(!$Newsletter) $this->cakeError('error404');
 		$this->set('Newsletter', $Newsletter);
 	}
 	function redir($url=null,$sended_id=null){
