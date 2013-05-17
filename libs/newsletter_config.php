@@ -18,6 +18,12 @@ class NewsletterConfig extends Object {
 		'cron' => 'auto',
 	);
 	
+	var $defZoneOpt = array(
+		'ordered' => true,
+		'delete' => true,
+		'boxList' => array(),
+	);
+	
 	//$_this =& NewsletterConfig::getInstance();
 	function &getInstance() {
 		static $instance = array();
@@ -48,6 +54,12 @@ class NewsletterConfig extends Object {
 		if(!empty($path)){
 			return Configure::read('Newsletter'.($path!==true?'.'.$path:''));
 		}
+	}
+	
+	
+	function getDefZoneOpt(){
+		$_this =& NewsletterConfig::getInstance();
+		return $_this->defZoneOpt;
 	}
 	
 }

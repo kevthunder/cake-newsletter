@@ -275,6 +275,8 @@ td.actions.labeled a.icon:hover span {
 	padding: 0px 0px 0px 0px;
 	text-align:right;
 	display:none;
+	font-family: helvetica,arial,sans-serif;
+	font-size: 12px;
 }
 * html #edit_zone .newsletter_box .box_actions{
 	display:block;

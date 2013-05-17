@@ -8,7 +8,7 @@ class NewsletterController extends NewsletterAppController {
 	var $name = 'Newsletter';
 	var $helpers = array('Html', 'Form', 'Newsletter.NewsletterMaker', 'Javascript');
 	var $uses = array('Newsletter.Newsletter','Newsletter.NewsletterBox','Newsletter.NewsletterSendlist','Newsletter.NewsletterEmail','Newsletter.NewsletterSended','Newsletter.NewsletterStat');
-	var $components = array('Email','Newsletter.Funct', 'RequestHandler');
+	var $components = array('Email','Newsletter.Funct', 'RequestHandler', 'Session');
 	
 	function index() {
 		$this->paginate['order'] = 'date DESC';
@@ -765,6 +765,7 @@ class NewsletterController extends NewsletterAppController {
 			}
 			if ($this->Newsletter->save($this->data)) {
 				$this->Session->setFlash(__d('newsletter','The Newsletter has been saved', true));
+				$this->Session->delete('EditedNewsletter');
 				$this->redirect(array('action'=>'index'));
 			} else {
 				$this->Session->setFlash(__d('newsletter','The Newsletter could not be saved. Please, try again.', true));
@@ -799,7 +800,13 @@ class NewsletterController extends NewsletterAppController {
 			Configure::write('debug', 1);
 		}
 		$this->layout = "newsletter_box_edit_ajax";
-		$newsletter_box = $this->NewsletterBox->read(null, $id);
+		
+		if(is_array($id)){
+			$newsletter_box = $id;
+		}else{
+			$newsletter_box = $this->NewsletterBox->read(null, $id);
+		}
+		
 		$newsletter = $this->Newsletter->read(null, $newsletter_box["NewsletterBox"]["newsletter_id"]);
 		$this->set('newsletter_box',$newsletter_box);
 		$this->data = $newsletter_box;
@@ -812,28 +819,49 @@ class NewsletterController extends NewsletterAppController {
 		$this->render(array('/elements/newsletter_box/'.$newsletter['Newsletter']['template'].'/'.$newsletter_box["NewsletterBox"]["template"].'_edit','/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"].'_edit'));
 		//$this->render('/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"]."_edit");
 	}
-	function admin_add_box($boxElement,$newsletter_id,$zone) {
+	function admin_add_box($newsletter_id,$zone,$boxElement = null) {
+		$this->autoRender = false;
 		if(Configure::read('debug')==2){
 			Configure::write('debug', 1);
 		}
 		//debug($this->params);
 		$this->layout = "newsletter_box_ajax";
 		
-		$this->NewsletterBox->create();
-		$newsletter_box = array("NewsletterBox"=>array());
-		$newsletter_box["NewsletterBox"]["template"] = $boxElement;
-		$newsletter_box["NewsletterBox"]["newsletter_id"] = $newsletter_id;
-		$newsletter_box["NewsletterBox"]["zone"] = $zone;
-		$this->NewsletterBox->save($newsletter_box);
-		$id = $this->NewsletterBox->getLastInsertID();
-		$newsletter_box["NewsletterBox"]["id"] = $id;
+		$zoneOpt = $this->_getZoneOpt($newsletter_id,$zone);
 		
-		$this->data = $newsletter_box;
-		$newsletter = $this->Newsletter->read(null, $newsletter_id);
-		$this->set('newsletter_box',$newsletter_box);
-		$this->set('newsletter',$newsletter);
-		//$this->render('/elements/newsletter_box/'.$boxElement);
-		$this->render(array('/elements/newsletter_box/'.$newsletter['Newsletter']['template'].'/'.$boxElement,'/elements/newsletter_box/'.$boxElement));
+		if(!empty($zoneOpt['boxList'])){
+			if(empty($boxElement) && count($zoneOpt['boxList']) == 1){
+				$boxElement = key($zoneOpt['boxList']);
+			}
+		}
+		
+		if($boxElement){
+			$this->NewsletterBox->create();
+			$newsletter_box = array("NewsletterBox"=>array());
+			$newsletter_box["NewsletterBox"]["template"] = $boxElement;
+			$newsletter_box["NewsletterBox"]["newsletter_id"] = $newsletter_id;
+			$newsletter_box["NewsletterBox"]["zone"] = $zone;
+			if(!empty($zoneOpt['boxList'][$boxElement]['data'])){
+				$newsletter_box["NewsletterBox"]['data'] = $zoneOpt['boxList'][$boxElement]['data'];
+			}
+			$this->NewsletterBox->save($newsletter_box);
+			$id = $this->NewsletterBox->getLastInsertID();
+			$newsletter_box["NewsletterBox"]["id"] = $id;
+			
+			if(!empty($this->params['named']['mode']) && $this->params['named']['mode'] == 'edit'){
+				$this->admin_get_box_edit($id);
+			}else{
+				$this->data = $newsletter_box;
+				$newsletter = $this->Newsletter->read(null, $newsletter_id);
+				$this->set('newsletter_box',$newsletter_box);
+				$this->set('newsletter',$newsletter);
+				//$this->render('/elements/newsletter_box/'.$boxElement);
+				$this->render(array('/elements/newsletter_box/'.$newsletter['Newsletter']['template'].'/'.$boxElement,'/elements/newsletter_box/'.$boxElement));
+			}
+		}else{
+			echo "No template selected";
+			//debug($zoneOpt);
+		}
 	}
 	
 	function admin_edit_box($id = null){
@@ -892,6 +920,12 @@ class NewsletterController extends NewsletterAppController {
 			$this->NewsletterBox->delete($id);
 		}
 		$this->autoRender = false;
+	}
+	
+	function _getZoneOpt($newsletter_id,$id){
+		$session = $this->Session->read('EditedNewsletter.'.$newsletter_id.'.zone.'.$id); 
+		if($session) return $session;
+		return NewsletterConfig::getDefZoneOpt();
 	}
 	
 	function admin_delete($id = null) {
@@ -985,7 +1019,7 @@ class NewsletterController extends NewsletterAppController {
 		
 		///////// map files /////////
 		$contentFileFilter = array('/^html.html$/','/^(?:[^\/]*\/)?html.html$/','/^(?:[^\/]*\/)?index.html$/');
-		$imageFilter = '/^(?:[^\/]*\/)?img\/.*\.(jpg|gif|png)$/';
+		$imageFilter = '/^(?:[^\/]*\/)?(img|images)\/.*\.(jpg|gif|png)$/';
 		$images = array();
 		for ($i = 0; $i < $zip->numFiles; $i++) {
 			$filename = $zip->getNameIndex($i);
@@ -1011,7 +1045,7 @@ class NewsletterController extends NewsletterAppController {
 		if(empty($content)){
 			return false;
 		}
-		$content = preg_replace('/="\/?(?:http:\/\/[^"\']*\/)?img\/([^"\']*)"/','="<?php echo \$html->url(\'/img/newsletter/'.$newsletterFileName.'/$1\',true); ?>"',$content);
+		$content = preg_replace('/="\/?(?:http:\/\/[^"\']*\/)?(img|images)\/([^"\']*)"/','="<?php echo \$html->url(\'/img/newsletter/'.$newsletterFileName.'/$1\',true); ?>"',$content);
 		$content = preg_replace('/href="([^"\']*)"/','href="<?php echo $this->NewsletterMaker->url(\'$1\'); ?>"',$content);
 		file_put_contents (APP.'views'.DS.'elements'.DS.'newsletter'.DS.$newsletterFileName.'.ctp' , $content);
 		

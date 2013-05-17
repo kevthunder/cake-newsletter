@@ -160,7 +160,7 @@
 		}else if(container.hasClass("nltr_row")){
 			container.children("tbody").children("tr").append(cell);
 		}
-		var url = root+"admin/newsletter/newsletter/add_box/"+box_element+"/"+newsletter_id+"/"+container.attr("zoneid")+"/"+new Date().getTime();
+		var url = root+"admin/newsletter/newsletter/add_box/"+newsletter_id+"/"+container.attr("zoneid")+"/"+box_element+"/t:"+new Date().getTime();
 		//alert(url);
 		cell.load(url,null,box_loaded);
 		$(this).closest(".popup").hide("fast");
@@ -190,7 +190,7 @@
 	}
 	function del_box_click(){
 		var newsletter_box = $(this).closest(".newsletter_box");
-		var url = root+"admin/newsletter/newsletter/delete_box/"+newsletter_box.attr("boxid")+"/"+new Date().getTime();
+		var url = root+"admin/newsletter/newsletter/delete_box/"+newsletter_box.attr("boxid")+"/t:"+new Date().getTime();
 		$.get(url, function(data){
 			//alert("Data Loaded: " + data);
 		});
@@ -210,29 +210,54 @@
 		$(".newsletter_box.selected").removeClass("selected");
 	}
 	function show_edit_form(newsletter_box){
-		var samebox = $("#edit_form_zone .edit_form").attr("boxid")==newsletter_box.attr("boxid");
-
-		hide_edit_form();
-		$("#edit_form_zone").append($('.ajax_loader').clone().show());
-		
-		var url = root+"admin/newsletter/newsletter/get_box_edit/"+newsletter_box.attr("boxid")+"/"+new Date().getTime();
-		$.get(url,null,edit_form_loaded);
-		
-		newsletter_box.addClass("selected");
-		
-		$("#edit_form_zone").show();
-		if(!samebox){
-			$("#edit_form_zone").css('position','absolute');
-			$("#edit_form_zone").css('top',newsletter_box.offset().top-$("#edit_form_zone").offsetParent().offset().top);//
-			$("#edit_form_zone").css('left',newsletter_box.offset().left-$("#edit_form_zone").offsetParent().offset().left);//
+		var boxid = newsletter_box.attr("boxid");
+		var samebox = false;
+		var url = false;
+		var completeCallback = edit_form_loaded;
+		if(boxid){
+			samebox = $("#edit_form_zone .edit_form").attr("boxid")==boxid;
+			url = root+"admin/newsletter/newsletter/get_box_edit/"+boxid+"/t:"+new Date().getTime();
+		}else if(newsletter_box.hasClass('nltr_single')){
+			url = root+"admin/newsletter/newsletter/add_box/"+newsletter_id+"/"+newsletter_box.attr("zoneid")+"/mode:edit/t:"+new Date().getTime();
+			completeCallback = function(responseText, textStatus, XMLHttpRequest){
+				edit_form_loaded(responseText, textStatus, XMLHttpRequest, newsletter_box)
+			}
+		}else{
+			if(window.console){
+				console.log('no id !');
+			}
+		}
+		if(url){
+			hide_edit_form();
+			$("#edit_form_zone").append($('.ajax_loader').clone().show());
+			
+			$.get(url,null,completeCallback);
+			
+			newsletter_box.addClass("selected");
+			
+			$("#edit_form_zone").show();
+			if(!samebox){
+				$("#edit_form_zone").css('position','absolute');
+				$("#edit_form_zone").css('top',newsletter_box.offset().top-$("#edit_form_zone").offsetParent().offset().top);//
+				$("#edit_form_zone").css('left',newsletter_box.offset().left-$("#edit_form_zone").offsetParent().offset().left);//
+			}
 		}
 	}
-	function edit_form_loaded(responseText, textStatus, XMLHttpRequest){
+	function edit_form_loaded(responseText, textStatus, XMLHttpRequest, updateBox){
 		$("#edit_form_zone").empty().append(responseText);
 		
 		$("#edit_form_zone").find(".submit_edit_form").click(submit_edit_form);
 		$("#edit_form_zone").find(".close_link").click(hide_edit_form);
 		$("#edit_form_zone").find("input[type!=hidden], select, textarea").get(0).focus();
+		
+		if(window.console){
+			console.log($(updateBox));
+		}
+		if($(updateBox).length){
+			var boxid = $("#edit_form_zone .edit_form").attr("boxid");
+			$(updateBox).attr('id',"box"+boxid);
+			$(updateBox).attr('boxid',boxid);
+		}
 		
 		entries_select_init($("#edit_form_zone"));
 		entry_finder_init($("#edit_form_zone"));
@@ -243,7 +268,7 @@
 	function submit_edit_form(){
 		var edit_form = $("#edit_form_zone .edit_form");
 		var boxid = edit_form.attr("boxid");
-		var url = root+"admin/newsletter/newsletter/edit_box/"+edit_form.attr("boxid")+"/"+new Date().getTime();
+		var url = root+"admin/newsletter/newsletter/edit_box/"+boxid+"/t:"+new Date().getTime();
 		submitTinyMCE();
 		$('input[type="file"]',edit_form).each(function(){
 			if(!$(this).val()){
