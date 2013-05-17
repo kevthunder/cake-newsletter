@@ -41,7 +41,9 @@ class NewsletterSendlistsController extends NewsletterAppController {
 	}
 
 	function admin_import($id = null) {
-		$allowedTypes = array('application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		//$allowedTypes = array('application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		$allowedExt = array('xls','xlsx');
+		
 		$moveFolder = TMP."newletter_import".DS;
 		App::import('Lib', 'Newsletter.SetMulti');
 		$filename = SetMulti::extractHierarchic(array('params.named.filename','params.filename','data.NewsletterSendlist.filename'),$this);
@@ -52,7 +54,8 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		if(!empty($this->data)){
 			if(!empty($this->data['NewsletterSendlist']['import_file'])){
 				$uploadFile = $this->data['NewsletterSendlist']['import_file'];
-				if(!in_array($uploadFile['type'],$allowedTypes)){
+				$ext = pathinfo($uploadFile['name'], PATHINFO_EXTENSION);
+				if(!in_array($ext,$allowedExt)){ //if(!in_array($uploadFile['type'],$allowedTypes)){
 					debug($uploadFile);
 					$this->Session->setFlash(__d('newsletter','This file type is not supported.', true));
 				}elseif($uploadFile['error'] == UPLOAD_ERR_OK){
