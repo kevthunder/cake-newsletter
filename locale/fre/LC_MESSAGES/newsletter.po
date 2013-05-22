@@ -420,8 +420,8 @@ msgstr "Ajouter un courriel"
 msgid "This newsletter has been tested"
 msgstr "Cette infolettre a été testée."
 
-msgid ""
-msgstr ""
+msgid "Can be subscripted to"
+msgstr "Les visiteurs peuvent s'y inscrire"
 
 msgid ""
 msgstr ""

@@ -19,6 +19,13 @@ class NewsletterEmailsController extends NewsletterAppController {
 	}*/
 	
 	function add() {
+		$sendlists = $this->NewsletterEmail->NewsletterSendlist->find('list',array(
+			'conditions'=>array(
+				'NewsletterSendlist.subscriptable'=>1
+			),
+			'order'=>array('NewsletterSendlist.order ASC','NewsletterSendlist.title ASC'),
+			'recursive' => -1,
+		));
 		if (!empty($this->data)) {
 			$error = false;
 			if(!empty($this->data['NewsletterEmail']['email']) && strpos($this->data['NewsletterEmail']['email'], '@') !== false){
@@ -30,23 +37,55 @@ class NewsletterEmailsController extends NewsletterAppController {
 				if(empty($this->data['NewsletterEmail']['sendlist_id'])){
 					if(Configure::read('Newsletter.defaultSendlist')){
 						$this->data['NewsletterEmail']['sendlist_id'] = Configure::read('Newsletter.defaultSendlist');
+					}elseif(!empty($sendlists)){
+						if(count($sendlists) == 1){
+							$this->data['NewsletterEmail']['sendlist_id'] = key($sendlists);
+						}else{
+							$this->Session->setFlash(__d('newsletter','You must choose at least one sendlist.', true));
+							$error = true;
+						}
 					}else{
 						$this->data['NewsletterEmail']['sendlist_id'] = 1;
 					}
+				}elseif(!empty($sendlists) && count(array_diff((array)$this->data['NewsletterEmail']['sendlist_id'],array_keys($sendlists)))){
+					$this->Session->setFlash(__d('newsletter','Invalid sendlist.', true));
+					$error = true;
 				}
-				$this->data['NewsletterEmail']['active'] = 1;
 				
-				$exists = $this->NewsletterEmail->find('first', array(
-					'conditions'=>array(
-						'email'=>$this->data['NewsletterEmail']['email'],
-						'sendlist_id'=>$this->data['NewsletterEmail']['sendlist_id'],
-						'active'=>1
-					),
-					'recursive'=>-1
-				));
 				
-				if(empty($exists)){
-					$this->NewsletterEmail->save($this->data);
+				$lists = (array)$this->data['NewsletterEmail']['sendlist_id'];
+				if(!$error){
+					$exists = $this->NewsletterEmail->find('list', array(
+						'fields'=>array('id','sendlist_id'),
+						'conditions'=>array(
+							'email'=>$this->data['NewsletterEmail']['email'],
+							'sendlist_id'=>$this->data['NewsletterEmail']['sendlist_id'],
+							'active'=>1
+						),
+						'recursive'=>-1
+					));
+					if($exists){
+						$lists = array_diff($lists,$exists);
+					}
+					if(!count($lists)){
+						$this->Session->setFlash(__d('newsletter','Ce email est déjà présent dans notre base de données.', true));
+						$error = true;
+					}
+				}
+				if(!$error){
+					$this->data['NewsletterEmail']['active'] = 1;
+					
+					$ids = array();
+					foreach($lists as $list){
+						$data = $this->data['NewsletterEmail'];
+						$data['sendlist_id'] = $list;
+						
+						$this->NewsletterEmail->create();
+						$this->NewsletterEmail->save($data);
+						$ids[] = $this->NewsletterEmail->id;
+					}
+				}
+				if(!$error){
 					
 					$confirmEmail = Configure::read('Newsletter.ConfirmEmail');
 					if(!empty($confirmEmail)){
@@ -74,9 +113,6 @@ class NewsletterEmailsController extends NewsletterAppController {
 					}else{
 						$this->redirect('/');
 					}
-				}else{
-					$this->Session->setFlash(__d('newsletter','Ce email est déjà présent dans notre base de données.', true));
-					$error = true;
 				}
 			}else{
 				$this->Session->setFlash(__d('newsletter','Invalid email.', true));
@@ -90,6 +126,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 				}
 			}
 		}
+		$this->set("sendlists",$sendlists);
 	}
 	
 	function _send_confirm_email($data){

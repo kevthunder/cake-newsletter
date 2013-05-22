@@ -1,4 +1,7 @@
-<?php $html->css('/newsletter/css/newsletter.admin',null,array('inline'=>false)); ?>
+<?php 
+	$html->css('/newsletter/css/newsletter.admin',null,array('inline'=>false));
+	$orderedSendlist = NewsletterConfig::load('orderedSendlist');
+?>
 <div class="newsletterSendlists index">
 <h2><?php __d('newsletter','NewsletterSendlists');?></h2>
 <p>
@@ -15,6 +18,9 @@ echo $paginator->counter(array(
 	<th><?php echo $paginator->sort('active');?></th>
 	<th><?php echo $paginator->sort(__d('newsletter','Created',true),'created');?></th>
 	<th><?php __d('newsletter','Email count');?></th>
+	<?php if( $orderedSendlist ) { ?>
+	<th><?php echo $paginator->sort('order');?></th>
+	<?php }?>
 	<th class="actions"><?php __d('newsletter','Actions');?></th>
 </tr>
 <?php
@@ -48,6 +54,25 @@ foreach ($newsletterSendlists as $newsletterSendlist):
 		<td>
 			<?php echo $newsletterSendlist['NewsletterSendlist']['nb_email']; ?>
 		</td>
+		<?php if( $orderedSendlist ) { ?>
+		<td class="order labeled">
+			<?php
+				$ordered = (!empty($this->params['paging']['NewsletterSendlist']['options']['order']) && key($this->params['paging']['NewsletterSendlist']['options']['order']) == 'NewsletterSendlist.order' );
+			
+				if($ordered) echo $html->link(
+					'<span>'.__d('newsletter','Move Up', true).'</span>', 
+					array('action' => 'up', $newsletterSendlist['NewsletterSendlist']['id']), 
+					array('class'=>'icon up','escape' => false)
+				);
+				echo '<div class="curOrder">'.$newsletterSendlist['NewsletterSendlist']['order'].'</div>';
+				if($ordered) echo $html->link(
+					'<span>'.__d('newsletter','Move Down', true).'</span>', 
+					array('action' => 'down', $newsletterSendlist['NewsletterSendlist']['id']), 
+					array('class'=>'icon down','escape' => false)
+				);
+			?>
+		</td>
+		<?php } ?>
 		<td class="actions labeled">
 		<?php
 			echo $html->link(

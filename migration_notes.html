@@ -140,5 +140,14 @@ ALTER TABLE `newsletter_stats` ADD `action` VARCHAR( 255 ) NULL AFTER `date`;
 </pre></li>
     </ol>
 </div>
+<div class="section">
+    <h1>De v0.1.2.5.5 à v0.1.2.5.6</h1>
+    <ol>
+        <li>Database : <pre>
+ALTER TABLE `newsletter_sendlists` ADD `subscriptable` tinyint(1) NOT NULL AFTER `active`;
+ALTER TABLE `newsletter_sendlists` ADD `order` int(11) default NULL AFTER `subscriptable`;
+</pre></li>
+    </ol>
+</div>
 </body>
 </html>

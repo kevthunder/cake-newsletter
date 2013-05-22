@@ -137,6 +137,7 @@ td.actions a.warning span.nb{
 	margin: 3px 0 0 0;
 }
 
+td.order.labeled a.icon,
 td.actions.labeled a.icon{
 	position:relative;
 	margin: 0;
@@ -144,6 +145,7 @@ td.actions.labeled a.icon{
     text-indent: 0px;
 }
 
+td.order.labeled a.icon span,
 td.actions.labeled a.icon span {
     display:none;
 	width:auto;
@@ -156,6 +158,7 @@ td.actions.labeled a.icon span {
 	background: url("../img/tool_tips.png") no-repeat scroll bottom right transparent;
 }
 
+td.order.labeled a.icon:hover span,
 td.actions.labeled a.icon:hover span {
     display:block;
 }
@@ -170,6 +173,39 @@ td.actions.labeled a.icon:hover span {
 
 .newsletters td.actions {
     width: 250px;
+}
+
+td.order {
+    width: 80px;
+}
+td.order .curOrder{
+    display: block;
+    float: left;
+	width: 30px;
+	text-align: center;
+	margin: 0 -5px 0 -5px;
+	padding: 0;
+}
+td.order a.up {
+    background: url("../img/icon_up.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 16px;
+}
+td.order a.down {
+    background: url("../img/icon_down.png") no-repeat scroll center center transparent;
+    display: block;
+    float: left;
+    height: 16px;
+    outline: medium none;
+    text-indent: -99999px;
+    width: 16px;
+}
+td.order.labeled a.icon span{
+	white-space:nowrap;
 }
 
 #edit_zone{

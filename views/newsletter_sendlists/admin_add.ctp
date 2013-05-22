@@ -4,6 +4,7 @@
  		<legend><?php __d('newsletter','Add NewsletterSendlist');?></legend>
 	<?php
 		echo $form->input('active', array('checked'=>1));
+		echo $form->input('subscriptable',array('label'=>__d('newsletter','Can be subscripted to',true)));
 		echo $form->input('title');
 		echo $form->input('description');
 	?>

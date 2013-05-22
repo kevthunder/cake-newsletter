@@ -5,6 +5,9 @@
 	<?php
 		echo $form->input('id');
 		echo $form->input('active');
+		if(!$tabled){
+			echo $form->input('subscriptable',array('label'=>__d('newsletter','Can be subscripted to',true)));
+		}
 		echo $form->input('title');
 		echo $form->input('description');
 	?>

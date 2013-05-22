@@ -7,8 +7,11 @@ class NewsletterConfig extends Object {
 	
 	var $loaded = false;
 	var $defaultConfig = array(
-		'defaultSendlist' => 1,
-		'EmailAdd.confirm' => true,
+		'defaultSendlist' => null,
+		'orderedSendlist' => false,
+		'EmailAdd'=>array(
+			'confirm' => true,
+		),
 		'selfSending' => false,
 		'sender' => 'Newsletter.PhpMail',
 		'maxSend' => null, //defaults to 10000 for PhpMail and 200 000 for Mailgun

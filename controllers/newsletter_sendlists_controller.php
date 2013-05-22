@@ -21,6 +21,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 	function admin_index() {
 
 		$this->NewsletterSendlist->recursive = -1;
+		$this->paginate['order'] =  array('NewsletterSendlist.order' => 'asc');
 		$lists = $this->paginate();
 		$this->NewsletterSendlist->NewsletterEmail->recursive = -1;
 		
@@ -415,6 +416,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 	}
 
 	function admin_edit($id = null) {
+	
 		if (!$id && empty($this->data)) {
 			$this->Session->setFlash(__d('newsletter','Invalid NewsletterSendlist', true));
 			$this->redirect(array('action'=>'index'));
@@ -430,6 +432,24 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		if (empty($this->data)) {
 			$this->data = $this->NewsletterSendlist->read(null, $id);
 		}
+		
+		$this->set('tabled',$this->Funct->isTableSendlist($id));
+	}
+
+	function admin_up($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__d('newsletter','Invalid NewsletterSendlist', true));
+		}
+		$this->NewsletterSendlist->move(-1,$id);
+		$this->redirect(array('action'=>'index'));
+		//$this->render(false);
+	}
+	function admin_down($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__d('newsletter','Invalid NewsletterSendlist', true));
+		}
+		$this->NewsletterSendlist->move(1,$id);
+		$this->redirect(array('action'=>'index'));
 	}
 
 	function admin_delete($id = null) {

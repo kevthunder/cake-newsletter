@@ -143,6 +143,8 @@ CREATE TABLE IF NOT EXISTS `newsletter_sendings` (
 CREATE TABLE IF NOT EXISTS `newsletter_sendlists` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `active` tinyint(1) NOT NULL,
+  `subscriptable` tinyint(1) NOT NULL,
+  `order` int(11) default NULL,
   `created` datetime NOT NULL,
   `modified` datetime NOT NULL,
   `title` varchar(255) COLLATE utf8_unicode_ci NOT NULL,

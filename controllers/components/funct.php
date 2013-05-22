@@ -452,10 +452,11 @@ class FunctComponent extends Object
 			//$emailData = array_intersect_key($mail[$modelName],array_flip($basicFields));
 			//if(array_key_exists($Model->primaryKey, $mail[$modelName]) {}
 			$emailData['id'] = $mail[$modelName][$Model->primaryKey];
-			if(isset($mail[$modelName]['active'])){
-				$emailData['active']= $mail[$modelName]['active'];
-			}else if($tableSendlist['activeField'] && isset($mail[$modelName][$tableSendlist['activeField']])){
+			//debug($mail[$modelName]);
+			if($tableSendlist['activeField'] && array_key_exists($tableSendlist['activeField'],$mail[$modelName])){
 				$emailData['active']= $mail[$modelName][$tableSendlist['activeField']];
+			}else if(array_key_exists('active',$mail[$modelName])){
+				$emailData['active']= $mail[$modelName]['active'];
 			}else{
 				$emailData['active']= 1;
 			}
