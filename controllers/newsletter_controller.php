@@ -1053,7 +1053,7 @@ class NewsletterController extends NewsletterAppController {
 		if(empty($content)){
 			return false;
 		}
-		$content = preg_replace('/="\/?(?:http:\/\/[^"\']*\/)?(img|images)\/([^"\']*)"/','="<?php echo \$html->url(\'/img/newsletter/'.$newsletterFileName.'/$1\',true); ?>"',$content);
+		$content = preg_replace('/="\/?(?:http:\/\/[^"\']*\/)?(?:img|images)\/([^"\']*)"/','="<?php echo \$html->url(\'/img/newsletter/'.$newsletterFileName.'/$1\',true); ?>"',$content);
 		$content = preg_replace('/href="([^"\']*)"/','href="<?php echo $this->NewsletterMaker->url(\'$1\'); ?>"',$content);
 		file_put_contents (APP.'views'.DS.'elements'.DS.'newsletter'.DS.$newsletterFileName.'.ctp' , $content);
 		
