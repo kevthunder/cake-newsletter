@@ -496,7 +496,7 @@ class NewsletterMakerHelper extends AppHelper {
 		return $final_url;
 	}
 	function unsubscribeUrl(){
-		return $this->html->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'unsubscribe', '%sended_id%', 'admin' => false),true);
+		return $this->html->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'unsubscribe', '%sended_id%', 'admin' => false, 'lang'=>$this->newsletter['Newsletter']['lang']),true);
 	}
 	function viewUrl(){
 		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false));
