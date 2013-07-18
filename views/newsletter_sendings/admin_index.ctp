@@ -52,8 +52,8 @@
 						<td class="id"><?php echo $newsletterSending['NewsletterSending']['id']; ?>&nbsp;</td>
 						<td class="date">
 			<?php 
-			if(strtotime($newsletter['Newsletter']['date']) != 0){
-				echo date_('jS F Y, G\hi',strtotime($newsletter['Newsletter']['date'])); 
+			if(strtotime($newsletterSending['NewsletterSending']['date']) != 0){
+				echo date_('jS F Y, G\hi',strtotime($newsletterSending['NewsletterSending']['date'])); 
 			}
 			?></td>
 						<?php if( empty($newsletter) ) { ?>
@@ -65,7 +65,11 @@
 							if(!empty($newsletterSending['NewsletterSending']['selected_lists'])){
 								foreach($newsletterSending['NewsletterSending']['selected_lists'] as $i => $list){
 									if($i != 0) echo ' ,';
-									echo '<a href="'.$this->Html->url(array('plugin'=>'newsletter','controller'=>'newsletter_emails','index'=>'view',$sendlists[$list])).'">'.$sendlists[$list].'</a>';
+									if(!empty($sendlists[$list])){
+										echo '<a href="'.$this->Html->url(array('plugin'=>'newsletter','controller'=>'newsletter_emails','index'=>'view',$sendlists[$list])).'">'.$sendlists[$list].'</a>';
+									}else{
+										echo '('.__d('newsletter','Deleted sendlist',true).')';
+									}
 								}
 							} ?>&nbsp;</td>
 						<td class="additional_emails"><?php echo $text->truncate($newsletterSending['NewsletterSending']['additional_emails'], 150, array('exact' => false)); ?>&nbsp;</td>
