@@ -456,7 +456,7 @@ class NewsletterMakerHelper extends AppHelper {
 			$text = substr($text,0,$matches[0][1]).'="'.$fullUrl.'"'.substr($text,$matches[0][1]+strlen($matches[0][0]));
 			//debug($matches);
 		}
-		if(!empty($opt['wrap'])){
+		if(!empty($opt['wrap']) && !empty($text)){
 			App::import('Vendor', 'Newsletter.simple_html_dom_node',array('file'=>'simple_html_dom.php'));
 			
 			$html = str_get_html($text);
