@@ -1,5 +1,5 @@
 <?php 
-$javascript->link('/newsletter/js/jquery-1.3.2.min.js', false);
+$javascript->link('/newsletter/js/jquery-1.9.1.js', false);
 
 $script = '$(function(e){
 				$("#print_bt").click(function(e){
