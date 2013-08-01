@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS `newsletters` (
   `date` datetime NOT NULL,
   `lang` varchar(255) collate utf8_unicode_ci default NULL,
   `sender` varchar(255) collate utf8_unicode_ci default NULL,
-  `html` text collate utf8_unicode_ci,
+  `html` longtext collate utf8_unicode_ci,
   `template` varchar(255) collate utf8_unicode_ci default NULL,
   `tested` tinyint(1) NOT NULL,
   `external_key` varchar(255) collate utf8_unicode_ci default NULL,
