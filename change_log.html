@@ -354,6 +354,15 @@ pre{
 		<li>Fix : Mauvaise date dans newsletter sendings</li>
 		<li>Fix : filterRichtext fait une erreur quand $text est vide quand des wrap sont spécifier dans les otions</li>
     </ul>
+    <h1>v0.1.2.5.7</h1>
+    <ul>
+        <li>Config "contentUrl" : NewsletterMaker->url() utilise cette config comme base de l'url sauf si "useContentUrl" est false</li>
+		<li>Detection automatique du fichier jquery. Utilisé dans le blank layout</li>
+		<li>Action "invalidate_render" pour effacer les rendu html des newsletters</li>
+		<li>Laction voir fait un rendu de l'infolettre si ce n'est pas déjà fait</li>
+		<li>Interne : Le component Funct renommé pour NewsletterFunct</li>
+		<li>Interne : L'action "make" qui fesait le rendu de l'infolettre est devenu la fonction "renderNewsletter" du component NewsletterFunct</li>
+    </ul>
 </div>
 </body>
 </html>

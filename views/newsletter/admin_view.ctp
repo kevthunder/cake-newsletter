@@ -1,5 +1,6 @@
 <?php 
-$javascript->link('/newsletter/js/jquery-1.3.2.min.js', false);
+$this->NewsletterMaker->getLib('jquery');
+//$javascript->link('/newsletter/js/jquery-1.3.2.min.js', false);
 
 $script = '$(function(e){
 				$("#print_bt").click(function(e){

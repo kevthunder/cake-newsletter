@@ -3,7 +3,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 
 	var $name = 'NewsletterEmails';
 	var $helpers = array('Html', 'Form');
-	var $components = array('Email','Newsletter.Funct','Newsletter.EmailUtils');
+	var $components = array('Email','Newsletter.NewsletterFunct','Newsletter.EmailUtils');
 
 	/*function index() {
 		$this->NewsletterEmail->recursive = 0;
@@ -212,11 +212,11 @@ class NewsletterEmailsController extends NewsletterAppController {
 		}
 		if($listId){
 			$this->NewsletterEmail->recursive = 0;
-			if($this->Funct->isTableSendlist($listId)){
-				$tableSendlist = $this->Funct->getTableSendlistID($listId,true);
+			if($this->NewsletterFunct->isTableSendlist($listId)){
+				$tableSendlist = $this->NewsletterFunct->getTableSendlistID($listId,true);
 				$Model = $tableSendlist['modelClass'];
 				$modelName = $Model->alias;
-				$findOptions = $this->Funct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
+				$findOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
 				if($q != null) {
 					$this->paginate['conditions'] = array('OR' => array(
 						'email LIKE' => '%'.$q.'%'
@@ -236,7 +236,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 				$mails = $this->paginate($Model);
 				$newsletterEmails = array();
 				foreach($mails as $mail){
-					$newsletterEmails[] = $this->Funct->tabledEmailGetFields($mail,$tableSendlist,'NewsletterEmail');
+					$newsletterEmails[] = $this->NewsletterFunct->tabledEmailGetFields($mail,$tableSendlist,'NewsletterEmail');
 				}
 				$toRender = 'tabled_email';
 			}else{

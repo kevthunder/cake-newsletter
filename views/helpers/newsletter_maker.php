@@ -152,8 +152,44 @@ class NewsletterMakerHelper extends AppHelper {
 		return NewsletterConfig::getDefZoneOpt();
 	}
 	
+	function getLib($name,$inline = false){
+		$opt = array();
+		$cache = Cache::read('html_lib');
+		if(empty($cache[$name])){
+			$libs = array(
+				'jquery' => array(
+					'type' => 'js',
+					'match' => 'jquery-[0-9.]+\.min\.js'
+				)
+			);
+			if(!empty($libs[$name])){
+				$opt = $libs[$name];
+				if(empty($opt['folder'])) $opt['folder'] = $opt['type'];
+				$folder = new Folder(WWW_ROOT . DS . $opt['folder']);
+				$res = $folder->find($opt['match']);
+				//debug($res);
+				if(!empty($res)) {
+					$opt['path'] = end($res);
+					$cache[$name] = $opt;
+					Cache::write('html_lib', $cache);
+				};
+			}
+		}else{
+			$opt = $cache[$name];
+		}
+		if(!empty($opt['path'])){
+			if($opt['type'] = 'js'){
+				return $this->html->script($opt['path'],array('inline'=>$inline));
+			}elseif($opt['type'] = 'css'){
+				return $this->html->css($opt['path'],null,array('inline'=>$inline));
+			}
+		}
+	}
+	
 	//////////////////// Newsletter layout ////////////////////
 	function inEditMode(){
+		$edit_mode = $this->view->getVar('edit_mode');
+		if(isset($edit_mode)) return $edit_mode;
 		return $this->params['controller'] == 'newsletter' && ($this->params['action'] == 'admin_edit' || $this->params['action'] == 'admin_preview' || $this->params['action'] == 'admin_add_box' || $this->params['action'] == 'admin_edit_box' || $this->params['action'] == 'admin_view_box');
 	}
 	function column($id,$options=array()){
@@ -478,12 +514,20 @@ class NewsletterMakerHelper extends AppHelper {
 	}
 	function url($url){
 		$base_url = '';
+		$contentUrl = NewsletterConfig::load('contentUrl');
 		if(is_array($url)){
 			$url['base'] = false;
 			$url['admin'] = false;
+			if(isset($url['useContentUrl']) && !$url['useContentUrl']){
+				$contentUrl = null;
+			}
+			unset($url['useContentUrl']);
 			$base_url = $this->html->url($url);
 		}else{
 			$base_url = str_replace($this->html->url('/',true),'/',$url);
+		}
+		if($contentUrl && $base_url[0] == '/'){
+			$base_url = $contentUrl . substr($base_url,1);
 		}
 		$final_url = $this->html->url(array('plugin' => 'newsletter', 'controller' => 'newsletter', 'action' => 'redir', 'admin'=>false),true);
 		//$encoded_link = urlencode(str_replace(array('/',':','?'),array('>',';','!'),$base_url));
@@ -499,10 +543,10 @@ class NewsletterMakerHelper extends AppHelper {
 		return $this->html->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'unsubscribe', '%sended_id%', 'admin' => false, 'lang'=>$this->newsletter['Newsletter']['lang']),true);
 	}
 	function viewUrl(){
-		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false));
+		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false, 'useContentUrl' => false));
 	}
 	function selfSendingUrl(){
-		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action'=>'add', $this->newsletter["Newsletter"]["id"],'%sended_id%', 'admin' => false));
+		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action'=>'add', $this->newsletter["Newsletter"]["id"],'%sended_id%', 'admin' => false, 'useContentUrl' => false));
 	}
 	function title(){
 		return $this->newsletter["Newsletter"]["title"];

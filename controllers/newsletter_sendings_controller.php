@@ -4,7 +4,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 	var $name = 'NewsletterSendings';
 	
 	var $uses = array('Newsletter.NewsletterSending','Newsletter.NewsletterSendlist','Newsletter.NewsletterSended');
-	var $components = array('Email','Newsletter.EmailUtils', 'Newsletter.Funct', 'RequestHandler');
+	var $components = array('Email','Newsletter.EmailUtils', 'Newsletter.NewsletterFunct', 'RequestHandler');
 	
 	var $lastProcessTime = null;
 	var $consoleOut = '';
@@ -809,7 +809,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 				}
 				//debug($toSend);
 				$this->NewsletterSended->recursive = -1;
-				if($this->NewsletterSended->updateAll($this->Funct->valFields(array('status'=>'reserved')),array('id'=>$ids,'active'=>1,'status'=>'ready')) && $this->NewsletterSended->getAffectedRows() == count($ids)){
+				if($this->NewsletterSended->updateAll($this->NewsletterFunct->valFields(array('status'=>'reserved')),array('id'=>$ids,'active'=>1,'status'=>'ready')) && $this->NewsletterSended->getAffectedRows() == count($ids)){
 					$this->_sendBatch($sender,$opt,$mailsOptions);
 				}else{
 					$this->_consoleOut($id,
@@ -868,10 +868,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$errorIds = array_keys($mailsOptions);
 			}
 			if(!empty($okIds)){
-				$this->NewsletterSended->updateAll($this->Funct->valFields(array('status'=>'sent')),array('id'=>$okIds));
+				$this->NewsletterSended->updateAll($this->NewsletterFunct->valFields(array('status'=>'sent')),array('id'=>$okIds));
 			}
 			if(!empty($errorIds)){
-				$this->NewsletterSended->updateAll($this->Funct->valFields(array('status'=>'error')),array('id'=>$okIds));
+				$this->NewsletterSended->updateAll($this->NewsletterFunct->valFields(array('status'=>'error')),array('id'=>$okIds));
 			}
 			$this->_consoleOut($id,sprintf(__d('newsletter','%s sent, %s errors', true),count($okIds),count($errorIds)));
 		}else{
@@ -1004,7 +1004,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$dynSendlists = array();
 		if(!empty($sending['NewsletterSending']['selected_lists'])){
 			foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
-				if($this->Funct->isTableSendlist($newsletterSendlist)){
+				if($this->NewsletterFunct->isTableSendlist($newsletterSendlist)){
 					$dynSendlists[] = $newsletterSendlist;
 				}else{
 					$sendlists[] = $newsletterSendlist;
@@ -1015,12 +1015,12 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$this->_consoleOut($id,sprintf(__d('newsletter','%s Dynamic Sendlists found', true),count($dynSendlists)));
 		foreach($dynSendlists as $list){
 			$this->_consoleOut($id,sprintf(__d('newsletter','Get query for Dynamic sendlist id : %s', true),$list));
-			$tableSendlist = $this->Funct->getTableSendlistID($list,true);
+			$tableSendlist = $this->NewsletterFunct->getTableSendlistID($list,true);
 			if($tableSendlist['modelClass']->useDbConfig != $this->NewsletterSended->useDbConfig){
-				$finalFindOptions = $this->Funct->tabledEmailGetFindOptions($list,true);
+				$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true);
 				$finalFindOptions['tableSendlist'] = $tableSendlist;
 			}else{
-				$finalFindOptions = $this->Funct->tabledEmailGetFindOptions($list,true,$findOptions);
+				$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true,$findOptions);
 			}
 			$finalFindOptions['fields']['sendlist_id'] = $list;
 			$queries[] = $finalFindOptions;
@@ -1043,7 +1043,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		//=========================== Save Queries ===========================
 		foreach($queries as $query){
 			//--- normalize Queries ---
-			$fields = $this->Funct->fieldsAddAlias($query['fields']);
+			$fields = $this->NewsletterFunct->fieldsAddAlias($query['fields']);
 			$insertFields = $this->NewsletterSended->tcheckSaveFields(array_keys($fields));
 			//debug($insertFields);
 			$fields = array_intersect_key($fields,array_flip($insertFields));
@@ -1059,7 +1059,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$i = 0;
 				do {
 					$query['page'] = $i+1;
-					$emails = $query['model']->find('all',$this->Funct->standardizeFindOptions($query));
+					$emails = $query['model']->find('all',$this->NewsletterFunct->standardizeFindOptions($query));
 					if(!empty($emails)){
 						$this->_consoleOut($id,sprintf(__d('newsletter','%s Email read', true),count($emails)));
 						
@@ -1091,7 +1091,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 						//--- format data ---
 						$toSave = array();
 						foreach($emails as $mail){
-							$mailData = $this->Funct->tabledEmailGetFields($mail,$tableSendlist);
+							$mailData = $this->NewsletterFunct->tabledEmailGetFields($mail,$tableSendlist);
 							if(!in_array($mailData['email'],$duplicata)){
 								$mailData = array_intersect_key($mailData,array_flip($insertFields));
 								$mailData['email_id'] = $mailData['id'];
@@ -1106,7 +1106,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 						if(!empty($toSave)){
 							$toSaveSql = array();
 							foreach($toSave as $d){
-								$toSaveSql[] = "(".implode(",",$this->Funct->valFields($d)).")";
+								$toSaveSql[] = "(".implode(",",$this->NewsletterFunct->valFields($d)).")";
 							}
 							$insertStatement = 'INSERT INTO '.$db->fullTableName($this->NewsletterSended).' (`'.implode("`,`",array_keys($toSave[0])).'`) VALUES '.implode(",",$toSaveSql);
 							//debug($insertStatement);
@@ -1141,12 +1141,12 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}else{
 				$query['fields']['email_id'] = $query['fields']['id'];
 				unset($query['fields']['id']);
-				$query['fields'] = array_merge($this->Funct->valFields($basicInfo),$query['fields']);
+				$query['fields'] = array_merge($this->NewsletterFunct->valFields($basicInfo),$query['fields']);
 				
-				$selectStatement = $db->buildStatement($this->Funct->standardizeFindOptions($query),$query['model']);
+				$selectStatement = $db->buildStatement($this->NewsletterFunct->standardizeFindOptions($query),$query['model']);
 				
 				//--- make insert Queries ---
-				$fields = $this->Funct->fieldsAddAlias($query['fields']);
+				$fields = $this->NewsletterFunct->fieldsAddAlias($query['fields']);
 				$insertFields = $this->NewsletterSended->tcheckSaveFields(array_keys($fields));
 				$insertQuery = array(
 					'table' => $db->fullTableName($this->NewsletterSended),

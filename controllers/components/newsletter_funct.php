@@ -1,6 +1,19 @@
 <?php 
-class FunctComponent extends Object
+class NewsletterFunctComponent extends Object
 {
+	var $controller = null;
+	var $Newsletter = null;
+	function initialize(&$controller, $settings = array()) {
+		uses('Folder');
+		$this->Folder =& new Folder();
+		$this->controller =& $controller;
+		if(!empty($this->controller->Newsletter)){
+			$this->Newsletter = $this->controller->Newsletter;
+		}else{
+			$this->Newsletter = ClassRegistry::init('Newsletter.Newsletter');
+		}
+		
+	}
 	function slug($chaine="", $length=150){
 		// remplace les caractères accentués par leur version non accentuée
 		$id = strtr( $chaine,
@@ -24,10 +37,6 @@ class FunctComponent extends Object
 			$newArr[ $key ] = ( is_array( $value ) ? $this->array_map_recursive( $func, $value ) : $func( $value ) );
 		}
 		return $newArr;
-	}
-	function initialize(&$controller, $settings = array()) {
-		uses('Folder');
-		$this->Folder =& new Folder();
 	}
 	function getAllViewPaths(){
 		if(!isset($this->allViewPaths)){
@@ -99,6 +108,73 @@ class FunctComponent extends Object
 		}
 	
 		return $boxElements;
+	}
+	
+	function getBoxByZone($newsletter){
+		if(!is_numeric($newsletter)){
+			if(!empty($newsletter['Newsletter']['id'])){
+				$newsletter = $newsletter['Newsletter']['id'];
+			}elseif(!empty($newsletter['id'])){
+				$newsletter = $newsletter['id'];
+			}else{
+				return null;
+			}
+		}
+		$newsletter_boxes = $this->Newsletter->NewsletterBox->find('all',array('conditions'=>array('NewsletterBox.newsletter_id'=>$newsletter),'order'=>'NewsletterBox.zone ASC, NewsletterBox.order ASC'));
+		$boxes_by_zone = array();
+		foreach($newsletter_boxes as $box){
+			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
+		}
+		return $boxes_by_zone;
+	}
+	
+	function renderNewsletter(&$newsletter,$save=true){
+		if(is_numeric($newsletter)){
+			$tmp = $this->Newsletter->read(null, $newsletter);
+			$newsletter =& $tmp;
+		}
+		if(empty($newsletter)){
+			debug('Invalid Newsletter.');
+			return null;
+		}
+		$boxes_by_zone = $this->getBoxByZone($newsletter);
+		$config = $this->Newsletter->getConfig($newsletter);
+		if(!empty($config)){
+			$config->beforeRender($newsletter,$this->controller);
+		}
+			
+		$vars = array(
+			'newsletter' => $newsletter,
+			'boxes_by_zone' => $boxes_by_zone,
+			'newsletter_data' => $newsletter,
+			'title_for_newsletter' => '<span id="title_for_newsletter">'.$newsletter['Newsletter']['title'].'</span>',
+			'edit_mode' => false,
+		);
+		$this->controller->set($vars);
+		
+		
+		$viewClass = $this->controller->view;
+		if ($viewClass != 'View') {
+			list($plugin, $viewClass) = pluginSplit($viewClass);
+			$viewClass = $viewClass . 'View';
+			App::import('View', $this->controller->view);
+		}
+		$View = new $viewClass($this->controller, true);
+		
+		$View->layout = 'newsletter';
+		
+		$htmlContent = $View->element('newsletter'.DS.$newsletter['Newsletter']['template'], array(), true);
+		$html = $View->renderLayout($htmlContent);
+		
+		ClassRegistry::removeObject('view');
+		
+		$newsletter['Newsletter']['html'] = $html;
+		
+		if($save){
+			$this->Newsletter->save(array('Newsletter'=>$newsletter['Newsletter']));
+		}
+		
+		return $html;
 	}
 	function json_enc($value){
 		//return json_encode($this->recur_utf8_encode($value));

@@ -8,7 +8,7 @@ class NewsletterController extends NewsletterAppController {
 	var $name = 'Newsletter';
 	var $helpers = array('Html', 'Form', 'Newsletter.NewsletterMaker', 'Javascript');
 	var $uses = array('Newsletter.Newsletter','Newsletter.NewsletterBox','Newsletter.NewsletterSendlist','Newsletter.NewsletterEmail','Newsletter.NewsletterSended','Newsletter.NewsletterStat');
-	var $components = array('Email','Newsletter.Funct', 'RequestHandler', 'Session','Acl');
+	var $components = array('Email','Newsletter.NewsletterFunct', 'RequestHandler', 'Session','Acl');
 	
 	function index() {
 		$this->paginate['order'] = 'date DESC';
@@ -32,14 +32,16 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$Newsletter = $this->Newsletter->read(null, $id);
 		if(!$Newsletter) $this->cakeError('error404');
+		
+		if(empty($Newsletter['Newsletter']['html'])){
+			$Newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
+		}
 		$this->set('Newsletter', $Newsletter);
 	}
 	function redir($url=null,$sended_id=null){
 		$this->autoRender = false;
-		//$url = str_replace(array('>',';','!'),array('/',':','?'),$url);
-		/*while(strpos($url,urlencode('/'))!== false || strpos($url,urlencode('%'))!== false){
-			$url = urldecode($url);
-		}*/
+		
+		///////// Decode /////////
 		$url = base64_decode(str_replace('-','/',$url));
 		$replace = array(
 			'%sended_id%' => $sended_id,
@@ -53,6 +55,7 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$url = str_replace(array_keys($replace),array_values($replace),$url);
 		
+		///////// Save stats if sended_id is present /////////
 		if($sended_id){
 			$this->NewsletterStat->create();
 			$visite = array();
@@ -65,9 +68,29 @@ class NewsletterController extends NewsletterAppController {
 			$this->NewsletterStat->save($visite);
 		}
 		//debug($this->params);
-		if(!preg_match('/http[s]?\:\/\//',$url)){
+		
+		
+		///////// If internal url, add Google Analytics tracking /////////
+		$internal = !preg_match('/http[s]?\:\/\//',$url);
+		if(!$internal){
+			$internalPrefixes = array(
+				Router::url('/',true)
+			);
+			$contentUrl = NewsletterConfig::load('contentUrl');
+			if($contentUrl){
+				$internalPrefixes[] = $contentUrl;
+			}
+			foreach($internalPrefixes as $prefix){
+				if(substr($url,0,strlen($prefix)) == $prefix){
+					$internal = true;
+					break;
+				}
+			}
+		}
+		if($internal){
 			$url= $url."?utm_source=newsletter&utm_medium=email&utm_campaign=email";
 		}
+		
 		if($url){
 			$this->redirect($url);
 		}
@@ -133,7 +156,7 @@ class NewsletterController extends NewsletterAppController {
 					//$email_data['id'] = $this->data['NewsletterEmail']['id'];
 					$email_data['active'] = '0';
 					$count = $this->NewsletterEmail->updateAll($email_data, array('email'=>$this->data['NewsletterEmail']['email']));
-					$tableSendlists = $this->Funct->getTableSendlists(true);
+					$tableSendlists = $this->NewsletterFunct->getTableSendlists(true);
 					foreach($tableSendlists as $tableSendlist){
 						if($tableSendlist['allowUnsubscribe']){
 							$Model = $tableSendlist['modelClass'];
@@ -173,7 +196,7 @@ class NewsletterController extends NewsletterAppController {
 				}else{
 					$email = $this->NewsletterEmail->find('first', array('conditions'=>array('email'=>$str_email),'order'=>array('active DESC')));
 					if(empty($email) || !$email['NewsletterEmail']['active']){
-						$tabledEmail = $this->Funct->getTabledEmail($str_email);
+						$tabledEmail = $this->NewsletterFunct->getTabledEmail($str_email);
 						if(!empty($tabledEmail)){
 							$email = array('NewsletterEmail'=>$tabledEmail);
 						}
@@ -244,13 +267,16 @@ class NewsletterController extends NewsletterAppController {
 	}
 	function admin_view($id = null) {
 		//$this->autoLayout = false;
-		$this->layout = "empty";
 		if (!$id) {
 			$this->Session->setFlash(__d('newsletter','Invalid Newsletter.', true));
 			debug('Invalid Newsletter.');
 			$this->redirect(array('action'=>'index'));
 		}
 		$Newsletter = $this->Newsletter->read(null, $id);
+		if(empty($Newsletter['Newsletter']['html'])){
+			$Newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
+		}
+		$this->layout = "empty";
 		$this->set('Newsletter', $Newsletter);
 	}
 	function admin_graphs($id = null) {
@@ -687,11 +713,7 @@ class NewsletterController extends NewsletterAppController {
 		}
 		//debug($this->params);
 		$newsletter = $this->Newsletter->read(null, $id);
-		$newsletter_boxes = $this->NewsletterBox->find('all',array('conditions'=>array('NewsletterBox.newsletter_id'=>$id),'order'=>'NewsletterBox.zone ASC, NewsletterBox.order ASC'));
-		$boxes_by_zone = array();
-		foreach($newsletter_boxes as $box){
-			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
-		}
+		$boxes_by_zone = $this->NewsletterFunct->getBoxByZone($id);
 		$config = $this->Newsletter->getConfig($this->Newsletter->data);
 		if(!empty($config)){
 			$config->beforeRender($this->Newsletter->data,$this);
@@ -703,35 +725,6 @@ class NewsletterController extends NewsletterAppController {
 		//$this->set('text_for_newsletter', '<div id="text_for_newsletter">'.$newsletter['Newsletter']['text'].'</div>');
 		
 		return $this->render('/elements/newsletter/'.$newsletter['Newsletter']['template']);
-	}
-	function admin_make($id = null) {
-		if(Configure::read('debug')==2){
-			Configure::write('debug', 1);
-		}
-		$this->autoLayout = true;
-		$this->layout = "newsletter";
-		if (!$id) {
-			debug('Invalid Newsletter.');
-			return false;
-		}else{
-			$newsletter = $this->Newsletter->read(null, $id);
-			$newsletter_boxes = $this->NewsletterBox->find('all',array('conditions'=>array('NewsletterBox.newsletter_id'=>$id),'order'=>'NewsletterBox.zone ASC, NewsletterBox.order ASC'));
-			$boxes_by_zone = array();
-			foreach($newsletter_boxes as $box){
-				$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
-			}
-			$config = $this->Newsletter->getConfig($this->Newsletter->data);
-			if(!empty($config)){
-				$config->beforeRender($this->Newsletter->data,$this);
-			}
-			$this->set('newsletter',$this->Newsletter->data);
-			$this->set('boxes_by_zone',$boxes_by_zone);
-			$this->set('newsletter_data', $this->Newsletter->data);
-			$this->set('title_for_newsletter', '<span id="title_for_newsletter">'.$newsletter['Newsletter']['title'].'</span>');
-			
-			
-			return $this->render('/elements/newsletter/'.$newsletter['Newsletter']['template']);
-		}
 	}
 	
 	function admin_add() {
@@ -746,7 +739,7 @@ class NewsletterController extends NewsletterAppController {
 			}
 		}
 		
-		$this->set('templates',$this->Funct->getTemplates());
+		$this->set('templates',$this->NewsletterFunct->getTemplates());
 	}
 
 	function admin_edit($id = null) {
@@ -766,7 +759,7 @@ class NewsletterController extends NewsletterAppController {
 			if($newsletter['Newsletter']['template'] != $this->data['Newsletter']['template']){
 				$this->Newsletter->save($this->data,true,array('id','template'));
 			}
-			$this->data['Newsletter']['html'] = $this->requestAction('admin/newsletter/newsletter/make/'.$id);
+			$this->data['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);//$this->requestAction('admin/newsletter/newsletter/make/'.$id);
 			$this->data['Newsletter']['tested'] = 0;
 			if(empty($this->data['Newsletter']['associated'])){
 				$this->data['Newsletter']['associated'] = array();
@@ -783,11 +776,7 @@ class NewsletterController extends NewsletterAppController {
 			$this->data = $newsletter;
 		}
 		$this->NewsletterBox->recursive = -1;
-		$newsletter_boxes = $this->NewsletterBox->find('all',array('conditions'=>array('NewsletterBox.newsletter_id'=>$id),'order'=>'NewsletterBox.zone ASC, NewsletterBox.order ASC'));
-		$boxes_by_zone = array();
-		foreach($newsletter_boxes as $box){
-			$boxes_by_zone[$box['NewsletterBox']['zone']][] = $box;
-		}
+		$boxes_by_zone = $this->NewsletterFunct->getBoxByZone($id);
 		
 		$langs = NewsletterConfig::load('langs');
 		if(!empty($langs)){
@@ -800,8 +789,8 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$this->set('newsletter',$this->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);
-		$this->set('templates',$this->Funct->getTemplates());
-		$this->set('box_elements',$this->Funct->getBoxElements($this->data['Newsletter']['template']));
+		$this->set('templates',$this->NewsletterFunct->getTemplates());
+		$this->set('box_elements',$this->NewsletterFunct->getBoxElements($this->data['Newsletter']['template']));
 	}
 	function admin_get_box_edit($id) {
 		if(Configure::read('debug')==2){
@@ -882,7 +871,7 @@ class NewsletterController extends NewsletterAppController {
 		if (!empty($this->data)) {
 			//debug($this->data);
 			if(Configure::read('App.encoding') && strtolower(Configure::read('App.encoding')) != "utf-8" && $this->RequestHandler->isAjax()){
-				$this->data = $this->Funct->array_map_recursive("utf8_decode",$this->data);
+				$this->data = $this->NewsletterFunct->array_map_recursive("utf8_decode",$this->data);
 			}
 			//////// Gestion de fichiers ////////
 			if(isset($this->data["NewsletterBox"]["file"])){
@@ -895,7 +884,7 @@ class NewsletterController extends NewsletterAppController {
 				$files = $this->data["NewsletterBox"]["file"];
 				foreach($files as $name => $file){
 					if(isset($file['error']) && $file['error'] == 0) {
-						$uploaded_files[$name] = $this->Funct->upload($file);
+						$uploaded_files[$name] = $this->NewsletterFunct->upload($file);
 						//debug($uploaded_files[$name]);
 					} elseif(isset($file['del']) && $file['del']){
 						unset($uploaded_files[$name]);
@@ -909,7 +898,7 @@ class NewsletterController extends NewsletterAppController {
 			}
 			
 			//////// save ////////
-			//$this->data = $this->Funct->encode_box($this->data);
+			//$this->data = $this->NewsletterFunct->encode_box($this->data);
 			//debug($this->data);
 			if ($this->NewsletterBox->save($this->data)) {
 
@@ -945,6 +934,15 @@ class NewsletterController extends NewsletterAppController {
 			$this->Session->setFlash(__d('newsletter','Newsletter deleted', true));
 			$this->redirect(array('action'=>'index'));
 		}
+	}
+	
+	function admin_invalidate_render(){
+		$this->Newsletter->updateAll(array('Newsletter.html'=>'null'), array(1));
+		
+		$this->Session->setFlash(__d('newsletter','All the newsletter renders has been cleared', true));
+		$this->redirect(array('action'=>'index'));
+			
+		$this->render(false);
 	}
 	
 	function admin_import_template(){

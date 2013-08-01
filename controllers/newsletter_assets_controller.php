@@ -4,7 +4,7 @@ class NewsletterAssetsController extends NewsletterAppController {
 	var $name = 'NewsletterAssets';
 	var $helpers = array('Html', 'Form', 'Newsletter.NewsletterMaker', 'Javascript');
 	var $uses = array();
-	var $components = array('Newsletter.Funct');
+	var $components = array('Newsletter.NewsletterFunct');
 	
 	function admin_ajax_get_entry($model=null,$id = null) {
 		Configure::write('debug', 0);
@@ -43,7 +43,7 @@ class NewsletterAssetsController extends NewsletterAppController {
 			$data['newsletterbox_media'] = $multimedia;
 		}
 		
-		print($this->Funct->json_enc($data));
+		print($this->NewsletterFunct->json_enc($data));
 	}
 	
 	function admin_popup_entry_search($model=null) {

@@ -3,7 +3,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 
 	var $name = 'NewsletterSendlists';
 	var $helpers = array('Html', 'Form');
-	var $components = array('Newsletter.Funct');
+	var $components = array('Newsletter.NewsletterFunct');
 
 	/*function index() {
 		$this->NewsletterSendlist->recursive = 0;
@@ -25,14 +25,14 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		$lists = $this->paginate();
 		$this->NewsletterSendlist->NewsletterEmail->recursive = -1;
 		
-		$tableSendlists = $this->Funct->getTableSendlists();
+		$tableSendlists = $this->NewsletterFunct->getTableSendlists();
 		$restrictedSendlists = array_keys($tableSendlists);
 		
 		foreach($lists as &$list){
 			if(in_array($list[$this->NewsletterSendlist->alias]['id'],$restrictedSendlists)){
-				$findOptions = $this->Funct->tabledEmailGetFindOptions($list[$this->NewsletterSendlist->alias]['id']);
+				$findOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list[$this->NewsletterSendlist->alias]['id']);
 				unset($findOptions['fields']);
-				$list[$this->NewsletterSendlist->alias]['nb_email'] = $findOptions['model']->find('count',$this->Funct->standardizeFindOptions($findOptions));
+				$list[$this->NewsletterSendlist->alias]['nb_email'] = $findOptions['model']->find('count',$this->NewsletterFunct->standardizeFindOptions($findOptions));
 			}else{
 				$list[$this->NewsletterSendlist->alias]['nb_email'] = $this->NewsletterSendlist->NewsletterEmail->find('count',array('conditions'=>array('sendlist_id'=>$list[$this->NewsletterSendlist->alias]['id'])));
 			}
@@ -328,15 +328,15 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			$this->Session->setFlash(__('Invalid NewsletterSendlist.', true));
 			$this->redirect(array('action'=>'index'));
 		}
-		if($this->Funct->isTableSendlist($id)){
-			$tableSendlist = $this->Funct->getTableSendlistID($id,true);
+		if($this->NewsletterFunct->isTableSendlist($id)){
+			$tableSendlist = $this->NewsletterFunct->getTableSendlistID($id,true);
 			$Model = $tableSendlist['modelClass'];
 			$Model->recursive = -1;
-			$findOptions = $this->Funct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
+			$findOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
 			$mails = $Model->find('all',$findOptions);
 			$newsletterEmails = array();
 			foreach($mails as $mail){
-				$newsletterEmails[] = $this->Funct->tabledEmailGetFields($mail,$tableSendlist,'NewsletterEmail');
+				$newsletterEmails[] = $this->NewsletterFunct->tabledEmailGetFields($mail,$tableSendlist,'NewsletterEmail');
 			}
 		}else{
 			$newsletterEmails = $this->NewsletterSendlist->NewsletterEmail->find('all',array('conditions'=>array('NewsletterEmail.sendlist_id'=>$id)));
@@ -433,7 +433,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			$this->data = $this->NewsletterSendlist->read(null, $id);
 		}
 		
-		$this->set('tabled',$this->Funct->isTableSendlist($id));
+		$this->set('tabled',$this->NewsletterFunct->isTableSendlist($id));
 	}
 
 	function admin_up($id = null) {

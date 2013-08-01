@@ -19,6 +19,7 @@ class NewsletterConfig extends Object {
 		'hiddenTemplates' => array(),
 		'multimedia' => true,
 		'cron' => 'auto',
+		'contentUrl' => false,
 	);
 	
 	var $defZoneOpt = array(
@@ -50,6 +51,9 @@ class NewsletterConfig extends Object {
 					'path' => CACHE,
 				));
 				$config['cron'] = !!Cache::read('newsletter_autocron','cron_cache');
+			}
+			if($config['contentUrl'] && $config['contentUrl'][strlen($config['contentUrl'])-1] != '/'){
+				$config['contentUrl'] .= '/'; 
 			}
 			Configure::write('Newsletter',$config);
 			$_this->loaded = true;
