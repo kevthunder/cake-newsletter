@@ -876,7 +876,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$this->_consoleOut($id,sprintf(__d('newsletter','%s sent, %s errors', true),count($okIds),count($errorIds)));
 		}else{
 			foreach($mailsOptions as $mailId => $mail){
-				$this->_consoleOut($id,sprintf(__d('newsletter','sending to %s...', true),$mail['email']['NewsletterSended']['email']));
+				$this->_consoleOut($id,sprintf(__d('newsletter','sending to %s...', true),$mail['email']['email']),false);
 				$this->NewsletterSended->create();
 				$data = array('id'=>$mailId);
 				if($this->_sendSingle($sender,$opt,$mail)){
