@@ -55,6 +55,12 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$url = str_replace(array_keys($replace),array_values($replace),$url);
 		
+		
+		///////// check invalid url /////////
+		if(!empty($url) && ($url[0] == '#' || $url[0] == '?')){
+			$url = null;
+		}
+		
 		///////// Save stats if sended_id is present /////////
 		if($sended_id){
 			$this->NewsletterStat->create();
@@ -93,6 +99,9 @@ class NewsletterController extends NewsletterAppController {
 		
 		if($url){
 			$this->redirect($url);
+		}else{
+			$this->Session->setFlash(__d('newsletter','Invalid URL.', true));
+			$this->redirect('/');
 		}
 	}
 	function counter($sended_id=null,$img_url=null){
