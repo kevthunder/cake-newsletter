@@ -75,7 +75,7 @@
 						<td class="additional_emails"><?php echo $text->truncate($newsletterSending['NewsletterSending']['additional_emails'], 150, array('exact' => false)); ?>&nbsp;</td>
 						<td class="status"><?php 
 							$status = $newsletterSending['NewsletterSending']['status'];
-							if($newsletterSending['NewsletterSending']['started'] === '0') $status = 'paused';
+							if($status != 'done' && $newsletterSending['NewsletterSending']['started'] === '0') $status = 'paused';
 							if(strtotime($newsletterSending['NewsletterSending']['date']) > mktime()) $status = 'waiting';
 							__d('newsletter',Inflector::humanize($status));
 						?>&nbsp;</td>
