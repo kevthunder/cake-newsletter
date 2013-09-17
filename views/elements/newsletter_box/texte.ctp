@@ -7,7 +7,7 @@ if(isset($newsletter_box["NewsletterBox"]["data"])){
 ?></h1>
 <?php 
 if(isset($newsletter_box["NewsletterBox"]["data"])){
-	echo $newsletter_box["NewsletterBox"]["data"]["text"]; 
+	echo $this->NewsletterMaker->filterRichtext($newsletter_box["NewsletterBox"]["data"]["text"]); 
 }else{
 	echo 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut vitae orci eu erat imperdiet interdum.';
 }

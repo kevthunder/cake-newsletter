@@ -1,0 +1,1 @@
+<?php echo $this->NewsletterMaker->showBox($newsletter_box,array('wrapper'=>false)); ?>

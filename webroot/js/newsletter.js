@@ -43,8 +43,9 @@
 		$(".add_box_link").click(add_box_click);
 		$(".add_link").click(add_link_click);
 		$(".close_link").click(close_link_click);
-		$(".newsletter_box .edit_box_link").click(edit_box_click);
-		$(".newsletter_box .del_box_link").click(del_box_click);
+		$('body').delegate(".newsletter_box .edit_box_link",'click',edit_box_click);
+		$('body').delegate(".newsletter_box .del_box_link",'click',del_box_click);
+		$('body').delegate(".newsletter_box .reset_box_link",'click',reset_box_click);
 		$(".nltr_column > tbody").sortable({items: 'tr.box_row', connectWith: '.nltr_column > tbody', placeholder: 'placeholder',stop: order_change});
 		$("#edit_form_zone").draggable({handle:".edit_box_title"});
 		//$("#edit_form_zone").bind('contentAdded',addTinyMce);
@@ -167,23 +168,25 @@
 	}
 	function box_loaded(responseText, textStatus, XMLHttpRequest){
 		//alert($(this).html());
-		$(this).find(".edit_box_link").click(edit_box_click);
-		$(this).find(".del_box_link").click(del_box_click);
 		
+		adjustStyles(this);
 		/*$(this).find("input, select, textarea").change(input_change);*/
 		var id = $(this).find("#NewsletterBoxId").val();
-		$(this).attr("boxid",id);
-		$(this).attr("id","box"+id);
-		$(this).prepend('<a name="box'+id+'"></a>');
-		try{
-			w.location.href=w.location.toString().split('#')[0]+"#box"+id;
-		}catch(e){
-			if(window.console){
-				console.log('could not change url',e,e.message);
+		if(id){
+			$(this).attr("boxid",id);
+			$(this).attr("id","box"+id);
+			$(this).prepend('<a name="box'+id+'"></a>');
+			try{
+				w.location.href=w.location.toString().split('#')[0]+"#box"+id;
+			}catch(e){
+				if(window.console){
+					console.log('could not change url',e,e.message);
+				}
 			}
+			show_edit_form($(this));
+		}else{
+			$(this).removeAttr("boxid",id);
 		}
-		adjustStyles(this);
-		show_edit_form($(this));
 	}
 	function close_link_click(e){
 		$(this).closest(".popup").hide("fast");
@@ -198,6 +201,22 @@
 			hide_edit_form();
 		}
 		newsletter_box.remove();
+	}
+	function reset_box_click(){
+		var newsletter_box = $(this).closest(".newsletter_box");
+		var url = root+"admin/newsletter/newsletter/reset_box/"+newsletter_box.attr("boxid")+"/t:"+new Date().getTime();
+	
+		if(newsletter_box.hasClass('selected')){
+			hide_edit_form();
+		}
+		newsletter_box.load(url,null,box_loaded);
+		/*$.ajax({
+			url       :  '/some_controller/some_method',
+			success   :  function(responseText, textStatus, XMLHttpRequest) {
+				newsletter_box.replaceWith(responseText);
+				box_loaded(responseText, textStatus, XMLHttpRequest);
+			}
+		});*/
 	}
 
 	////////////////////////// box editing functions //////////////////////////

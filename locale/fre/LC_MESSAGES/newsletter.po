@@ -75,6 +75,9 @@ msgstr "Retour à l'édition de l'infolettre"
 msgid "Delete"
 msgstr "Effacer"
 
+msgid "Reset"
+msgstr "Réinitialiser"
+
 msgid "Are you sure you want to delete # %s?"
 msgstr "Voulez-vous vraiment effacer # %s?"
 

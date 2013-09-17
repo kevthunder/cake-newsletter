@@ -822,8 +822,8 @@ class NewsletterController extends NewsletterAppController {
 		if(!empty($config)){
 			$config->beforeRenderEdit($newsletter_box,$this);
 		}
-		$this->render(array('/elements/newsletter_box/'.$newsletter['Newsletter']['template'].'/'.$newsletter_box["NewsletterBox"]["template"].'_edit','/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"].'_edit'));
-		//$this->render('/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"]."_edit");
+		$single = preg_match('/^single--/',$newsletter_box['NewsletterBox']['zone']);
+		$this->render(NewsletterConfig::getNewsletterBoxPaths($newsletter_box['NewsletterBox']['template'],$newsletter['Newsletter']['template'],true,true,$single));
 	}
 	function admin_add_box($newsletter_id,$zone,$boxElement = null) {
 		$this->autoRender = false;
@@ -831,7 +831,7 @@ class NewsletterController extends NewsletterAppController {
 			Configure::write('debug', 1);
 		}
 		//debug($this->params);
-		$this->layout = "newsletter_box_ajax";
+		$this->layout = "ajax";
 		
 		$zoneOpt = $this->_getZoneOpt($newsletter_id,$zone);
 		
@@ -862,7 +862,8 @@ class NewsletterController extends NewsletterAppController {
 				$this->set('newsletter_box',$newsletter_box);
 				$this->set('newsletter',$newsletter);
 				//$this->render('/elements/newsletter_box/'.$boxElement);
-				$this->render(array('/elements/newsletter_box/'.$newsletter['Newsletter']['template'].'/'.$boxElement,'/elements/newsletter_box/'.$boxElement));
+				
+				$this->render('show_box');
 			}
 		}else{
 			echo "No template selected";
@@ -874,7 +875,7 @@ class NewsletterController extends NewsletterAppController {
 		if(Configure::read('debug')==2){
 			Configure::write('debug', 1);
 		}
-		$this->layout = "newsletter_box_ajax";
+		$this->layout = "ajax";
 		
 		$newsletter_box = $this->NewsletterBox->read(null, $id);
 		if (!empty($this->data)) {
@@ -918,7 +919,31 @@ class NewsletterController extends NewsletterAppController {
 		$this->set('newsletter_box',$newsletter_box);
 		$this->set('newsletter',$newsletter);
 		//$this->render('/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"]);
-		$this->render(array('/elements/newsletter_box/'.$newsletter['Newsletter']['template'].'/'.$newsletter_box["NewsletterBox"]["template"],'/elements/newsletter_box/'.$newsletter_box["NewsletterBox"]["template"]));
+		
+		$this->render('show_box');
+	}
+	
+	function admin_reset_box($id = null){
+		if(Configure::read('debug')==2){
+			Configure::write('debug', 1);
+		}
+		$this->layout = "ajax";
+		
+		if ($id) {
+			$newsletter_box = $this->NewsletterBox->read(null, $id);
+			$newsletter = $this->Newsletter->read(null, $newsletter_box["NewsletterBox"]["newsletter_id"]);
+			
+			$newsletter_box['NewsletterBox']['id'] = null;
+			$newsletter_box['NewsletterBox']['data'] = array();
+			$newsletter_box['NewsletterBox']['file'] = array();
+			
+			$this->set('newsletter_box',$newsletter_box);
+			$this->set('newsletter',$newsletter);
+		
+			$this->NewsletterBox->delete($id);
+		
+			$this->render('show_box');
+		}
 	}
 	
 	function admin_delete_box($id = null){
@@ -992,18 +1017,17 @@ class NewsletterController extends NewsletterAppController {
 		
 		if($available){
 			if (!empty($this->data)) {
-				//debug($this->data);
-				if(!empty($this->data['Newsletter']['zip_file']) && $this->data['Newsletter']['zip_file']['error'] == 0  && $this->data['Newsletter']['zip_file']['type'] == 'application/zip'){
+				if(!empty($this->data['Newsletter']['zip_file']) && $this->data['Newsletter']['zip_file']['error'] == 0  && pathinfo($this->data['Newsletter']['zip_file']['name'],PATHINFO_EXTENSION) == 'zip'){
 					$i = 0;
 					while(file_exists(TMP.'newsletter'.DS.'import_'.$i.'.zip')){
 						$i++;
 					}
 					if(move_uploaded_file($this->data['Newsletter']['zip_file']['tmp_name'],TMP.'newsletter'.DS.'import_'.$i.'.zip')){
-						if($this->_import_zip(TMP.'newsletter'.DS.'import_'.$i.'.zip',$this->data['Newsletter']['title'])){
+						if($this->_import_zip(TMP.'newsletter'.DS.'import_'.$i.'.zip',$this->data['Newsletter']['title'],$error)){
 							$this->Session->setFlash(__d('newsletter','Newsletter template imported', true));
 							$this->redirect(array('action'=>'index'));
 						}else{
-							$this->Session->setFlash(__d('newsletter','Error reading zip file', true));
+							$this->Session->setFlash(__d('newsletter','Error reading zip file', true).' : '.$error);
 						}
 					}else{
 						$this->Session->setFlash(__d('newsletter','Error moving zip file', true));
@@ -1016,11 +1040,12 @@ class NewsletterController extends NewsletterAppController {
 		}
 	}
 	
-	function _import_zip($file,$name){
+	function _import_zip($file,$name,&$error = null){
 		
 		$zip = new ZipArchive;
 		$res = $zip->open($file);
 		if (!$res) {
+			$error = __d('newsletter','Cant read archive', true);
 			return false;
 		}
 		$newsletterFileName = strtolower(Inflector::slug($name));
@@ -1028,6 +1053,7 @@ class NewsletterController extends NewsletterAppController {
 		///////// create needed folder /////////
 		if(!file_exists(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName)){
 			if(!mkdir(WWW_ROOT.'img'.DS.'newsletter'.DS.$newsletterFileName,  0777)){
+				$error = __d('newsletter','Cant create img folder', true);
 				return false;
 			}
 		}
@@ -1054,10 +1080,12 @@ class NewsletterController extends NewsletterAppController {
 		
 		///////// extract and format content /////////
 		if(empty($contentFile)){
+			$error = __d('newsletter','Cant find main html file', true);
 			return false;
 		}
 		$content = $zip->getFromName($contentFile);
 		if(empty($content)){
+			$error = __d('newsletter','Cant read main html file', true);
 			return false;
 		}
 		$content = preg_replace('/="\/?(?:http:\/\/[^"\']*\/)?(?:img|images)\/([^"\']*)"/','="<?php echo \$html->url(\'/img/newsletter/'.$newsletterFileName.'/$1\',true); ?>"',$content);

@@ -26,6 +26,7 @@ class NewsletterMakerHelper extends AppHelper {
 				'attr' => array(),
 			),
 			'indent' => '',
+			'single' => preg_match('/^single--/',$box['NewsletterBox']['zone']),
 		);
 		$opt = Set::merge($defOpt,$options);
 		
@@ -42,7 +43,13 @@ class NewsletterMakerHelper extends AppHelper {
 			$opt['wrapper'] = false;
 		}
 		if($opt['wrapper']) $result_html .= $opt['indent'].'<'.$opt['wrapper']['tag'].$this->_parseAttributes($opt['wrapper']['attr']).'>';
-		$element = array('newsletter_box/'.$this->newsletter['Newsletter']['template'].'/'.$box['NewsletterBox']['template'],'newsletter_box/'.$box['NewsletterBox']['template']);
+		$element = NewsletterConfig::getNewsletterBoxPaths($box['NewsletterBox']['template'],$this->newsletter['Newsletter']['template'],false,false,$opt['single']);
+		
+		//add default data provide by the zone
+		$zoneOpt = $this->getZoneOpt($box['NewsletterBox']['zone']);
+		if(!empty($zoneOpt['boxList'][$box['NewsletterBox']['template']]['data'])){
+			$box['NewsletterBox']['data'] = array_merge($zoneOpt['boxList'][$box['NewsletterBox']['template']]['data'],$box['NewsletterBox']['data']);
+		}
 		
 		$slug = '';
 		if(!empty($box['NewsletterBox']['data']['title'])){
@@ -54,29 +61,33 @@ class NewsletterMakerHelper extends AppHelper {
 		}
 		
 		$result_html .= $this->view->element($element, array("newsletter_box" => $box));//,'plugin' => 'none'
-		$result_html .= $this->boxFooter($box);
+		$result_html .= $this->boxFooter($box,$zoneOpt);
 		if($opt['wrapper']) $result_html .= $opt['indent'].'</'.$opt['wrapper']['tag'].'>'."\n";
 		
 		return $result_html;
 	}
 	
-	function boxFooter($box=NULL){
+	function boxFooter($box=NULL,$zoneOpt=null){
 		if(!$box){
 			$box = $this->newsletter_box;
 		}
 		
 		$result_html  = '';
 		if($this->inEditMode()){
-			$zoneOpt = $this->getZoneOpt($box['NewsletterBox']['zone']);
-			if(!empty($box['NewsletterBox']['id']) && $zoneOpt['ordered']){
+			if(empty($zoneOpt)) $zoneOpt = $this->getZoneOpt($box['NewsletterBox']['zone']);
+			if(!empty($box['NewsletterBox']['id'])) {
 				$box_id = $box['NewsletterBox']['id'];
 				$result_html .= $this->Form->input('NewsletterBox.'.$box_id.'.id',array('id'=>'NewsletterBoxId','value'=>$box_id));
-				$order = 0;
-				if(isset($box['NewsletterBox']['order'])){
-					$order = $box['NewsletterBox']['order'];
+				if($zoneOpt['ordered']){
+					$order = 0;
+					if(isset($box['NewsletterBox']['order'])){
+						$order = $box['NewsletterBox']['order'];
+					}
+					$result_html .= $this->Form->input('NewsletterBox.'.$box_id.'.order',array('id'=>'NewsletterBoxOrder','value'=>$order,'type'=>'hidden'));
+					$result_html .= $this->Form->input('NewsletterBox.'.$box_id.'.zone',array('id'=>'NewsletterBoxZone','value'=>$box['NewsletterBox']['zone'],'type'=>'hidden'));
 				}
-				$result_html .= $this->Form->input('NewsletterBox.'.$box_id.'.order',array('id'=>'NewsletterBoxOrder','value'=>$order,'type'=>'hidden'));
-				$result_html .= $this->Form->input('NewsletterBox.'.$box_id.'.zone',array('id'=>'NewsletterBoxZone','value'=>$box['NewsletterBox']['zone'],'type'=>'hidden'));
+			}else{
+				$zoneOpt['reset'] = false;
 			}
 			$result_html .= $this->boxActions($zoneOpt);
 		}
@@ -86,6 +97,7 @@ class NewsletterMakerHelper extends AppHelper {
 		$defOpt = array(
 			'edit' => true,
 			'delete' => true,
+			'reset' => false,
 		);
 		$opt = Set::merge($defOpt,$options);
 	
@@ -93,6 +105,7 @@ class NewsletterMakerHelper extends AppHelper {
 		$result_html .= '	<ul>'."\n";
 		if($opt['edit']) $result_html .= '		<li><a class="edit_box_link">'.__d('newsletter','Edit', true).'</a></li>'."\n";
 		if($opt['delete']) $result_html .= '		<li><a class="del_box_link">'.__d('newsletter','Delete', true).'</a></li>'."\n";
+		if($opt['reset']) $result_html .= '		<li><a class="reset_box_link">'.__d('newsletter','Reset', true).'</a></li>'."\n";
 		$result_html .= '	</ul>'."\n";
 		$result_html .= '</div>'."\n";
 		return $result_html;
@@ -190,7 +203,15 @@ class NewsletterMakerHelper extends AppHelper {
 	function inEditMode(){
 		$edit_mode = $this->view->getVar('edit_mode');
 		if(isset($edit_mode)) return $edit_mode;
-		return $this->params['controller'] == 'newsletter' && ($this->params['action'] == 'admin_edit' || $this->params['action'] == 'admin_preview' || $this->params['action'] == 'admin_add_box' || $this->params['action'] == 'admin_edit_box' || $this->params['action'] == 'admin_view_box');
+		$editActions = array(
+			'admin_edit',
+			'admin_preview',
+			'admin_add_box',
+			'admin_edit_box',
+			'admin_view_box',
+			'admin_reset_box',
+		);
+		return $this->params['controller'] == 'newsletter' && in_array($this->params['action'],$editActions);
 	}
 	function column($id,$options=array()){
 		$editMode = $this->inEditMode();
@@ -325,6 +346,7 @@ class NewsletterMakerHelper extends AppHelper {
 			$this->setZoneOpt($id,array(
 				'ordered'=>false,
 				'delete'=>false,
+				'reset'=>true,
 				'boxList'=>array($boxTemplate=>array('data'=>$opt['data'])),
 			));
 		}
@@ -353,6 +375,7 @@ class NewsletterMakerHelper extends AppHelper {
 					'zoneid'=>$id,
 				),
 			),
+			'single' => true,
 		));
 	}
 	function langSwitch($options = array()){
@@ -480,6 +503,12 @@ class NewsletterMakerHelper extends AppHelper {
 								// )
 		);
 		$opt = array_merge($defOpt,$options);
+		//replacements
+		$replace = array(
+			'##unsubscribe_url##' => $this->unsubscribeUrl(),
+		);
+		$text = str_replace(array_keys($replace),array_values($replace),$text);
+		
 		//filter urls
 		$findUrl = '/=["\']'.str_replace('/','\/',$this->html->url('/')).'([-\/_=?&%.:#a-zA-Z0-9]*)["\']/';
 		//debug($findUrl);
@@ -523,6 +552,8 @@ class NewsletterMakerHelper extends AppHelper {
 			}
 			unset($url['useContentUrl']);
 			$base_url = $this->html->url($url);
+		}elseif($url[0] == '#'){
+			return $url;
 		}else{
 			$base_url = str_replace($this->html->url('/',true),'/',$url);
 		}
