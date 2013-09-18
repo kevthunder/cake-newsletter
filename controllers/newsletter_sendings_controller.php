@@ -1422,6 +1422,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$opt['replace'] = array(
 			'%sended_id%' => $sended_id,
 			'%recipient_name%' => $recipient_name,
+			'%recipient_email%' => $email['email'],
 		);
 		if(isset($email['data'])){
 			preg_match_all('/%mdata\:([\w.]+)%/', $globalOpt['content'], $matches, PREG_SET_ORDER);

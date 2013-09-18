@@ -367,8 +367,24 @@ pre{
     </ul>
     <h1>v0.1.2.5.8</h1>
     <ul>
+		<li>Il est maintant possible de créé des template uniquement pour les zone single en créant un dossier single</li>
+		<li>3 nouveau core template les zone single
+			<ul>
+				<li>Link : Lien et label</li>
+				<li>String : Un champ rich text</li>
+				<li>Title : Un champ text normal</li>
+			</ul>
+		</li>
+		<li>Nouveau bouton pour réinitialiser une zone single à sont état initial</li>
+		<li>Import template : Enlevé la dépendance au mime type</li>
+		<li>Import template : Message d'erreur plus précis</li>
+		<li>Box Template texte : ajout d'un filterRichtext</li>
+		<li>filterRichtext : remplace ##unsubscribe_url## pas le résultat de la function unsubscribeUrl()</li>
+		<li>%recipient_email% est maintenant remplacé par le email du la perssonne à qui le email est envoyé</li>
+		<li>NewsletterMaker->url : n'essait plus d'encoder des href commencant par "#"</li>
 		<li>Redir : Détection des URLs invalides pour éviter un loop de reditections</li>
 		<li>Sendings list : fixe pour le status des envoies terminées</li>
+		<li>Amélioration du code pour le render des boxes.</li>
     </ul>
 </div>
 </body>
