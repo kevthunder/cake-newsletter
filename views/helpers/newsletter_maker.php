@@ -544,7 +544,9 @@ class NewsletterMakerHelper extends AppHelper {
 	function url($url){
 		$base_url = '';
 		$contentUrl = NewsletterConfig::load('contentUrl');
-		if(is_array($url)){
+		if(empty($url)){
+			return '#';
+		}elseif(is_array($url)){
 			$url['base'] = false;
 			$url['admin'] = false;
 			if(isset($url['useContentUrl']) && !$url['useContentUrl']){
@@ -583,7 +585,7 @@ class NewsletterMakerHelper extends AppHelper {
 		return $this->newsletter["Newsletter"]["title"];
 	}
 	function date($format = "jS F Y"){
-		return date_($format,strtotime($this->newsletter["Newsletter"]["date"]));
+		return date_($format,strtotime($this->newsletter["Newsletter"]["date"]),!empty($this->newsletter['Newsletter']['lang'])?$this->newsletter['Newsletter']['lang']:null);
 	}
 	
 	//////////////////// Box Editor ////////////////////

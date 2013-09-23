@@ -26,7 +26,7 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
  ?>
 <div style="display:none" class="ajax_loader"></div>
 <div class="newsletters form">
-<?php echo $form->create('Newsletter',array('onsubmit'=>'return newsletter_submit();','url'=>array('plugin' => 'newsletter', 'controller' => 'newsletter', 'action' => 'edit')));?>
+<?php echo $form->create('Newsletter',array('url'=>array('plugin' => 'newsletter', 'controller' => 'newsletter', 'action' => 'edit')));?>
 	<fieldset>
  		<legend><?php __d('newsletter','Edit Newsletter');?></legend>
 	<?php

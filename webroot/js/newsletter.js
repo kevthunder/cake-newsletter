@@ -48,6 +48,7 @@
 		$('body').delegate(".newsletter_box .reset_box_link",'click',reset_box_click);
 		$(".nltr_column > tbody").sortable({items: 'tr.box_row', connectWith: '.nltr_column > tbody', placeholder: 'placeholder',stop: order_change});
 		$("#edit_form_zone").draggable({handle:".edit_box_title"});
+		$("#NewsletterAdminEditForm").submit(newsletter_submit);
 		//$("#edit_form_zone").bind('contentAdded',addTinyMce);
 		
 		$("#NewsletterLang").change(updateLangInputs);
