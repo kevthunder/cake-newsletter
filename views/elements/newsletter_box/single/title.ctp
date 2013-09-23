@@ -1,5 +1,5 @@
 <?php 
-if(isset($newsletter_box["NewsletterBox"]["data"])){
+if(isset($newsletter_box["NewsletterBox"]["data"]["title"])){
 	echo $newsletter_box["NewsletterBox"]["data"]["title"]; 
 }else{
 	echo 'Lorem ipsum';
