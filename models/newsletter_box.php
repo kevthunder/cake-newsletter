@@ -176,8 +176,12 @@ class NewsletterBox extends NewsletterAppModel {
 	
 	
 	function json_dec($value){
-		//return $this->recur_utf8_decode(json_decode($value,true));
-		return json_decode($value,true);
+		App::import('Lib', 'Newsletter.NewsletterConfig');
+		if(NewsletterConfig::load('oldSerializeUTF8')){
+			return $this->recur_utf8_decode(json_decode($value,true));
+		}else{
+			return json_decode($value,true);
+		}
 	}
 	function recur_utf8_decode($value){
 		if(is_string($value)){

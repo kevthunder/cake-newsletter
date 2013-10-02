@@ -20,6 +20,7 @@ class NewsletterConfig extends Object {
 		'multimedia' => true,
 		'cron' => 'auto',
 		'contentUrl' => false,
+		'oldSerializeUTF8' => false,
 	);
 	
 	var $defZoneOpt = array(
