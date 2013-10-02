@@ -1,8 +1,8 @@
 <?php 
 /* SVN FILE: $Id$ */
 /* App schema generated on: 2013-05-22 16:05:29 : 1369238489*/
-class AppSchema extends CakeSchema {
-	var $name = 'App';
+class NewsletterSchema extends CakeSchema {
+	var $name = 'Newsletter';
 
 	function before($event = array()) {
 		return true;
