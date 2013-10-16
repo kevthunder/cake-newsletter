@@ -42,6 +42,17 @@ class NewsletterAssetsController extends NewsletterAppController {
 			}
 			$data['newsletterbox_media'] = $multimedia;
 		}
+		if(!array_key_exists('url',$data[$modelClass]) && !array_key_exists('url_'.$this->lang,$data[$modelClass])){
+			$data[$modelClass]['url'] = Router::url(array(
+				'plugin' => Inflector::underscore($plugin),
+				'controller' => Inflector::tableize($modelClass),
+				'action' => 'view',
+				'id' => $id,
+				'base' => false,
+				'admin' => false,
+				'lang' => $this->lang,
+			));
+		}
 		
 		print($this->NewsletterFunct->json_enc($data));
 	}

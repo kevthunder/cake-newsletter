@@ -319,6 +319,11 @@
 	////////////////////////// box_edit TinyMce functions //////////////////////////
 	function addTinyMce(){
 		$('textarea.tinymce').each(function(){
+			var editor = tinyMCE.getInstanceById($(this).attr('id'));
+			if(editor){
+				tinyMCE.remove(editor);
+			}
+			//tinymce.execCommand('mceRemoveControl', true, $(this).attr('id'));
 			var preloader = $('.ajax_loader').clone().show();
 			preloader.addClass('tinymce_preloader');
 			preloader.css('position','absolute');
@@ -427,7 +432,7 @@
 						$.colorbox($.extend({},colorbox_options,opts));
 					}});
 				}
-				var colorbox_options = {maxHeight:"95%",onComplete:entry_popup_init};
+				var colorbox_options = {maxHeight:"95%",maxWidth:"95%",onComplete:entry_popup_init};
 				
 				$(".entry_finder .bt_search",$edit_box).click(function(){
 					var $entryFinder = $(this).closest(".entry_finder");
@@ -457,7 +462,7 @@
 		var model = $entryFinder.attr('model');
 		if(id && model){
 			$('.loading',$entryFinder).show();
-			var url = root+"admin/newsletter/newsletter_assets/ajax_get_entry/"+model+"/"+id+"/"+new Date().getTime();
+			var url = root+"admin/newsletter/newsletter_assets/ajax_get_entry/"+model+"/"+id+"/lang:"+getLang()+"/"+new Date().getTime();
 			
 			$.get(url, function(jsonData){
 				if(model.indexOf('.') != -1){
@@ -525,12 +530,16 @@
 									}else{
 										selector = "#NewsletterBoxData"+map[i].camelize();
 									}
+									/*if(window.console){
+										console.log(selector);
+									}*/
 									var $input = $(selector,$edit_box);
 									if($input.length){
-										if(val==null){
-											$input.val("");
+										if($input.hasClass("tinymce")){
+											var editor = tinyMCE.getInstanceById($input.attr('id'));
+											editor.setContent((val==null)?"":val);
 										}else{
-											$input.val(val);
+											$input.val((val==null)?"":val);
 										}
 									}
 								}
