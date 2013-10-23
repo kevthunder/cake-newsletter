@@ -6,7 +6,7 @@
 	<?php
 		echo $form->input('name');
 		echo $form->input('email');
-		if(!empty($sendlists)){
+		if(!empty($sendlists) && count($sendlists) > 1){
 			echo $form->input('sendlist_id', array('label'=>__d('newsletter','Sendlist',true), 'options'=>$sendlists, 'multiple'=>'checkbox'));
 		}
 	?>
