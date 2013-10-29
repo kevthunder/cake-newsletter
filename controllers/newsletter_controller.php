@@ -769,6 +769,8 @@ class NewsletterController extends NewsletterAppController {
 				$this->Newsletter->save($this->data,true,array('id','template'));
 			}
 			$this->data['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);//$this->requestAction('admin/newsletter/newsletter/make/'.$id);
+			$this->Newsletter->NewsletterVariant->updateAll(array('NewsletterVariant.html'=>null), array('NewsletterVariant.newsletter_id'=>$id));
+			
 			$this->data['Newsletter']['tested'] = 0;
 			if(empty($this->data['Newsletter']['associated'])){
 				$this->data['Newsletter']['associated'] = array();
@@ -971,7 +973,8 @@ class NewsletterController extends NewsletterAppController {
 	}
 	
 	function admin_invalidate_render(){
-		$this->Newsletter->updateAll(array('Newsletter.html'=>'null'), array(1));
+		$this->Newsletter->updateAll(array('Newsletter.html'=>null), array(1));
+		$this->Newsletter->NewsletterVariant->updateAll(array('NewsletterVariant.html'=>null), array(1));
 		
 		$this->Session->setFlash(__d('newsletter','All the newsletter renders has been cleared', true));
 		$this->redirect(array('action'=>'index'));

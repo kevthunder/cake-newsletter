@@ -21,6 +21,37 @@ class NewsletterTemplateConfig extends Object {
 		return $this->beforeConfig($data,$controller);//deprecated
 	}
 	
+	function getGroupOpts($newsletter,$sendlist){
+		return null;
+	}
+	
+	function getGrouping($newsletter,$sendlist = null){
+		if(is_numeric($newsletter)){
+			$NewsletterSending = ClassRegistry::init('Newsletter.NewsletterSending');
+			$newsletter = $NewsletterSending->read(null,$newsletter);
+		}
+		$opt = $this->getGroupOpts($newsletter,$sendlist);
+		if(is_null($opt)){
+			return null;
+		}
+		$defOpt = array(
+			'fields' => array(),
+			'validation' => array(),
+			'withMissing' => array(
+				'disable' => false,
+				'validate' => true,
+			),
+			'bySendlist'=>false,
+		);
+		if(!count(array_intersect_key($opt,$defOpt))){
+			$opt = array('fields'=>$opt);
+		}
+		return Set::merge($defOpt,$opt);
+	}
+	
+	function getDefaultSendlists($newsletter){
+		return null;
+	}
 	
 	function afterFind(&$model, $result){
 	}

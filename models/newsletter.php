@@ -43,6 +43,19 @@ class Newsletter extends NewsletterAppModel {
 			'exclusive' => '',
 			'finderQuery' => '',
 			'counterQuery' => ''
+		),
+		'NewsletterVariant' => array(
+			'className' => 'Newsletter.NewsletterVariant',
+			'foreignKey' => 'newsletter_id',
+			'dependent' => false,
+			'conditions' => '',
+			'fields' => '',
+			'order' => '',
+			'limit' => '',
+			'offset' => '',
+			'exclusive' => '',
+			'finderQuery' => '',
+			'counterQuery' => ''
 		)
 	);
 	

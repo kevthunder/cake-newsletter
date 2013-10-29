@@ -3,7 +3,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 
 	var $name = 'NewsletterSendings';
 	
-	var $uses = array('Newsletter.NewsletterSending','Newsletter.NewsletterSendlist','Newsletter.NewsletterSended');
+	var $helpers = array('Newsletter.NewsletterMaker');
+	var $uses = array('Newsletter.NewsletterSending','Newsletter.NewsletterSendlist','Newsletter.NewsletterSended','Newsletter.NewsletterVariant');
 	var $components = array('Email','Newsletter.EmailUtils', 'Newsletter.NewsletterFunct', 'RequestHandler');
 	
 	var $lastProcessTime = null;
@@ -231,6 +232,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}else{
 				$this->Session->setFlash(__d('newsletter','Invalid Newsletter', true));
 				$this->redirect(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'index'));
+			}
+		}else{
+			if(empty($sendlist_id)){
+				$this->data['NewsletterSending']['selected_lists'] = $newsletter['Newsletter']['TemplateConfig']->getDefaultSendlists($newsletter);
 			}
 		}
 		if ($sendlist_id) {
@@ -731,6 +736,13 @@ class NewsletterSendingsController extends NewsletterAppController {
 			if(!$this->_valid_sending($sending)){ return true; }
 		}
 		
+		if($sending['NewsletterSending']['status'] == 'render'){
+			$this->_render($sending);
+			
+			$sending = $this->NewsletterSending->read(null,$id);
+			if(!$this->_valid_sending($sending)){ return true; }
+		}
+		
 		if($sending['NewsletterSending']['status'] == 'send'){
 			$this->_send($sending);
 		}
@@ -758,73 +770,110 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$continue = $this->_valid_sending($id);
 		$done = false;
 		
-		
-		//// init sender class ////
-		App::import('Lib', 'Newsletter.ClassCollection');
-		$senderOpt = NewsletterConfig::load('sender');
-		if(!is_array($senderOpt)){
-			$senderOpt = array('name' => $senderOpt);
-		}
-		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
-		$sender->init($this,$senderOpt);
-		
-		//// parse global option ////
-		$opt = $this->_parseGlobalOpt($sending);
-		if(method_exists($sender,'editGlobalOpt')){
-			$opt = $sender->editGlobalOpt($opt);
-		}
-		
-		//// get chunk/batch size ////
-		$chunk = Configure::read('Newsletter.sending_chunck');
-		if(empty($chunk)){
-			if(!empty($sender->batchSize)){
-				$chunk = $sender->batchSize;
-			}else{
-				$chunk = 10;
+		if($continue){
+			//// init sender class ////
+			App::import('Lib', 'Newsletter.ClassCollection');
+			$senderOpt = NewsletterConfig::load('sender');
+			if(!is_array($senderOpt)){
+				$senderOpt = array('name' => $senderOpt);
 			}
-		}
-		
-		//// get max sending ////
-		if(is_null($max)){
-			$confMax = NewsletterConfig::load('maxSend');
-			if(!is_null($confMax)){
-				$max = $confMax;
-			}elseif(isset($sender->maxSend)){
-				$max = $sender->maxSend;
-			}else{
-				$max = 10000;
+			$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
+			$sender->init($this,$senderOpt);
+			
+			//// parse global option ////
+			$opt = $this->_parseGlobalOpt($sending);
+			if(method_exists($sender,'editGlobalOpt')){
+				$opt = $sender->editGlobalOpt($opt);
 			}
-		}
-		
-		while(($max === false || $i*$chunk<$max) && $continue){
-			$this->NewsletterSended->belongsTo = $belongsToTmp;
-			$toSend = $this->NewsletterSended->find('all',array('conditions'=>array('NewsletterSended.active'=>1,'NewsletterSended.status'=>'ready','NewsletterSended.sending_id'=>$id),'limit'=>$chunk,'contain'=>'NewsletterEmail'));
-			$this->NewsletterSended->belongsTo = array();
-			$mailsOptions = array();
-			$ids = array();
-			if(!empty($toSend)){
-				foreach($toSend as $mail){
-					$mailsOptions[$mail['NewsletterSended']['id']] = $this->_parseRecipientOpt($mail,$opt);
-					$ids[] = $mail['NewsletterSended']['id'];
-				}
-				//debug($toSend);
-				$this->NewsletterSended->recursive = -1;
-				if($this->NewsletterSended->updateAll($this->NewsletterFunct->valFields(array('status'=>'reserved')),array('id'=>$ids,'active'=>1,'status'=>'ready')) && $this->NewsletterSended->getAffectedRows() == count($ids)){
-					$this->_sendBatch($sender,$opt,$mailsOptions);
+			
+			//// get chunk/batch size ////
+			$chunk = Configure::read('Newsletter.sending_chunck');
+			if(empty($chunk)){
+				if(!empty($sender->batchSize)){
+					$chunk = $sender->batchSize;
 				}else{
-					$this->_consoleOut($id,
-						__d('newsletter','Could not reserve email, there may be an another process using this sending', true),
-						array('exit'=>true)
-					);
+					$chunk = 10;
 				}
-			}else{
-				//sending complete
-				
-				$done = true;
-				$continue = false;
 			}
-			$continue = $this->_valid_sending($id);
-			$i++;
+			
+			//// get max sending ////
+			if(is_null($max)){
+				$confMax = NewsletterConfig::load('maxSend');
+				if(!is_null($confMax)){
+					$max = $confMax;
+				}elseif(isset($sender->maxSend)){
+					$max = $sender->maxSend;
+				}else{
+					$max = 10000;
+				}
+			}
+			
+			//// get variantes ////
+			
+			$this->NewsletterSended->belongsTo = $belongsToTmp;
+			$this->NewsletterSended->Behaviors->attach('Containable');
+			$variants = $this->NewsletterSended->find('all',array(
+				'conditions'=>array(
+					'NewsletterSended.sending_id' => $id,
+				),
+				'contain' => array('NewsletterVariant'),
+				'group' => 'NewsletterSended.newsletter_variant_id'
+			));
+			$this->NewsletterSended->belongsTo = array();
+			//debug($variants);
+			
+			reset($variants);
+			while ((list($key, $variant) = each($variants)) && $continue) {
+				//debug($variant);
+				$done = false;
+				$opt['variant'] = !empty($variant['NewsletterVariant'])?array('NewsletterVariant'=>$variant['NewsletterVariant']):null;
+				if(!empty($opt['variant']['NewsletterVariant']['html'])) {
+					$opt['content'] = $opt['variant']['NewsletterVariant']['html'];
+				}
+				//debug($opt['variant']);
+				
+				while(($max === false || $i*$chunk<$max) && $continue && !$done){
+					$this->NewsletterSended->belongsTo = $belongsToTmp;
+					$findOpt = array(
+						'conditions'=>array(
+							'NewsletterSended.active'=>1,
+							'NewsletterSended.status'=>'ready',
+							'NewsletterSended.sending_id'=>$id,
+							'NewsletterSended.newsletter_variant_id'=>!empty($opt['variant'])?$opt['variant']['NewsletterVariant']['id']:null,
+						),
+						'limit'=>$chunk,
+						'contain'=>'NewsletterEmail'
+					);
+					$toSend = $this->NewsletterSended->find('all',$findOpt);
+					$this->NewsletterSended->belongsTo = array();
+					$mailsOptions = array();
+					$ids = array();
+					//debug($toSend);
+					//exit();
+					if(!empty($toSend)){
+						foreach($toSend as $mail){
+							$mailsOptions[$mail['NewsletterSended']['id']] = $this->_parseRecipientOpt($mail,$opt);
+							$ids[] = $mail['NewsletterSended']['id'];
+						}
+						//debug($toSend);
+						$this->NewsletterSended->recursive = -1;
+						if($this->NewsletterSended->updateAll($this->NewsletterFunct->valFields(array('status'=>'reserved')),array('id'=>$ids,'active'=>1,'status'=>'ready')) && $this->NewsletterSended->getAffectedRows() == count($ids)){
+							$this->_sendBatch($sender,$opt,$mailsOptions);
+						}else{
+							$this->_consoleOut($id,
+								__d('newsletter','Could not reserve email, there may be an another process using this sending', true),
+								array('exit'=>true)
+							);
+						}
+					}else{
+						//sending complete
+						
+						$done = true;
+					}
+					$continue = $this->_valid_sending($id);
+					$i++;
+				}
+			}
 		}
 		
 		//=========================== Done ===========================
@@ -896,6 +945,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 	}
 	
 	function _build($sending){
+		App::import('Lib', 'Newsletter.Sendlist');
+		
 		if(is_numeric($sending)){
 			$sending = $this->NewsletterSending->read(null,$sending);
 		}
@@ -912,6 +963,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$this->_consoleOut($id,__d('newsletter','Start Building Sending', true));
 		
 		//=========================== Data ===========================
+		
 		$basicInfo = array(
 			'active' => 1,
 			'status' =>  "ready",
@@ -949,6 +1001,76 @@ class NewsletterSendingsController extends NewsletterAppController {
 		}*/
 		
 		//debug($sending);
+		//=========================== Grouping ===========================
+		$grouping = $sending['Newsletter']['TemplateConfig']->getGrouping($sending);
+		if(!empty($grouping)){
+			$this->_consoleOut($id,__d('newsletter','Calculating variants', true));
+			
+			
+			$code = sha1(serialize($grouping['fields']));
+			$groups = array(
+				$code=>array(
+					'active' => 1,
+					'conditions' => $grouping['fields'],
+					'newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
+					'code' => $code,
+				)
+			);
+			$listsGroups = array();
+			
+			if(!empty($sending['NewsletterSending']['selected_lists'])){
+				foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
+					$sendlist = Sendlist::getSendlist($newsletterSendlist);
+					$cgrouping = $grouping;
+					if($cgrouping['bySendlist']){
+						$cgrouping = $sending['Newsletter']['TemplateConfig']->getGrouping($sending,$sendlist);
+					}
+					$groupingFields = array_keys($cgrouping['fields']);
+					$groupingFields = array_values(array_intersect(array_keys($sendlist->emailFields()),$groupingFields));
+					$missing = count($groupingFields) != count($cgrouping['fields']);
+					if(!empty($groupingFields) && (!$missing || !$cgrouping['withMissing']['disable']) ){
+						//debug($groupingFields);
+						$findOpt = array('fields'=>$groupingFields,'group'=>$groupingFields);
+						if(!$missing || $cgrouping['withMissing']['validate']){
+							$findOpt['conditions'] = $cgrouping['validation'];
+						}
+						$lgroups = $sendlist->findEmail('all',$findOpt);
+						foreach($lgroups as $group){
+							$cond = array_merge($cgrouping['fields'],$group);
+							$code = sha1(serialize($cond));
+							if(!isset($groups[$code])){
+								$groups[$code] = array(
+									'active' => 1,
+									'conditions' => $cond,
+									'newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
+									'code' => $code,
+								);
+							}
+							$listsGroups[$newsletterSendlist][] = array(
+								'cond' => $group,
+								'variant' => &$groups[$code]
+							);
+						}
+					}
+				}
+			}
+			
+			$this->_consoleOut($id,__d('newsletter','Save variants', true));
+			
+			$existing = $this->NewsletterVariant->find('list',array('fields'=>array('code','id'),'conditions'=>array('code' => array_keys($groups)),'recursive'=>-1));
+			foreach($groups as &$group){
+				if(isset($existing[$group['code']])){
+					$group['id'] = $existing[$group['code']];
+				}else{
+					$this->NewsletterVariant->create();
+					$this->NewsletterVariant->save($group);
+					$group['id'] = $this->NewsletterVariant->id;
+				}
+			}
+			unset($group);
+			//debug($listsGroups);
+		}
+		
 		//=========================== Build Aditionnal Emails ===========================
 		if(!empty($sending['NewsletterSending']['additional_emails'])){
 			$this->_consoleOut($id,__d('newsletter','Build Aditionnal Emails', true));
@@ -996,6 +1118,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 				
 		}
+		
 		//debug($sending);
 		$queries = array();
 		//=========================== Build Dynamic sendlists ===========================
@@ -1004,7 +1127,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$dynSendlists = array();
 		if(!empty($sending['NewsletterSending']['selected_lists'])){
 			foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
-				if($this->NewsletterFunct->isTableSendlist($newsletterSendlist)){
+				if(Sendlist::isTabled($newsletterSendlist)){
 					$dynSendlists[] = $newsletterSendlist;
 				}else{
 					$sendlists[] = $newsletterSendlist;
@@ -1016,14 +1139,31 @@ class NewsletterSendingsController extends NewsletterAppController {
 		foreach($dynSendlists as $list){
 			$this->_consoleOut($id,sprintf(__d('newsletter','Get query for Dynamic sendlist id : %s', true),$list));
 			$tableSendlist = $this->NewsletterFunct->getTableSendlistID($list,true);
-			if($tableSendlist['modelClass']->useDbConfig != $this->NewsletterSended->useDbConfig){
-				$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true);
-				$finalFindOptions['tableSendlist'] = $tableSendlist;
-			}else{
-				$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true,$findOptions);
+			
+			
+			$lGroups = !empty($listsGroups[$list])?$listsGroups[$list]:array(null);
+			foreach($lGroups as $group){
+				$finalFindOptions = $findOptions;
+				if(!empty($group)){
+					$finalFindOptions['conditions'][] = $group['cond'];
+				}
+				if($tableSendlist['modelClass']->useDbConfig != $this->NewsletterSended->useDbConfig){
+					$finalFindOptions = array();
+					if(!empty($group)){
+						$finalFindOptions['conditions'][] = $group['cond'];
+					}
+					$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true);
+					$finalFindOptions['tableSendlist'] = $tableSendlist;
+				}else{
+					$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true,$finalFindOptions);
+				}
+				if(!empty($group)){
+					$finalFindOptions['fields']['newsletter_variant_id'] = $group['variant']['id'];
+				}
+				$finalFindOptions['fields']['sendlist_id'] = $list;
+				$queries[] = $finalFindOptions;
+				
 			}
-			$finalFindOptions['fields']['sendlist_id'] = $list;
-			$queries[] = $finalFindOptions;
 			
 			$this->_updateProcessTime($id,true);
 		}
@@ -1034,12 +1174,30 @@ class NewsletterSendingsController extends NewsletterAppController {
 		foreach($sendlists as $list){
 			$this->_consoleOut($id,sprintf(__d('newsletter','Get query for sendlist id : %s', true),$list));
 			$mailsFindOptions = array('fields'=>array('NewsletterEmail.id','NewsletterEmail.name','NewsletterEmail.email'), 'conditions'=>array('NewsletterEmail.sendlist_id'=>$list,'NewsletterEmail.active'=>1));
-			$finalFindOptions = Set::merge($mailsFindOptions,(array)$findOptions);
-			$finalFindOptions['fields']['sendlist_id'] = $list;
-			$finalFindOptions['model'] = $this->NewsletterSendlist->NewsletterEmail;
-			$queries[] = $finalFindOptions;
+			
+			$lGroups = !empty($listsGroups[$list])?$listsGroups[$list]:array(null);
+			foreach($lGroups as $group){
+				$finalFindOptions = Set::merge($mailsFindOptions,(array)$findOptions);
+				if(!empty($group)){
+					$finalFindOptions['conditions'][] = $group['cond'];
+					$finalFindOptions['fields']['newsletter_variant_id'] = $group['variant']['id'];
+				}
+				$finalFindOptions['fields']['sendlist_id'] = $list;
+				$finalFindOptions['model'] = $this->NewsletterSendlist->NewsletterEmail;
+				
+				$queries[] = $finalFindOptions;
+			}
+			
 		}
 		
+		/*if(!empty($grouping)){
+			debug($grouping);
+			foreach ($queries as $q) {
+				unset($q['model']);
+				debug($q);
+			}
+			exit();
+		}*/
 		//=========================== Save Queries ===========================
 		foreach($queries as $query){
 			//--- normalize Queries ---
@@ -1159,7 +1317,11 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$insertQuery['fields'] = implode(', ', $insertQuery['fields']);
 				$insertStatement = 'INSERT INTO '.$insertQuery['table'].' ('.$insertQuery['fields'].') ('.$insertQuery['select'].')';
 				
-				$this->_consoleOut($id,sprintf(__d('newsletter','Execute query for sendlist id : %s', true),$query['fields']['sendlist_id']));
+				$msg = sprintf(__d('newsletter','Execute query for sendlist id : %s', true),$query['fields']['sendlist_id']);
+				if(!empty($query['fields']['newsletter_variant_id'])){
+					$msg .= ' ('.sprintf(__d('newsletter','Variant id : %s', true),$query['fields']['newsletter_variant_id']).')';
+				}
+				$this->_consoleOut($id, $msg);
 				if($db->execute($insertStatement)){
 					$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),$this->NewsletterSended->getAffectedRows()));
 				}else{
@@ -1174,7 +1336,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		
 		//=========================== Done ===========================
 		$this->NewsletterSending->create();
-		$data = array('NewsletterSending'=>array('id'=>$id,'status'=>'send'));
+		$data = array('NewsletterSending'=>array('id'=>$id,'status'=>'render'));
 		if($this->NewsletterSending->save($data)){
 			$this->_consoleOut($id,__('Building Complete.',true));
 		}else{
@@ -1187,6 +1349,63 @@ class NewsletterSendingsController extends NewsletterAppController {
 		return true;
 	}
 	
+	
+	function _render($sending){
+	
+		if(is_numeric($sending)){
+			$sending = $this->NewsletterSending->read(null,$sending);
+		}
+	
+		if(empty($sending)){
+			$this->_consoleOut(false,
+				__d('newsletter','Invalid Newsletter Sending', true),
+				array('exit'=>true)
+			);
+		}
+		$id = $sending['NewsletterSending']['id'];
+		
+		$this->NewsletterSended->Behaviors->attach('Containable');
+		$unrenderedVariants = $this->NewsletterSended->find('all',array(
+			'conditions'=>array(
+				'NewsletterSended.sending_id' => $id, 
+				'NewsletterSended.newsletter_variant_id IS NOT NULL',
+				'NewsletterVariant.html IS NULL'
+			),
+			'contain' => array('NewsletterVariant'),
+			'group' => 'NewsletterSended.newsletter_variant_id'
+		));
+		
+		if(empty($sending['Newsletter']['html'])){
+			$this->_updateProcessTime($id,true);
+			$this->_consoleOut($id,__('Rendering the newsletter',true));
+			$this->NewsletterFunct->renderNewsletter($sending);
+		}
+		
+		
+		$i = 0;
+		foreach($unrenderedVariants as $variant){
+			$this->_updateProcessTime($id,true);
+			$this->_consoleOut($id,sprintf(__('Render variant %d/%d',true), $i+1, count($unrenderedVariants)));
+			$this->NewsletterFunct->renderNewsletter($sending,true,$variant);
+			$i++;
+			//debug($variant['NewsletterVariant']['html']);
+			//debug($variant);
+		}
+		
+		
+		$this->NewsletterSending->create();
+		$data = array('NewsletterSending'=>array('id'=>$id,'status'=>'send'));
+		if($this->NewsletterSending->save($data)){
+			$this->_consoleOut($id,__('Render Complete.',true));
+		}else{
+			$this->_consoleOut($id,
+				__('Could not start Sending',true),
+				array('exit'=>true)
+			);
+		}
+		
+		return true;
+	}
 	
 	
 	function _valid_sending($sending){

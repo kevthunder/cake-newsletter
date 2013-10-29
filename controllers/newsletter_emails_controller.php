@@ -5,11 +5,10 @@ class NewsletterEmailsController extends NewsletterAppController {
 	var $helpers = array('Html', 'Form');
 	var $components = array('Email','Newsletter.NewsletterFunct','Newsletter.EmailUtils');
 
-	/*function index() {
-		$this->NewsletterEmail->recursive = 0;
-		$this->set('newsletterEmails', $this->paginate());
+	function index() {
+		$this->redirect('add');
 	}
-
+	/*
 	function view($id = null) {
 		if (!$id) {
 			$this->Session->setFlash(__('Invalid NewsletterEmail.', true));
@@ -212,7 +211,8 @@ class NewsletterEmailsController extends NewsletterAppController {
 		}
 		if($listId){
 			$this->NewsletterEmail->recursive = 0;
-			if($this->NewsletterFunct->isTableSendlist($listId)){
+			App::import('Lib', 'Newsletter.Sendlist');
+			if(Sendlist::isTabled($listId)){
 				$tableSendlist = $this->NewsletterFunct->getTableSendlistID($listId,true);
 				$Model = $tableSendlist['modelClass'];
 				$modelName = $Model->alias;

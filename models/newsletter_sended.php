@@ -33,6 +33,13 @@ class NewsletterSended extends NewsletterAppModel {
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
+		),
+		'NewsletterVariant' => array(
+			'className' => 'Newsletter.NewsletterVariant',
+			'foreignKey' => 'newsletter_variant_id',
+			'conditions' => '',
+			'fields' => '',
+			'order' => ''
 		)
 	);
 	

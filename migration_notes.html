@@ -71,25 +71,25 @@ pre{
 </head>
 <body>
 <div class="section">
-    <h1>De v0.1.2.0.2 à v0.1.2.1.0</h1>
+    <h1>De v(0.1)2.0.2 à v(0.1)2.1.0</h1>
     <ol>
         <li>Database : <pre>ALTER TABLE `newsletter_boxes` ADD `multimedia` TEXT NULL;</pre></li>
     </ol>
 </div>
 <div class="section">
-    <h1>De v0.1.2.1.2 à v0.1.2.1.3</h1>
+    <h1>De v(0.1)2.1.2 à v(0.1)2.1.3</h1>
     <ol>
         <li>Database : <pre>ALTER TABLE `newsletter_sended` ADD `sending_no` INT NULL , ADD `date` DATETIME NULL</pre></li>
     </ol>
 </div>
 <div class="section">
-    <h1>avant v0.1.2.2.0</h1>
+    <h1>avant v(0.1)2.2.0</h1>
     <ol>
         <li>Faire un update du schema avec newsletter/config/schema.php</li>
     </ol>
 </div>
 <div class="section">
-   <h1>De v0.1.2.2.x à v0.1.2.3.0</h1>
+   <h1>De v(0.1)2.2.x à v(0.1)2.3.0</h1>
     <ol>
         <li>Database : <pre>
 ALTER TABLE `newsletter_sended` ADD   `error` text collate utf8_unicode_ci default NULL AFTER `status`;
@@ -99,7 +99,7 @@ ALTER TABLE `newsletter_sendings` ADD   `self_sending` tinyint(1) default NULL A
     </ol>
 </div>
 <div class="section">
-    <h1>De v0.1.2.3.0 à v0.1.2.3.1</h1>
+    <h1>De v(0.1)2.3.0 à v(0.1)2.3.1</h1>
     <ol>
         <li>Database : <pre>
 CREATE TABLE IF NOT EXISTS `newsletter_assocs` (
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `newsletter_assocs` (
     </ol>
 </div>
 <div class="section">
-    <h1>De v0.1.2.3.1 à v0.1.2.3.2</h1>
+    <h1>De v(0.1)2.3.1 à v(0.1)2.3.2</h1>
     <ol>
         <li>Database : <pre>
 ALTER TABLE `newsletter_sendings` ADD   `data` text collate utf8_unicode_ci AFTER `sender_email`;
@@ -122,7 +122,7 @@ ALTER TABLE `newsletter_sendings` ADD   `wrapper` varchar(255) collate utf8_unic
     </ol>
 </div>
 <div class="section">
-    <h1>De v0.1.2.3.6 à v0.1.2.4.0</h1>
+    <h1>De v(0.1)2.3.6 à v(0.1)2.4.0</h1>
     <ol>
         <li>Database : <pre>
 ALTER TABLE `newsletters` ADD `tested` BOOLEAN NOT NULL AFTER `template`;
@@ -132,7 +132,7 @@ ALTER TABLE `newsletter_sendings` ADD `scheduled` BOOLEAN NULL AFTER `date`;
     </ol>
 </div>
 <div class="section">
-    <h1>De v0.1.2.4.0 à v0.1.2.5.0</h1>
+    <h1>De v(0.1)2.4.0 à v(0.1)2.5.0</h1>
     <ol>
         <li>Database : <pre>
 ALTER TABLE `newsletters` ADD `external_key` VARCHAR( 255 ) NULL AFTER `tested`;
@@ -141,7 +141,7 @@ ALTER TABLE `newsletter_stats` ADD `action` VARCHAR( 255 ) NULL AFTER `date`;
     </ol>
 </div>
 <div class="section">
-    <h1>De v0.1.2.5.5 à v0.1.2.5.6</h1>
+    <h1>De v(0.1)2.5.5 à v(0.1)2.5.6</h1>
     <ol>
         <li>Database : <pre>
 ALTER TABLE `newsletter_sendlists` ADD `subscriptable` tinyint(1) NOT NULL AFTER `active`;

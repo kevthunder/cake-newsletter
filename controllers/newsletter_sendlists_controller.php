@@ -328,7 +328,8 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			$this->Session->setFlash(__('Invalid NewsletterSendlist.', true));
 			$this->redirect(array('action'=>'index'));
 		}
-		if($this->NewsletterFunct->isTableSendlist($id)){
+		App::import('Lib', 'Newsletter.Sendlist');
+		if(Sendlist::isTabled($id)){
 			$tableSendlist = $this->NewsletterFunct->getTableSendlistID($id,true);
 			$Model = $tableSendlist['modelClass'];
 			$Model->recursive = -1;
@@ -433,7 +434,8 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			$this->data = $this->NewsletterSendlist->read(null, $id);
 		}
 		
-		$this->set('tabled',$this->NewsletterFunct->isTableSendlist($id));
+		App::import('Lib', 'Newsletter.Sendlist');
+		$this->set('tabled',Sendlist::isTabled($id));
 	}
 
 	function admin_up($id = null) {

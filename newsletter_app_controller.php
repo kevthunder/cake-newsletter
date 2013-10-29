@@ -1,6 +1,6 @@
 <?php
 class NewsletterAppController extends AppController {
-	var $pluginVersion = "0.1.2.5.9"; 
+	var $pluginVersion = "2.6.0"; 
 	
 	var $view = "Newsletter";
 	

@@ -128,7 +128,7 @@ class NewsletterFunctComponent extends Object
 		return $boxes_by_zone;
 	}
 	
-	function renderNewsletter(&$newsletter,$save=true){
+	function renderNewsletter(&$newsletter,$save=true,&$variant=null){
 		if(is_numeric($newsletter)){
 			$tmp = $this->Newsletter->read(null, $newsletter);
 			$newsletter =& $tmp;
@@ -136,6 +136,9 @@ class NewsletterFunctComponent extends Object
 		if(empty($newsletter)){
 			debug('Invalid Newsletter.');
 			return null;
+		}
+		if(!empty($variant) && is_numeric($variant)){
+			$variant = $this->Newsletter->NewsletterVariant->read(null, $variant);
 		}
 		$boxes_by_zone = $this->getBoxByZone($newsletter);
 		$config = $this->Newsletter->getConfig($newsletter);
@@ -149,6 +152,7 @@ class NewsletterFunctComponent extends Object
 			'newsletter_data' => $newsletter,
 			'title_for_newsletter' => '<span id="title_for_newsletter">'.$newsletter['Newsletter']['title'].'</span>',
 			'edit_mode' => false,
+			'variant' => $variant,
 		);
 		$this->controller->set($vars);
 		
@@ -168,11 +172,19 @@ class NewsletterFunctComponent extends Object
 		
 		ClassRegistry::removeObject('view');
 		
-		$newsletter['Newsletter']['html'] = $html;
 		
-		if($save){
-			$this->Newsletter->save(array('Newsletter'=>$newsletter['Newsletter']));
+		if(!empty($variant)){
+			$variant['NewsletterVariant']['html'] = $html;
+			if($save){
+				$this->Newsletter->NewsletterVariant->save(array('NewsletterVariant'=>$variant['NewsletterVariant']));
+			}
+		}else{
+			$newsletter['Newsletter']['html'] = $html;
+			if($save){
+				$this->Newsletter->save(array('Newsletter'=>$newsletter['Newsletter']));
+			}
 		}
+		
 		
 		return $html;
 	}
@@ -294,22 +306,6 @@ class NewsletterFunctComponent extends Object
 		}
 	}
 	
-	
-	function isTableSendlist($tableSendlist_id){
-		$tableSendlists = Configure::read('Newsletter.tableSendlist');
-		if(!empty($tableSendlists)){
-			foreach($tableSendlists as $key => $tableSendlist){
-				if(isset($tableSendlist['id'])){
-					if($tableSendlist['id'] == $tableSendlist_id){
-						return true;
-					}
-				}elseif($key==$tableSendlist_id){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
 	function getTableSendlistMails($tableSendlist_id,$active = true,$addfindOptions = null){
 		$emails = array();
 		$tableSendlist = $this->getTableSendlistID($tableSendlist_id,true);

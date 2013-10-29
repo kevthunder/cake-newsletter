@@ -483,6 +483,15 @@ class NewsletterMakerHelper extends AppHelper {
 	}
 	
 	//////////////////// Newsletter layout & boxes ////////////////////
+	function testVariantCond($key,$val,$default=null){
+		$variant = $this->view->getVar('variant');
+		$var = $default;
+		if(!empty($variant['NewsletterVariant']['conditions']) && array_key_exists($key,$variant['NewsletterVariant']['conditions'])){
+			$var = $variant['NewsletterVariant']['conditions'][$key];
+		}
+		//debug($variant['NewsletterVariant']['conditions']);
+		return $var == $val;
+	}
 	function arrayToTime($options){
 		$default_options = array(
 			'year'=> date("Y"), 
