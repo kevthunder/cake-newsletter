@@ -33,55 +33,36 @@ class NewsletterEmailsController extends NewsletterAppController {
 				}
 	
 				$this->NewsletterEmail->create();
-				if(empty($this->data['NewsletterEmail']['sendlist_id'])){
+				if(!empty($this->data['NewsletterEmail']['sendlist_id'])){
+					$this->data['NewsletterSendlist'] = (array)$this->data['NewsletterEmail']['sendlist_id'];
+				}
+				if(empty($this->data['NewsletterSendlist'])){
 					if(Configure::read('Newsletter.defaultSendlist')){
-						$this->data['NewsletterEmail']['sendlist_id'] = Configure::read('Newsletter.defaultSendlist');
+						$this->data['NewsletterSendlist'] = (array)Configure::read('Newsletter.defaultSendlist');
 					}elseif(!empty($sendlists)){
 						if(count($sendlists) == 1){
-							$this->data['NewsletterEmail']['sendlist_id'] = key($sendlists);
+							$this->data['NewsletterSendlist'] = array(key($sendlists));
 						}else{
 							$this->Session->setFlash(__d('newsletter','You must choose at least one sendlist.', true));
 							$error = true;
 						}
 					}else{
-						$this->data['NewsletterEmail']['sendlist_id'] = 1;
+						$this->data['NewsletterSendlist'] = array(1);
 					}
-				}elseif(!empty($sendlists) && count(array_diff((array)$this->data['NewsletterEmail']['sendlist_id'],array_keys($sendlists)))){
+				}elseif(!empty($sendlists) && count(array_diff((array)$this->data['NewsletterSendlist'],array_keys($sendlists)))){
 					$this->Session->setFlash(__d('newsletter','Invalid sendlist.', true));
 					$error = true;
 				}
 				
 				
-				$lists = (array)$this->data['NewsletterEmail']['sendlist_id'];
 				if(!$error){
-					$exists = $this->NewsletterEmail->find('list', array(
-						'fields'=>array('id','sendlist_id'),
-						'conditions'=>array(
-							'email'=>$this->data['NewsletterEmail']['email'],
-							'sendlist_id'=>$this->data['NewsletterEmail']['sendlist_id'],
-							'active'=>1
-						),
-						'recursive'=>-1
-					));
-					if($exists){
-						$lists = array_diff($lists,$exists);
-					}
-					if(!count($lists)){
-						$this->Session->setFlash(__d('newsletter','Ce email est déjà présent dans notre base de données.', true));
+					if($this->NewsletterEmail->save($data)){
+						if(!empty($this->NewsletterEmail->data['NewsletterEmail']['existed'])){
+							$this->Session->setFlash(__d('newsletter','This email allready exists in our database. Your informations has been updated.', true));
+						}
+					}else{
+						$this->Session->setFlash(__d('newsletter','The email could not be saved. Please, try again.', true));
 						$error = true;
-					}
-				}
-				if(!$error){
-					$this->data['NewsletterEmail']['active'] = 1;
-					
-					$ids = array();
-					foreach($lists as $list){
-						$data = $this->data['NewsletterEmail'];
-						$data['sendlist_id'] = $list;
-						
-						$this->NewsletterEmail->create();
-						$this->NewsletterEmail->save($data);
-						$ids[] = $this->NewsletterEmail->id;
 					}
 				}
 				if(!$error){

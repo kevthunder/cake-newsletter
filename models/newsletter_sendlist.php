@@ -3,19 +3,13 @@ class NewsletterSendlist extends NewsletterAppModel {
 
 	var $name = 'NewsletterSendlist';
 	
-	var $hasMany = array(
+	var $hasAndBelongsToMany = array(
 		'NewsletterEmail' => array(
+			'with' => 'Newsletter.NewsletterSendlistsEmail',
 			'className' => 'Newsletter.NewsletterEmail',
-			'foreignKey' => 'sendlist_id',
-			'dependent' => false,
-			'conditions' => '',
-			'fields' => '',
-			'order' => '',
-			'limit' => '',
-			'offset' => '',
-			'exclusive' => '',
-			'finderQuery' => '',
-			'counterQuery' => ''
+			'foreignKey' => 'newsletter_sendlist_id',
+			'associationForeignKey' => 'newsletter_email_id',
+			'unique' => true,
 		)
 	);
 	

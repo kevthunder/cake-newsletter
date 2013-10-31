@@ -138,23 +138,6 @@ class NewsletterController extends NewsletterAppController {
 			$this->cakeError('error404');
 		}
 	}
-	function add_email($send_list_id,$email,$name=null) {
-		if($send_list_id && $email){
-			$this->NewsletterEmail->create();
-			$email_data = array();
-			$email_data['active'] = 1;
-			$email_data['name'] = $name;
-			$email_data['email'] = $email;
-			$email_data['sendlist_id'] = $send_list_id;
-			if($this->NewsletterEmail->save($email_data)){
-				return true;
-			}else{
-				return false;
-			}
-		}else{
-			return false;
-		}
-	}
 	function unsubscribe($sended_id=null) {
 		//Configure::write('debug', 1);
 		//$view = 'unsubscribe_step1';

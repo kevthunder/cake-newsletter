@@ -85,5 +85,41 @@ class NewsletterConfig extends Object {
 		return $paths;
 	}
 	
+	
+	function checkTables(){
+		$tables = array(
+			'newsletter_boxes',
+			'newsletter_emails',
+			'newsletter_sended',
+			'newsletter_sendings',
+			'newsletter_sendlists',
+			'newsletter_sendlists_emails',
+			'newsletter_stats',
+			'newsletter_variants',
+			'newsletters',
+		);
+		
+		
+		App::import('Lib', 'ConnectionManager');
+		$db =& ConnectionManager::getDataSource('default');
+		
+		$sourceList = $db->listSources();
+		return !count(array_diff($tables,$sourceList));
+	}
+	
+	function checkSchema(){
+
+		if(!NewsletterConfig::checkTables()){
+			return false;
+		}
+		
+		$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
+		//debug($NewsletterEmail->schema());
+		if(array_key_exists('sendlist_id',$NewsletterEmail->schema())){
+			return false;
+		}
+		
+		return true;
+	}
 }
 ?>

@@ -15,12 +15,12 @@ class NewsletterFunctComponent extends Object
 		
 	}
 	function slug($chaine="", $length=150){
-		// remplace les caractères accentués par leur version non accentuée
+		// remplace les caractÃ¨res accentuÃ©s par leur version non accentuÃ©e
 		$id = strtr( $chaine,
-				'ŠŽšžŸÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåçèéêëìíîïñòóôõöøùúûüýÿ',
+				'Å Å½Å¡Å¾Å¸Ã€ÃÃ‚ÃƒÃ„Ã…Ã‡ÃˆÃ‰ÃŠÃ‹ÃŒÃÃŽÃÃ‘Ã’Ã“Ã”Ã•Ã–Ã˜Ã™ÃšÃ›ÃœÃÃ Ã¡Ã¢Ã£Ã¤Ã¥Ã§Ã¨Ã©ÃªÃ«Ã¬Ã­Ã®Ã¯Ã±Ã²Ã³Ã´ÃµÃ¶Ã¸Ã¹ÃºÃ»Ã¼Ã½Ã¿',
 				'SZszYAAAAAACEEEEIIIINOOOOOOUUUUYaaaaaaceeeeiiiinoooooouuuuyy' );
 
-		// remplace les caractères non standards
+		// remplace les caractÃ¨res non standards
 		$id = preg_replace(
 				array(
 					'`^[^A-Za-z0-9]+`',
@@ -216,6 +216,7 @@ class NewsletterFunctComponent extends Object
 		}
 		return $value;
 	}
+	
 	function get_emails($newsletterSendlist){
 		$emails = array();
 		foreach($newsletterSendlist['NewsletterEmail'] as $newsletterEmail){
@@ -472,8 +473,10 @@ class NewsletterFunctComponent extends Object
 			'group' => array()
 		);
 		$findOptions = array_merge($empty,$findOptions);
-		$findOptions['table']=$findOptions['model']->useTable;
-		$findOptions['alias']=$findOptions['model']->alias;
+		if(!empty($findOptions['model'])){
+			$findOptions['table']=$findOptions['model']->useTable;
+			$findOptions['alias']=$findOptions['model']->alias;
+		}
 		unset($findOptions['model']);
 		if(!empty($findOptions['fields'])){
 			$findOptions['fields'] = $this->aliasedFields($findOptions['fields']);
@@ -484,7 +487,7 @@ class NewsletterFunctComponent extends Object
 		$formated = array();
 		foreach($fields as $alias => $field){
 			if(!is_numeric($alias)){
-				//À Faire : $db->name(
+				//Ã€ Faire : $db->name(
 				$field .= ' as `'.$alias.'`';
 			}
 			$formated[] = $field;

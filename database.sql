@@ -133,6 +133,22 @@ CREATE TABLE IF NOT EXISTS `newsletter_sendings` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `newsletter_sendlists_emails`
+--
+
+CREATE TABLE IF NOT EXISTS `newsletter_sendlists_emails` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `newsletter_sendlist_id` int(11) DEFAULT NULL,
+  `newsletter_email_id` int(11) DEFAULT NULL,
+  `active` tinyint(1) DEFAULT '1',
+  `created` datetime DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 -- --------------------------------------------------------
 

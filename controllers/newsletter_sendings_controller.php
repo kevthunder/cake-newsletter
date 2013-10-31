@@ -1173,7 +1173,18 @@ class NewsletterSendingsController extends NewsletterAppController {
 		
 		foreach($sendlists as $list){
 			$this->_consoleOut($id,sprintf(__d('newsletter','Get query for sendlist id : %s', true),$list));
-			$mailsFindOptions = array('fields'=>array('NewsletterEmail.id','NewsletterEmail.name','NewsletterEmail.email'), 'conditions'=>array('NewsletterEmail.sendlist_id'=>$list,'NewsletterEmail.active'=>1));
+			
+			$this->NewsletterEmail->bindModel(array(
+				'hasOne' => array(
+					'NewsletterSendlistsEmail' => array(
+						'className' => 'NewsletterSendlistsEmail'
+					)
+				)
+			),false);
+			$mailsFindOptions = array(
+				'fields'=>array('NewsletterEmail.id','NewsletterEmail.name','NewsletterEmail.email'),
+				'conditions'=>array('NewsletterSendlistsEmail.newsletter_sendlist_id'=>$list,'NewsletterEmail.active'=>1)
+			);
 			
 			$lGroups = !empty($listsGroups[$list])?$listsGroups[$list]:array(null);
 			foreach($lGroups as $group){
@@ -1190,14 +1201,14 @@ class NewsletterSendingsController extends NewsletterAppController {
 			
 		}
 		
-		/*if(!empty($grouping)){
+		if(!empty($grouping)){
 			debug($grouping);
 			foreach ($queries as $q) {
 				unset($q['model']);
 				debug($q);
 			}
 			exit();
-		}*/
+		}
 		//=========================== Save Queries ===========================
 		foreach($queries as $query){
 			//--- normalize Queries ---

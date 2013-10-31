@@ -1,6 +1,6 @@
 <?php
 class NewsletterAppController extends AppController {
-	var $pluginVersion = "2.6.0"; 
+	var $pluginVersion = "2.6.0alpha"; 
 	
 	var $view = "Newsletter";
 	
@@ -12,9 +12,20 @@ class NewsletterAppController extends AppController {
 		
 		App::import('Lib', 'Newsletter.ClassCollection');
 	}
-	/*function beforeFilter() {
+	
+	function constructClasses() {
+	
+	
+		if(!empty($this->params['admin']) && $this->params['controller'] != 'newsletter_upgrade' && !NewsletterConfig::checkSchema()) {
+			$this->redirect(array('plugin'=>'newsletter','controller'=>'newsletter_upgrade','action'=>'upgrade','admin'=>true));
+		}
+		
+		return parent::constructClasses();
+	}
+	
+	function beforeFilter() {
 		parent::beforeFilter();
 		Configure::write('debug', 1);
-	}*/
+	}
 }
 ?>

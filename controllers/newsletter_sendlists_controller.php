@@ -5,6 +5,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 	var $helpers = array('Html', 'Form');
 	var $components = array('Newsletter.NewsletterFunct');
 
+	
 	/*function index() {
 		$this->NewsletterSendlist->recursive = 0;
 		$this->set('newsletterSendlists', $this->paginate());
@@ -28,13 +29,14 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		$tableSendlists = $this->NewsletterFunct->getTableSendlists();
 		$restrictedSendlists = array_keys($tableSendlists);
 		
+		$this->NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
 		foreach($lists as &$list){
 			if(in_array($list[$this->NewsletterSendlist->alias]['id'],$restrictedSendlists)){
 				$findOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list[$this->NewsletterSendlist->alias]['id']);
 				unset($findOptions['fields']);
 				$list[$this->NewsletterSendlist->alias]['nb_email'] = $findOptions['model']->find('count',$this->NewsletterFunct->standardizeFindOptions($findOptions));
 			}else{
-				$list[$this->NewsletterSendlist->alias]['nb_email'] = $this->NewsletterSendlist->NewsletterEmail->find('count',array('conditions'=>array('sendlist_id'=>$list[$this->NewsletterSendlist->alias]['id'])));
+				$list[$this->NewsletterSendlist->alias]['nb_email'] = $this->NewsletterSendlistsEmail->find('count',array('conditions'=>array('newsletter_sendlist_id'=>$list[$this->NewsletterSendlist->alias]['id'])));
 			}
 		}
 		$this->set('newsletterSendlists', $lists);
@@ -126,9 +128,9 @@ class NewsletterSendlistsController extends NewsletterAppController {
 					'email'      => array("email", "mail", "courriel")
 			);
 			$fieldsCharAlias = array(
-				"é" => "e",
-				"è" => "e",
-				"ê" => "e",
+				"Ã©" => "e",
+				"Ã¨" => "e",
+				"Ãª" => "e",
 				"_" => " ",
 				"-" => " "
 			);
@@ -464,6 +466,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			$this->redirect(array('action'=>'index'));
 		}
 	}
+	
 
 }
 ?>
