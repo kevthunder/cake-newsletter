@@ -32,8 +32,8 @@ class TabledSendlist extends Sendlist {
 						'email'=>'email',
 						'name'=>'name',
 						'active'=>'active',
-						'firstName'=>null,
-						'lastName'=>null,
+						'first_name'=>null,
+						'last_name'=>null,
 					),
 					'showInnactive'=>true,
 					'conditions'=>null,
@@ -90,6 +90,7 @@ class TabledSendlist extends Sendlist {
 	/////////  /////////
 	
 	var $options;
+	var $type = 'tabled';
 	
 	function __construct($id){
 		$this->id = $id;
@@ -97,7 +98,66 @@ class TabledSendlist extends Sendlist {
 		$this->EmailModel = ClassRegistry::init($this->options['model']); 
 	}
 	
-	function emailFields(){
+	function alterEmailQuery($opt){
+		$Model = $this->EmailModel;
+		$modelName = $Model->alias;
+		
+		if(!empty($opt)){
+			$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail'); 
+			App::import('Lib', 'Newsletter.SetMulti');
+			$replace = array(
+					$NewsletterEmail->alias.'.email' => $modelName.'.'.$this->options['fields']['email'],
+					$NewsletterEmail->alias => $modelName
+				);
+			$opt = SetMulti::replaceTree(array_keys($replace),array_values($replace),$opt);
+		}
+	
+	
+		$conditions = array();
+		if(	
+			(
+				!empty($opt['active']) 
+				|| (!isset($opt['active']) && !$this->options['showInnactive'])
+			) 
+			&& !empty($this->options['fields']['active']) 
+			&& $Model->hasField($this->options['fields']['active'])
+		){
+			$conditions[$modelName.'.'.$this->options['fields']['active']] = 1;
+		}
+		$conditions['NOT'][$modelName.'.'.$this->options['fields']['email']] = "";
+		$conditions[] = $modelName.'.'.$this->options['fields']['email'].' IS NOT NULL';
+		if(!empty($this->options['conditions'])){
+			if(!array($this->options['conditions'])){
+				$this->options['conditions'] = array($this->options['conditions']);
+			}
+			$conditions = set::merge($conditions,$this->options['conditions']);
+		}
+		$opt['conditions'][] = $conditions;
+		
+		if($opt['mode'] != 'count' && empty($opt['fields'])){
+			$opt['fields'] = $this->emailFields();
+		}
+		if(!empty($this->options['findOptions']) && is_array($this->options['findOptions'])){
+			$opt = set::merge($opt,$this->options['findOptions']);
+		}
+		
+		return $opt;
+	}
+	
+	
+	function searchQuery($q,$opt=array()){
+		$fields = $this->emailFields(array('exclude'=>array('id','primary_key','active')));
+		$cond = array();
+		foreach($fields as $f){
+			$schema = $this->EmailModel->schema(end(explode('.',$f)));
+			if($schema['type'] != 'boolean'){
+				$cond['OR'][$f.' LIKE'] = '%'.$q.'%';
+			}
+		}
+		$opt['conditions'][] = $cond;
+		return $opt;
+	}
+	function emailFields($opt=array()){
 		$modelName = $this->EmailModel->alias;
 		$dbo = $this->EmailModel->getDataSource();
 		$fields = array();
@@ -109,7 +169,74 @@ class TabledSendlist extends Sendlist {
 		}
 		$fields['primary_key'] = $modelName.'.'.$this->EmailModel->primaryKey;
 		//$fields[] = '*';
+		if(!empty($opt['exclude'])){
+			$fields = array_diff_key($fields,array_flip($opt['exclude']));
+		}
 		return $fields;
+	}
+	
+	function parseResult($res,$useAlias=null){
+		if(empty($res)) return $res;
+		
+		$Model = $this->EmailModel;
+		$modelName = $Model->alias;
+		$single = isset($res[$modelName]);
+		$fields = $this->options['fields'];
+		//debug($fields);
+		if($single) $res = array($res);
+		
+		foreach ($res as &$mail) {
+			$emailData = array();
+			if(isset($mail[$modelName]['email'])){
+				$emailData['email']= $mail[$modelName]['email'];
+			}else if($fields['email'] && isset($mail[$modelName][$fields['email']])){
+				$emailData['email']= $mail[$modelName][$fields['email']];
+			}
+			
+			if(!empty($emailData['email'])){
+				//$basicFields = array('id','email','name','first_name','last_name');
+				//$emailData = array_intersect_key($mail[$modelName],array_flip($basicFields));
+				//if(array_key_exists($Model->primaryKey, $mail[$modelName]) {}
+				$emailData['id'] = $mail[$modelName][$Model->primaryKey];
+				//debug($mail[$modelName]);
+				if($fields['active'] && array_key_exists($fields['active'],$mail[$modelName])){
+					$emailData['active']= $mail[$modelName][$fields['active']];
+				}else if(array_key_exists('active',$mail[$modelName])){
+					$emailData['active']= $mail[$modelName]['active'];
+				}else{
+					$emailData['active']= 1;
+				}
+				$name = array();
+				if(isset($mail[$modelName]['first_name']) && $mail[$modelName]['first_name']){
+					$name[] = $mail[$modelName]['first_name'];
+				}else if($fields['first_name'] && isset($mail[$modelName][$fields['first_name']]) && $mail[$modelName][$fields['first_name']]){
+					$name[] = $mail[$modelName][$fields['first_name']];
+				}
+				if(isset($mail[$modelName]['last_name']) && $mail[$modelName]['last_name']){
+					$name[] = $mail[$modelName]['last_name'];
+				}else if($fields['last_name'] && isset($mail[$modelName][$fields['last_name']]) && $mail[$modelName][$fields['last_name']]){
+					$name[] = $mail[$modelName][$fields['last_name']];
+				}
+				$name = implode(' ',$name);
+				if(!$name){
+					if(isset($mail[$modelName]['name'])){
+						$name = $mail[$modelName]['name'];
+					}else if($fields['name'] && isset($mail[$modelName][$fields['name']])){
+						$name = $mail[$modelName][$fields['name']];	
+					}
+				}
+				$emailData['name'] = $name;
+				$emailData['sendlist_id'] = $this->id;
+				$emailData['data'] = $mail;
+				if($useAlias){
+					$mail = array($useAlias => $emailData);
+				}else{
+					$mail = $emailData;
+				}
+			}
+		}
+		if($single) $res = $res[0];
+		return $res;
 	}
 	
 }

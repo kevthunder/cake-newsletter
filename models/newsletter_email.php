@@ -33,7 +33,7 @@ class NewsletterEmail extends NewsletterAppModel {
 			$this->bindModel(array(
 				'hasMany' => array(
 					'NewsletterSendlistsEmail' => array(
-						'className' => 'NewsletterSendlistsEmail'
+						'className' => 'Newsletter.NewsletterSendlistsEmail'
 					)
 				)
 			));

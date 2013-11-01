@@ -25,7 +25,7 @@ class NewsletterAppController extends AppController {
 	
 	function beforeFilter() {
 		parent::beforeFilter();
-		Configure::write('debug', 1);
+		//Configure::write('debug', 1);
 	}
 }
 ?>

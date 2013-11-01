@@ -180,52 +180,36 @@ class NewsletterEmailsController extends NewsletterAppController {
 			$q = $this->params['named']['q'];
 		}
 		
-		if($q != null) {
-			$this->paginate['conditions'] = array('OR' => array(
-				Inflector::singularize($this->name) . '.email LIKE' => '%'.$q.'%',
-				Inflector::singularize($this->name) . '.name LIKE' => '%'.$q.'%'
-			));
-		}
 		
 		if(!$listId && !empty($this->params['named']['id'])){
 			$listId = $this->params['named']['id'];
 		}
 		if($listId){
-			$this->NewsletterEmail->recursive = 0;
 			App::import('Lib', 'Newsletter.Sendlist');
-			if(Sendlist::isTabled($listId)){
-				$tableSendlist = $this->NewsletterFunct->getTableSendlistID($listId,true);
-				$Model = $tableSendlist['modelClass'];
-				$modelName = $Model->alias;
-				$findOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
-				if($q != null) {
-					$this->paginate['conditions'] = array('OR' => array(
-						'email LIKE' => '%'.$q.'%'
-					));
-					if($tableSendlist['firstNameField'] && $Model->hasField($tableSendlist['firstNameField'])){
-						$this->paginate['conditions']['OR']['first_name LIKE'] = '%'.$q.'%';
-					}
-					if($tableSendlist['lastNameField'] && $Model->hasField($tableSendlist['lastNameField'])){
-						$this->paginate['conditions']['OR']['last_name LIKE'] = '%'.$q.'%';
-					}
-					if($tableSendlist['nameField'] && $Model->hasField($tableSendlist['nameField'])){
-						$this->paginate['conditions']['OR']['name LIKE'] = '%'.$q.'%';
-					}
-				}
-				$this->paginate = array_merge_recursive($this->paginate,$findOptions);
-				$Model->recursive = -1;
-				$mails = $this->paginate($Model);
-				$newsletterEmails = array();
-				foreach($mails as $mail){
-					$newsletterEmails[] = $this->NewsletterFunct->tabledEmailGetFields($mail,$tableSendlist,'NewsletterEmail');
-				}
-				$toRender = 'tabled_email';
-			}else{
-				$newsletterEmails = $this->paginate(null,array('NewsletterEmail.sendlist_id'=>$listId));
-			}
+			$sendlist = Sendlist::getSendlist($listId);
+			
+			$findOptions = array('search'=>$q);
+			$findOptions = $sendlist->emailQuery($findOptions,false);
+			//debug($findOptions);
+			$this->paginate = $findOptions;
+			$mails = $this->paginate($sendlist->EmailModel);
+			//debug($mails);
+			$newsletterEmails = $sendlist->parseResult($mails,'NewsletterEmail');
 			//debug($newsletterEmails);
-			$this->set('sendlist', $this->NewsletterEmail->NewsletterSendlist->read(null, $listId));
+			if($sendlist->type == 'tabled'){
+				$toRender = 'tabled_email';
+			}
+			$this->set('sendlist', $sendlist->getInfo());
+			
 		}else{
+		
+			if($q != null) {
+				$this->paginate['conditions'] = array('OR' => array(
+					Inflector::singularize($this->name) . '.email LIKE' => '%'.$q.'%',
+					Inflector::singularize($this->name) . '.name LIKE' => '%'.$q.'%'
+				));
+			}
+		
 			$this->NewsletterEmail->recursive = 0;
 			$newsletterEmails = $this->paginate();
 		}

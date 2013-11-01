@@ -149,5 +149,13 @@ ALTER TABLE `newsletter_sendlists` ADD `order` int(11) default NULL AFTER `subsc
 </pre></li>
     </ol>
 </div>
+<div class="section">
+    <h1>De v(0.1)2.5.* à v2.6.0</h1>
+    <ol>
+        <li>Database : <pre>
+ALTER TABLE `newsletter_sended` CHANGE `sending_id` `tabledlist_id` INT( 11 ) NULL DEFAULT NULL ;
+</pre></li>
+    </ol>
+</div>
 </body>
 </html>

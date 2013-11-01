@@ -974,33 +974,22 @@ class NewsletterSendingsController extends NewsletterAppController {
 			'email' => null
 		);
 		
-		$findOptions = array();
-		$join = array(
-			'table' => $this->NewsletterSended->useTable,
-			'alias' => $this->NewsletterSended->alias,
-			'type' => 'left',
-			'foreignKey' => false,
-			'conditions'=> array(
-				$this->NewsletterSendlist->NewsletterEmail->alias.'.email = '.$this->NewsletterSended->alias.'.email',
-				$this->NewsletterSended->alias.'.newsletter_id' => $sending['NewsletterSending']['newsletter_id']
-			)
-		);
-		if(!$sending['NewsletterSending']['check_sended']){
-			$join['conditions'][$this->NewsletterSended->alias.'.sending_id'] = $id;
-		}
-		$opt = array(
-			'joins' => array($join),
-			'conditions'=>array(
-				$this->NewsletterSended->alias.'.email IS NULL'
-			)
-		);
-		$findOptions = Set::merge($findOptions,(array)$opt);
-		/*if(isset($this->data['Newsletter']['conditions'])){
-			$opt = array('conditions'=>(array)$this->data['Newsletter']['conditions']);
-			$findOptions = Set::merge($findOptions,(array)$opt);
-		}*/
 		
-		//debug($sending);
+		
+		
+		//=========================== Split Dynamic sendlists ===========================
+		$sendlists = array();
+		$dynSendlists = array();
+		if(!empty($sending['NewsletterSending']['selected_lists'])){
+			foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
+				if(Sendlist::isTabled($newsletterSendlist)){
+					$dynSendlists[] = $newsletterSendlist;
+				}else{
+					$sendlists[] = $newsletterSendlist;
+				}
+			}
+		}
+		
 		//=========================== Grouping ===========================
 		$grouping = $sending['Newsletter']['TemplateConfig']->getGrouping($sending);
 		if(!empty($grouping)){
@@ -1018,42 +1007,64 @@ class NewsletterSendingsController extends NewsletterAppController {
 			);
 			$listsGroups = array();
 			
-			if(!empty($sending['NewsletterSending']['selected_lists'])){
-				foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
+			if(!empty($sendlists)){
+				//--------- normal sendlists ---------
+				$findOpt = Sendlist::addSendlistsEmailCond($sendlists,array(
+					'fields'=>array('NewsletterEmail.id','NewsletterEmail.name','NewsletterEmail.email'),
+					'conditions'=>array(
+						'NewsletterEmail.active'=>1
+					),
+					'group' => 'NewsletterEmail.id',
+					'recursive'=>-1,
+				));
+				
+				$findOpt = $this->_groupingBaseFindOpt($grouping,array_keys($this->NewsletterSendlist->NewsletterEmail->schema()));
+				if(!empty($findOpt) ){
+					$lgroups = $this->NewsletterSendlist->NewsletterEmail->find('all',$findOpt);
+					foreach($lgroups as $group){
+						$listsGroups['Basic'][] = array(
+							'cond' => $group[$this->NewsletterSendlist->NewsletterEmail->alias]
+						);
+					}
+				}
+			}
+			if(!empty($dynSendlists)){
+				//--------- dynamic sendlists ---------
+				foreach($dynSendlists as $newsletterSendlist){
 					$sendlist = Sendlist::getSendlist($newsletterSendlist);
 					$cgrouping = $grouping;
 					if($cgrouping['bySendlist']){
 						$cgrouping = $sending['Newsletter']['TemplateConfig']->getGrouping($sending,$sendlist);
 					}
-					$groupingFields = array_keys($cgrouping['fields']);
-					$groupingFields = array_values(array_intersect(array_keys($sendlist->emailFields()),$groupingFields));
-					$missing = count($groupingFields) != count($cgrouping['fields']);
-					if(!empty($groupingFields) && (!$missing || !$cgrouping['withMissing']['disable']) ){
-						//debug($groupingFields);
-						$findOpt = array('fields'=>$groupingFields,'group'=>$groupingFields);
-						if(!$missing || $cgrouping['withMissing']['validate']){
-							$findOpt['conditions'] = $cgrouping['validation'];
-						}
+					$findOpt = $this->_groupingBaseFindOpt($cgrouping,array_keys($sendlist->emailFields()));
+					if(!empty($findOpt) ){
 						$lgroups = $sendlist->findEmail('all',$findOpt);
 						foreach($lgroups as $group){
-							$cond = array_merge($cgrouping['fields'],$group);
-							$code = sha1(serialize($cond));
-							if(!isset($groups[$code])){
-								$groups[$code] = array(
-									'active' => 1,
-									'conditions' => $cond,
-									'newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
-									'code' => $code,
-								);
-							}
 							$listsGroups[$newsletterSendlist][] = array(
-								'cond' => $group,
-								'variant' => &$groups[$code]
+								'cond' => $group[$sendlist->EmailModel->alias]
 							);
 						}
 					}
 				}
 			}
+			
+			foreach($listsGroups as &$lgroup){
+				foreach($lgroup as &$group){
+					$cond = array_merge($cgrouping['fields'],$group['cond']);
+					$code = sha1(serialize($cond));
+					if(!isset($groups[$code])){
+						$groups[$code] = array(
+							'active' => 1,
+							'conditions' => $cond,
+							'newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
+							'code' => $code,
+						);
+					}
+					$group['variant'] = &$groups[$code];
+				}
+			}
+			unset($lgroup);
+			unset($group);
 			
 			$this->_consoleOut($id,__d('newsletter','Save variants', true));
 			
@@ -1071,113 +1082,73 @@ class NewsletterSendingsController extends NewsletterAppController {
 			//debug($listsGroups);
 		}
 		
-		//=========================== Build Aditionnal Emails ===========================
-		if(!empty($sending['NewsletterSending']['additional_emails'])){
-			$this->_consoleOut($id,__d('newsletter','Build Aditionnal Emails', true));
-			//--- format emails ---
-			$emails = explode(',',$sending['NewsletterSending']['additional_emails']);
-			$named = "/^<([^>]*)>(.*)$/";
-			$add_emails = array();
-			foreach($emails as $key => $email){
-				$email = array('email'=>trim($email));
-				if(preg_match($named,$email['email'],$match)){
-					$email['name'] = $match[1];
-					$email['email'] = $match[2];
-				}
-				$email = array_merge($basicInfo,$email);
-				$add_emails[$email['email']] = $email;
-			}
-			
-			//--- tcheck for duplicate ---
-			$findOpt = array('fields'=>array('DISTINCT email'),'conditions'=>array('email'=>array_keys($add_emails),'newsletter_id'=>$sending['NewsletterSending']['newsletter_id']));
-			if(!$sending['NewsletterSending']['check_sended']){
-				$findOpt['conditions']['sending_id'] = $id;
-			}
-			$this->NewsletterSended->recursive = -1;
-			$dub = $this->NewsletterSended->find('all',$findOpt);
-			if(!empty($dub)){
-				$this->_consoleOut($id,sprintf(__d('newsletter','%s dupliqued Email found, they will be ignored', true),count($dub)));
-				foreach($dub as $key => $val){
-					$dub[$key] = $val['NewsletterSended']['email'];
-				}
-				$add_emails = array_diff_key($add_emails,array_flip($dub));
-			}
-			
-			//--- save ---
-			if(!empty($add_emails)){
-				if($this->NewsletterSended->createMany(array_keys($basicInfo),array_values($add_emails))){
-					$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),$this->NewsletterSended->getAffectedRows()));
-				}else{
-					$this->_consoleOut($id,
-						__d('newsletter','Could not save emails', true),
-						array('exit'=>true)
-					);
-				}
-			}else{
-				$this->_consoleOut($id,__d('newsletter','No Emails saved', true));
-			}
-				
-		}
 		
 		//debug($sending);
 		$queries = array();
-		//=========================== Build Dynamic sendlists ===========================
-		//--- Get Dynamic sendlists ---
-		$sendlists = array();
-		$dynSendlists = array();
-		if(!empty($sending['NewsletterSending']['selected_lists'])){
-			foreach($sending['NewsletterSending']['selected_lists'] as $newsletterSendlist){
-				if(Sendlist::isTabled($newsletterSendlist)){
-					$dynSendlists[] = $newsletterSendlist;
-				}else{
-					$sendlists[] = $newsletterSendlist;
-				}
-			}
-		}
-		//--- Get Queries ---
-		$this->_consoleOut($id,sprintf(__d('newsletter','%s Dynamic Sendlists found', true),count($dynSendlists)));
-		foreach($dynSendlists as $list){
-			$this->_consoleOut($id,sprintf(__d('newsletter','Get query for Dynamic sendlist id : %s', true),$list));
-			$tableSendlist = $this->NewsletterFunct->getTableSendlistID($list,true);
-			
-			
-			$lGroups = !empty($listsGroups[$list])?$listsGroups[$list]:array(null);
-			foreach($lGroups as $group){
-				$finalFindOptions = $findOptions;
-				if(!empty($group)){
-					$finalFindOptions['conditions'][] = $group['cond'];
-				}
-				if($tableSendlist['modelClass']->useDbConfig != $this->NewsletterSended->useDbConfig){
-					$finalFindOptions = array();
-					if(!empty($group)){
-						$finalFindOptions['conditions'][] = $group['cond'];
-					}
-					$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true);
-					$finalFindOptions['tableSendlist'] = $tableSendlist;
-				}else{
-					$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true,$finalFindOptions);
-				}
-				if(!empty($group)){
-					$finalFindOptions['fields']['newsletter_variant_id'] = $group['variant']['id'];
-				}
-				$finalFindOptions['fields']['sendlist_id'] = $list;
-				$queries[] = $finalFindOptions;
-				
-			}
-			
-			$this->_updateProcessTime($id,true);
-		}
 		
-		$this->_consoleOut($id,sprintf(__d('newsletter','%s normal Sendlists found', true),count($sendlists)));
 		//=========================== Build normal sendlists ===========================
 		
+		$this->_consoleOut($id,sprintf(__d('newsletter','%s normal Sendlists found', true),count($sendlists)));
+		if(!empty($sendlists)){
+			$lGroups = !empty($listsGroups['Basic'])?$listsGroups['Basic']:array(null);
+			foreach($lGroups as $group){
+				//If any sendeded has been added in this same group we assume it the group was allready added by an interucpted build or a parralel process and we skip the query
+				$findOpt = array(
+					'conditions'=>array(
+						'tabledlist_id IS NULL',
+						'email_id IS NOT NULL',
+						'sending_id' => $id
+					),
+					'recursive'=>-1,
+				);
+				if(!empty($group)){
+					$findOpt['conditions']['newsletter_variant_id'] = $group['variant']['id'];
+				}
+				if(!$this->NewsletterSended->find('count',$findOpt)){
+					$findOpt = Sendlist::addSendlistsEmailCond($sendlists,array(
+						'fields'=>array('NewsletterEmail.id','NewsletterEmail.name','NewsletterEmail.email'),
+						'conditions'=>array(
+							'NewsletterEmail.active'=>1
+						),
+						'group' => 'NewsletterEmail.id',
+						'recursive'=>-1,
+					));
+					
+					if($sending['NewsletterSending']['check_sended']){
+						$findOpt['joins'][] = array(
+							'table' => $this->NewsletterSended->useTable,
+							'alias' => $this->NewsletterSended->alias,
+							'type' => 'left',
+							'foreignKey' => false,
+							'conditions'=> array(
+								$this->NewsletterSendlist->NewsletterEmail->alias.'.id = '.$this->NewsletterSended->alias.'.email_id',
+								$this->NewsletterSended->alias.'.newsletter_id' => $sending['NewsletterSending']['newsletter_id']
+							)
+						);
+						$findOpt['conditions'][] = $this->NewsletterSended->alias.'.id IS NULL';
+					}
+					
+					if(!empty($group)){
+						$findOpt['conditions'][] = $group['cond'];
+						$findOpt['fields']['newsletter_variant_id'] = $group['variant']['id'];
+					}
+					//debug($findOpt);
+					$findOpt['model'] = $this->NewsletterSendlist->NewsletterEmail;
+					$queries[] = $findOpt;
+					
+				}
+				
+				$this->_updateProcessTime($id,true);
+			}
+		}
+		/*
 		foreach($sendlists as $list){
 			$this->_consoleOut($id,sprintf(__d('newsletter','Get query for sendlist id : %s', true),$list));
 			
-			$this->NewsletterEmail->bindModel(array(
+			$this->NewsletterSendlist->NewsletterEmail->bindModel(array(
 				'hasOne' => array(
 					'NewsletterSendlistsEmail' => array(
-						'className' => 'NewsletterSendlistsEmail'
+						'className' => 'Newsletter.NewsletterSendlistsEmail'
 					)
 				)
 			),false);
@@ -1199,16 +1170,77 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$queries[] = $finalFindOptions;
 			}
 			
+		}*/
+		
+		//=========================== Build Dynamic sendlists ===========================
+		$this->_consoleOut($id,sprintf(__d('newsletter','%s dynamic Sendlists found', true),count($dynSendlists)));
+		if(!empty($dynSendlists)){
+			$findOptions = array();
+			$join = array(
+				'table' => $this->NewsletterSended->useTable,
+				'alias' => $this->NewsletterSended->alias,
+				'type' => 'left',
+				'foreignKey' => false,
+				'conditions'=> array(
+					$this->NewsletterSendlist->NewsletterEmail->alias.'.email = '.$this->NewsletterSended->alias.'.email',
+					$this->NewsletterSended->alias.'.newsletter_id' => $sending['NewsletterSending']['newsletter_id']
+				)
+			);
+			if(!$sending['NewsletterSending']['check_sended']){
+				$join['conditions'][$this->NewsletterSended->alias.'.sending_id'] = $id;
+			}
+			$opt = array(
+				'joins' => array($join),
+				'conditions'=>array(
+					$this->NewsletterSended->alias.'.email IS NULL'
+				)
+			);
+			$findOptions = Set::merge($findOptions,(array)$opt);
+			
+			foreach($dynSendlists as $list){
+				$this->_consoleOut($id,sprintf(__d('newsletter','Get query for Dynamic sendlist id : %s', true),$list));
+				$tableSendlist = $this->NewsletterFunct->getTableSendlistID($list,true);
+				
+				
+				$lGroups = !empty($listsGroups[$list])?$listsGroups[$list]:array(null);
+				foreach($lGroups as $group){
+					$finalFindOptions = $findOptions;
+					$finalFindOptions['group'] = 'NewsletterEmail.email';
+					if(!empty($group)){
+						$finalFindOptions['conditions'][] = $group['cond'];
+					}
+					if($tableSendlist['modelClass']->useDbConfig != $this->NewsletterSended->useDbConfig){
+						$finalFindOptions = array();
+						if(!empty($group)){
+							$finalFindOptions['conditions'][] = $group['cond'];
+						}
+						$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true);
+						$finalFindOptions['tableSendlist'] = $tableSendlist;
+					}else{
+						$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true,$finalFindOptions);
+					}
+					if(!empty($group)){
+						$finalFindOptions['fields']['newsletter_variant_id'] = $group['variant']['id'];
+					}
+					$finalFindOptions['fields']['tabledlist_id'] = $list;
+					$queries[] = $finalFindOptions;
+					
+				}
+				
+				$this->_updateProcessTime($id,true);
+			}
 		}
 		
-		if(!empty($grouping)){
+		/*if(!empty($grouping)){
 			debug($grouping);
-			foreach ($queries as $q) {
-				unset($q['model']);
-				debug($q);
-			}
-			exit();
+		}*/
+		/*
+		foreach ($queries as $q) {
+			$q['model'] = $q['model']->alias;
+			debug($q);
 		}
+		exit();*/
+		
 		//=========================== Save Queries ===========================
 		foreach($queries as $query){
 			//--- normalize Queries ---
@@ -1345,6 +1377,54 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 		}
 		
+		
+		//=========================== Build Aditionnal Emails ===========================
+		if(!empty($sending['NewsletterSending']['additional_emails'])){
+			$this->_consoleOut($id,__d('newsletter','Build Aditionnal Emails', true));
+			//--- format emails ---
+			$emails = explode(',',$sending['NewsletterSending']['additional_emails']);
+			$named = "/^<([^>]*)>(.*)$/";
+			$add_emails = array();
+			foreach($emails as $key => $email){
+				$email = array('email'=>trim($email));
+				if(preg_match($named,$email['email'],$match)){
+					$email['name'] = $match[1];
+					$email['email'] = $match[2];
+				}
+				$email = array_merge($basicInfo,$email);
+				$add_emails[$email['email']] = $email;
+			}
+			
+			//--- tcheck for duplicate ---
+			$findOpt = array('fields'=>array('DISTINCT email'),'conditions'=>array('email'=>array_keys($add_emails),'newsletter_id'=>$sending['NewsletterSending']['newsletter_id']));
+			if(!$sending['NewsletterSending']['check_sended']){
+				$findOpt['conditions']['sending_id'] = $id;
+			}
+			$this->NewsletterSended->recursive = -1;
+			$dub = $this->NewsletterSended->find('all',$findOpt);
+			if(!empty($dub)){
+				$this->_consoleOut($id,sprintf(__d('newsletter','%s dupliqued Email found, they will be ignored', true),count($dub)));
+				foreach($dub as $key => $val){
+					$dub[$key] = $val['NewsletterSended']['email'];
+				}
+				$add_emails = array_diff_key($add_emails,array_flip($dub));
+			}
+			
+			//--- save ---
+			if(!empty($add_emails)){
+				if($this->NewsletterSended->createMany(array_keys($basicInfo),array_values($add_emails))){
+					$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),$this->NewsletterSended->getAffectedRows()));
+				}else{
+					$this->_consoleOut($id,
+						__d('newsletter','Could not save emails', true),
+						array('exit'=>true)
+					);
+				}
+			}else{
+				$this->_consoleOut($id,__d('newsletter','No Emails saved', true));
+			}
+		}
+		
 		//=========================== Done ===========================
 		$this->NewsletterSending->create();
 		$data = array('NewsletterSending'=>array('id'=>$id,'status'=>'render'));
@@ -1360,6 +1440,20 @@ class NewsletterSendingsController extends NewsletterAppController {
 		return true;
 	}
 	
+	function _groupingBaseFindOpt($grouping,$myFields){
+		$groupingFields = array_keys($grouping['fields']);
+		$groupingFields = array_values(array_intersect($myFields,$groupingFields));
+		$missing = count($groupingFields) != count($grouping['fields']);
+		if(!empty($groupingFields) && (!$missing || !$grouping['withMissing']['disable']) ){
+			//debug($groupingFields);
+			$findOpt = array('fields'=>$groupingFields,'group'=>$groupingFields,'active'=>true);
+			if(!$missing || $grouping['withMissing']['validate']){
+				$findOpt['conditions'] = $grouping['validation'];
+			}
+			return $findOpt;
+		}
+		return null;
+	}
 	
 	function _render($sending){
 	

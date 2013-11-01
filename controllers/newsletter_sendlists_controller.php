@@ -29,15 +29,11 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		$tableSendlists = $this->NewsletterFunct->getTableSendlists();
 		$restrictedSendlists = array_keys($tableSendlists);
 		
-		$this->NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
+		App::import('Lib', 'Newsletter.Sendlist');
 		foreach($lists as &$list){
-			if(in_array($list[$this->NewsletterSendlist->alias]['id'],$restrictedSendlists)){
-				$findOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list[$this->NewsletterSendlist->alias]['id']);
-				unset($findOptions['fields']);
-				$list[$this->NewsletterSendlist->alias]['nb_email'] = $findOptions['model']->find('count',$this->NewsletterFunct->standardizeFindOptions($findOptions));
-			}else{
-				$list[$this->NewsletterSendlist->alias]['nb_email'] = $this->NewsletterSendlistsEmail->find('count',array('conditions'=>array('newsletter_sendlist_id'=>$list[$this->NewsletterSendlist->alias]['id'])));
-			}
+			$sendlist = Sendlist::getSendlist($list[$this->NewsletterSendlist->alias]['id']);
+			
+			$list[$this->NewsletterSendlist->alias]['nb_email'] = $sendlist->nbEmails();
 		}
 		$this->set('newsletterSendlists', $lists);
 		$this->set('restrictedSendlists',$restrictedSendlists);
