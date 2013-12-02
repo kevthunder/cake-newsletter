@@ -72,7 +72,6 @@ CREATE TABLE IF NOT EXISTS `newsletter_emails` (
   `active` tinyint(1) NOT NULL,
   `created` datetime NOT NULL,
   `modified` datetime NOT NULL,
-  `sendlist_id` int(11) NOT NULL,
   `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
@@ -88,7 +87,8 @@ CREATE TABLE IF NOT EXISTS `newsletter_sended` (
   `id` int(11) NOT NULL auto_increment,
   `newsletter_id` int(11) NOT NULL,
   `email_id` int(11) default NULL,
-  `sendlist_id` int(11) default NULL,
+  `newsletter_variant_id` int(11) DEFAULT NULL,
+  `tabledlist_id` int(11) DEFAULT NULL,
   `email` varchar(255) collate utf8_unicode_ci NOT NULL,
   `view` int(11) NOT NULL default '0',
   `sending_id` int(11) default NULL,
