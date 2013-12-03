@@ -56,7 +56,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 				
 				
 				if(!$error){
-					if($this->NewsletterEmail->save($data)){
+					if($this->NewsletterEmail->save($this->data)){
 						if(!empty($this->NewsletterEmail->data['NewsletterEmail']['existed'])){
 							$this->Session->setFlash(__d('newsletter','This email allready exists in our database. Your informations has been updated.', true));
 						}

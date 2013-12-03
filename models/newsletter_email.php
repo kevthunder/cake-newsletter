@@ -49,7 +49,7 @@ class NewsletterEmail extends NewsletterAppModel {
 					)
 				),
 			));
-			debug($exists);
+			//debug($exists);
 			if($exists){
 				$this->data['NewsletterEmail']['id'] = $exists['NewsletterEmail']['id'];
 				$this->data['NewsletterEmail']['existed'] = 1;
@@ -58,8 +58,8 @@ class NewsletterEmail extends NewsletterAppModel {
 				}
 			}
 		}
-		debug($this->data);
-		exit();
+		//debug($this->data);
+		//exit();
 		return true;
 	}
 }
