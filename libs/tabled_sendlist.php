@@ -134,7 +134,7 @@ class TabledSendlist extends Sendlist {
 		}
 		$opt['conditions'][] = $conditions;
 		
-		if($opt['mode'] != 'count' && empty($opt['fields'])){
+		if((empty($opt['mode']) || $opt['mode'] != 'count') && empty($opt['fields'])){
 			$opt['fields'] = $this->emailFields();
 		}
 		if(!empty($this->options['findOptions']) && is_array($this->options['findOptions'])){
