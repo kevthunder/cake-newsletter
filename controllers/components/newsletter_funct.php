@@ -466,17 +466,6 @@ class NewsletterFunctComponent extends Object
 		//$fields[] = '*';
 		return $fields;
 	}
-	function aliasedFields($fields){
-		$formated = array();
-		foreach($fields as $alias => $field){
-			if(!is_numeric($alias)){
-				//À Faire : $db->name(
-				$field .= ' as `'.$alias.'`';
-			}
-			$formated[] = $field;
-		}
-		return $formated;
-	}
 	function fieldsAddAlias($fields){
 		$formated = array();
 		foreach($fields as $alias => $field){

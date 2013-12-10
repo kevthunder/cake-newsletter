@@ -21,7 +21,7 @@ class NewsletterUpgradeController extends NewsletterAppController {
 				$sqlFile = App::pluginPath('Newsletter').'database.sql';
 				$sql = file_get_contents($sqlFile);
 				$sql = preg_replace('/^-.*/m','',$sql);
-				$sql = preg_replace('/.$/','lol2',$sql);
+				//$sql = preg_replace('/.$/','lol2',$sql);
 				if($sql){
 					//debug($matches);
 					foreach(explode(';',$sql) as $q){
@@ -36,7 +36,7 @@ class NewsletterUpgradeController extends NewsletterAppController {
 				}
 				if(empty($error)){
 					$this->Session->setFlash(__d('newsletter','The database has been fixed', true));
-					$this->redirect(array('start'=>'1'));
+					$this->redirect(array('start'=>'1','step'=>2));
 				}
 			}else{
 				$this->NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
