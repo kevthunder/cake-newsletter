@@ -1260,7 +1260,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$i = 0;
 				do {
 					$query['page'] = $i+1;
-					$emails = $query['model']->find('all',$this->NewsletterFunct->standardizeFindOptions($query));
+					App::import('Lib', 'Newsletter.QueryUtil'); 
+					$emails = $query['model']->find('all',QueryUtil::standardizeFindOptions($query));
 					if(!empty($emails)){
 						$this->_consoleOut($id,sprintf(__d('newsletter','%s Email read', true),count($emails)));
 						
@@ -1344,7 +1345,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 				unset($query['fields']['id']);
 				$query['fields'] = array_merge($this->NewsletterFunct->valFields($basicInfo),$query['fields']);
 				
-				$selectStatement = $db->buildStatement($this->NewsletterFunct->standardizeFindOptions($query),$query['model']);
+				App::import('Lib', 'Newsletter.QueryUtil'); 
+				$selectStatement = $db->buildStatement(QueryUtil::standardizeFindOptions($query),$query['model']);
 				
 				//--- make insert Queries ---
 				$fields = $this->NewsletterFunct->fieldsAddAlias($query['fields']);

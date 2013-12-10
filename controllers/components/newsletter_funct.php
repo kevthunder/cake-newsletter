@@ -466,23 +466,6 @@ class NewsletterFunctComponent extends Object
 		//$fields[] = '*';
 		return $fields;
 	}
-	function standardizeFindOptions($findOptions){
-		$empty=array(
-			'order' => array(),
-			'limit' => null,
-			'group' => array()
-		);
-		$findOptions = array_merge($empty,$findOptions);
-		if(!empty($findOptions['model'])){
-			$findOptions['table']=$findOptions['model']->useTable;
-			$findOptions['alias']=$findOptions['model']->alias;
-		}
-		unset($findOptions['model']);
-		if(!empty($findOptions['fields'])){
-			$findOptions['fields'] = $this->aliasedFields($findOptions['fields']);
-		}
-		return $findOptions;
-	}
 	function aliasedFields($fields){
 		$formated = array();
 		foreach($fields as $alias => $field){

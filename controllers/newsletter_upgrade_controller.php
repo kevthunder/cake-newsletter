@@ -3,7 +3,7 @@ class NewsletterUpgradeController extends NewsletterAppController {
 
 	var $name = 'NewsletterUpgrade';
 	var $helpers = array('Html', 'Form');
-	var $components = array('Newsletter.NewsletterFunct');
+	var $components = array();
 	var $uses = array();
 
 	function admin_upgrade(){
@@ -16,6 +16,7 @@ class NewsletterUpgradeController extends NewsletterAppController {
 			
 			$db =& ConnectionManager::getDataSource('default');
 			
+			App::import('Lib', 'Newsletter.QueryUtil'); 
 			if(!NewsletterConfig::checkTables()){
 				$sqlFile = App::pluginPath('Newsletter').'database.sql';
 				$sql = file_get_contents($sqlFile);
@@ -76,7 +77,8 @@ class NewsletterUpgradeController extends NewsletterAppController {
 						'recursive' => -1,
 						'model' => $this->NewsletterEmail,
 					);
-					$query = $db->buildStatement($this->NewsletterFunct->standardizeFindOptions($findOpt),$findOpt['model']);
+					
+					$query = $db->buildStatement(QueryUtil::standardizeFindOptions($findOpt),$findOpt['model']);
 					$insertStatement = 'INSERT INTO '.$this->NewsletterSendlistsEmail->useTable.' (`newsletter_email_id`,`newsletter_sendlist_id`) ('.$query.')';
 					$queries[] = $insertStatement;
 					
@@ -102,7 +104,8 @@ class NewsletterUpgradeController extends NewsletterAppController {
 						'recursive' => -1,
 						'model' => $this->NewsletterEmail,
 					);
-					$query = $db->buildStatement($this->NewsletterFunct->standardizeFindOptions($findOpt),$findOpt['model']);
+					App::import('Lib', 'Newsletter.QueryUtil'); 
+					$query = $db->buildStatement(QueryUtil::standardizeFindOptions($findOpt),$findOpt['model']);
 					$queries[] = 'DELETE'.substr($query,6);
 				}
 				
@@ -113,7 +116,7 @@ class NewsletterUpgradeController extends NewsletterAppController {
 					'recursive' => -1,
 					'model' => $this->NewsletterEmail,
 				);
-				$query = $db->buildStatement($this->NewsletterFunct->standardizeFindOptions($findOpt),$findOpt['model']);
+				$query = $db->buildStatement(QueryUtil::standardizeFindOptions($findOpt),$findOpt['model']);
 				$insertStatement = 'INSERT INTO '.$this->NewsletterSendlistsEmail->useTable.' (`newsletter_email_id`,`newsletter_sendlist_id`) ('.$query.')';
 				$queries[] = $insertStatement;
 				
