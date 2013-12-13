@@ -1104,6 +1104,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 				if(!empty($group)){
 					$findOpt['conditions']['newsletter_variant_id'] = $group['variant']['id'];
 				}
+				
 				if(!$this->NewsletterSended->find('count',$findOpt)){
 					$findOpt = Sendlist::addSendlistsEmailCond($sendlists,array(
 						'fields'=>array('NewsletterEmail.id','NewsletterEmail.name','NewsletterEmail.email'),
@@ -1131,6 +1132,9 @@ class NewsletterSendingsController extends NewsletterAppController {
 					if(!empty($group)){
 						$findOpt['conditions'][] = $group['cond'];
 						$findOpt['fields']['newsletter_variant_id'] = $group['variant']['id'];
+						$findOpt['msg'] .= sprintf(__d('newsletter','Variant id : %s', true),$group['variant']['id']);
+					}else{
+						$findOpt['msg'] .= __d('newsletter','Normal sendlists', true);
 					}
 					//debug($findOpt);
 					$findOpt['model'] = $this->NewsletterSendlist->NewsletterEmail;
@@ -1219,7 +1223,9 @@ class NewsletterSendingsController extends NewsletterAppController {
 					}else{
 						$finalFindOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($list,true,$finalFindOptions);
 					}
+					$finalFindOptions['msg'] = sprintf(__d('newsletter','Dynamic sendlist id : %s', true),$list);
 					if(!empty($group)){
+						$finalFindOptions['msg'] .= '; '.sprintf(__d('newsletter','Variant id : %s', true),$group['variant']['id']);
 						$finalFindOptions['fields']['newsletter_variant_id'] = $group['variant']['id'];
 					}
 					$finalFindOptions['fields']['tabledlist_id'] = $list;
@@ -1234,12 +1240,12 @@ class NewsletterSendingsController extends NewsletterAppController {
 		/*if(!empty($grouping)){
 			debug($grouping);
 		}*/
-		/*
-		foreach ($queries as $q) {
+		
+		/*foreach ($queries as $q) {
 			$q['model'] = $q['model']->alias;
 			debug($q);
-		}
-		exit();*/
+		}*/
+		//exit();
 		
 		//=========================== Save Queries ===========================
 		foreach($queries as $query){
@@ -1362,10 +1368,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$insertQuery['fields'] = implode(', ', $insertQuery['fields']);
 				$insertStatement = 'INSERT INTO '.$insertQuery['table'].' ('.$insertQuery['fields'].') ('.$insertQuery['select'].')';
 				
-				$msg = sprintf(__d('newsletter','Execute query for sendlist id : %s', true),$query['fields']['sendlist_id']);
-				if(!empty($query['fields']['newsletter_variant_id'])){
-					$msg .= ' ('.sprintf(__d('newsletter','Variant id : %s', true),$query['fields']['newsletter_variant_id']).')';
-				}
+				$msg = str_replace('%msg%',$query['msg'],__d('newsletter','Execute query : %msg%', true));
 				$this->_consoleOut($id, $msg);
 				if($db->execute($insertStatement)){
 					$this->_consoleOut($id,sprintf(__d('newsletter','%s saved Emails', true),$this->NewsletterSended->getAffectedRows()));

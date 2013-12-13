@@ -16,14 +16,9 @@ class NewsletterSended extends NewsletterAppModel {
 		'NewsletterEmail' => array(
 			'className' => 'Newsletter.NewsletterEmail',
 			'foreignKey' => 'email_id',
-			'conditions' => '',
-			'fields' => '',
-			'order' => ''
-		),
-		'NewsletterSendlist' => array(
-			'className' => 'Newsletter.NewsletterSendlist',
-			'foreignKey' => 'sendlist_id',
-			'conditions' => '',
+			'conditions' => array(
+				'NewsletterSended.tabledlist_id IS NULL'
+			),
 			'fields' => '',
 			'order' => ''
 		),

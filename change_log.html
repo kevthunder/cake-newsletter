@@ -399,13 +399,21 @@ pre{
     <h1>v2.6.0</h1>
     <ul>
 		<li>Changement au versionnement : retrait des 2 premier chiffres inutile. ex: v0.1.2.6.0 devient v2.6.0</li>
-		<li>Variantes : permet d'e personnaliser une infolettre pour chaque destinataire
+		<li>Variantes : permet de personnaliser une infolettre pour chaque destinataire
 			<ul>
 				<li>Les préférances possible sont configurer dans la function getGroupOpts des NewsletterTemplateConfig</li>
 				<li>Les Destinataire avec les même préférance sont regrouper pour améliorer la performance</li>
 			</ul>
 		</li>
 		<li>Template config class : getDefaultSendlists : Ajout d'une function permettant de choisir des listes de diffusions sélectionnés par défault</li>
+		<li>Changement interne important: les email sont maitenant unique et peuvent appartenir à plusieur sendlist
+			<ul>
+				<li>Fix des problème d'envoie de email en double</li>
+				<li>Fix des problème de mauvais nom</li>
+				<li>Améliore la vitesse du "build"</li>
+			</ul>
+		</li>
+		<li>Script pour faire l'ugrade de bd directement via le browser.</li>
 		<li>Default Sendlist in database.sql</li>
 		<li>/newsletter/newsletter_emails redirige vers /newsletter/newsletter_emails/add</li>
     </ul>
