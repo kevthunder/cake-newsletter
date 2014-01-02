@@ -30,6 +30,9 @@ class NewsletterEmail extends NewsletterAppModel {
 			$this->data['NewsletterSendlist'] = (array)$this->data['NewsletterEmail']['sendlist_id'];
 		}
 		if(empty($this->data['NewsletterEmail']['id'])){
+			if(!array_key_exists('active',$this->data['NewsletterEmail'])){
+				$this->data['NewsletterEmail']['active'] = 1;
+			}
 			$this->bindModel(array(
 				'hasMany' => array(
 					'NewsletterSendlistsEmail' => array(
