@@ -327,19 +327,8 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			$this->redirect(array('action'=>'index'));
 		}
 		App::import('Lib', 'Newsletter.Sendlist');
-		if(Sendlist::isTabled($id)){
-			$tableSendlist = $this->NewsletterFunct->getTableSendlistID($id,true);
-			$Model = $tableSendlist['modelClass'];
-			$Model->recursive = -1;
-			$findOptions = $this->NewsletterFunct->tabledEmailGetFindOptions($tableSendlist,!$tableSendlist['showInnactive']);
-			$mails = $Model->find('all',$findOptions);
-			$newsletterEmails = array();
-			foreach($mails as $mail){
-				$newsletterEmails[] = $this->NewsletterFunct->tabledEmailGetFields($mail,$tableSendlist,'NewsletterEmail');
-			}
-		}else{
-			$newsletterEmails = $this->NewsletterSendlist->NewsletterEmail->find('all',array('conditions'=>array('NewsletterEmail.sendlist_id'=>$id)));
-		}
+		$Sendlist = new Sendlist($id);
+		$newsletterEmails = $Sendlist->findEmail('all');
 		$sendlist = $this->NewsletterSendlist->read(null, $id);
 		
 		if(!empty($newsletterEmails)){
