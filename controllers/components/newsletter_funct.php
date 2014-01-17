@@ -157,6 +157,9 @@ class NewsletterFunctComponent extends Object
 		$this->controller->set($vars);
 		
 		
+		$lang_tmp = Configure::read('Config.language');
+		if(!empty($newsletter['Newsletter']['lang'])) Configure::write('Config.language',$newsletter['Newsletter']['lang']);
+		
 		$viewClass = $this->controller->view;
 		if ($viewClass != 'View') {
 			list($plugin, $viewClass) = pluginSplit($viewClass);
@@ -165,10 +168,14 @@ class NewsletterFunctComponent extends Object
 		}
 		$View = new $viewClass($this->controller, true);
 		
+		
 		$View->layout = 'newsletter';
 		
 		$htmlContent = $View->element('newsletter'.DS.$newsletter['Newsletter']['template'], array(), true);
 		$html = $View->renderLayout($htmlContent);
+		
+		
+		$lang_tmp = Configure::write('Config.language',$lang_tmp);
 		
 		ClassRegistry::removeObject('view');
 		

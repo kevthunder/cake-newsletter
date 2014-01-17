@@ -44,7 +44,7 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
 		if(!empty($langs)){
 			if(count($langs) > 1){
 				echo $form->input('lang',array('label'=>__('Language',true),'options'=>$langs,'empty'=>true));
-				foreach ($langs as $key => $val) {
+				/*foreach ($langs as $key => $val) {
 					$opts = array();
 					if(!empty($newsletterByLang[$key])){
 						$opts = $newsletterByLang[$key];
@@ -56,7 +56,7 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
 						$label = sprintf(__('%s version', true), __($val, true));
 					}
 					echo $form->input('Newsletter.associated.'.$key,array('label'=>$label,'options'=>$opts,'empty'=>true,'div'=>array('class'=>'input select langAssoc')));
-				}
+				}*/
 			}else{
 				echo $form->input('lang',array('type'=>'hidden','value'=>reset(array_keys($langs))));
 			}

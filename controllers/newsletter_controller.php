@@ -716,7 +716,14 @@ class NewsletterController extends NewsletterAppController {
 		$this->set('title_for_newsletter', '<span id="title_for_newsletter">'.$newsletter['Newsletter']['title'].'</span>');
 		//$this->set('text_for_newsletter', '<div id="text_for_newsletter">'.$newsletter['Newsletter']['text'].'</div>');
 		
-		return $this->render('/elements/newsletter/'.$newsletter['Newsletter']['template']);
+		$tmp = Configure::read('Config.language');
+		if(!empty($newsletter['Newsletter']['lang'])) Configure::write('Config.language',$newsletter['Newsletter']['lang']);
+		
+		$res = $this->render('/elements/newsletter/'.$newsletter['Newsletter']['template']);
+		
+		$tmp = Configure::write('Config.language',$tmp);
+		
+		return $res;
 	}
 	
 	function admin_add() {

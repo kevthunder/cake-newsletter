@@ -60,8 +60,14 @@ class NewsletterMakerHelper extends AppHelper {
 			$result_html .= '<a name="'.$slug.$box['NewsletterBox']['id'].'"></a>';
 		}
 		
+		$tmp = Configure::read('Config.language');
+		if(!empty($this->newsletter['Newsletter']['lang'])) Configure::write('Config.language',$this->newsletter['Newsletter']['lang']);
+		
 		$result_html .= $this->view->element($element, array("newsletter_box" => $box));//,'plugin' => 'none'
 		$result_html .= $this->boxFooter($box,$zoneOpt);
+		
+		$tmp = Configure::write('Config.language',$tmp);
+		
 		if($opt['wrapper']) $result_html .= $opt['indent'].'</'.$opt['wrapper']['tag'].'>'."\n";
 		
 		return $result_html;

@@ -426,8 +426,8 @@ msgstr "Cette infolettre a été testée."
 msgid "Can be subscripted to"
 msgstr "Les visiteurs peuvent s'y inscrire"
 
-msgid ""
-msgstr ""
+msgid "You must choose at least one sendlist."
+msgstr "Vous devez choisir la langue / You must choose the language"
 
 msgid ""
 msgstr ""
