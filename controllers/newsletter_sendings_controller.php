@@ -1068,7 +1068,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			
 			$this->_consoleOut($id,__d('newsletter','Save variants', true));
 			
-			$existing = $this->NewsletterVariant->find('list',array('fields'=>array('code','id'),'conditions'=>array('code' => array_keys($groups)),'recursive'=>-1));
+			$existing = $this->NewsletterVariant->find('list',array('fields'=>array('code','id'),'conditions'=>array('newsletter_id' => $sending['NewsletterSending']['newsletter_id'],'code' => array_keys($groups)),'recursive'=>-1));
 			foreach($groups as &$group){
 				if(isset($existing[$group['code']])){
 					$group['id'] = $existing[$group['code']];
