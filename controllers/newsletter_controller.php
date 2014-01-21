@@ -738,6 +738,8 @@ class NewsletterController extends NewsletterAppController {
 			}
 		}
 		
+		$langs = NewsletterConfig::load('langs');
+		$this->set('langs',$langs);
 		$this->set('templates',$this->NewsletterFunct->getTemplates());
 	}
 
@@ -755,10 +757,7 @@ class NewsletterController extends NewsletterAppController {
 					$this->NewsletterBox->save($newsletter_box);
 				}
 			}
-			if($newsletter['Newsletter']['template'] != $this->data['Newsletter']['template']){
-				$this->Newsletter->save($this->data,true,array('id','template'));
-			}
-			$this->data['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);//$this->requestAction('admin/newsletter/newsletter/make/'.$id);
+			$this->data['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($this->data);//$this->requestAction('admin/newsletter/newsletter/make/'.$id);
 			$this->Newsletter->NewsletterVariant->updateAll(array('NewsletterVariant.html'=>null), array('NewsletterVariant.newsletter_id'=>$id));
 			
 			$this->data['Newsletter']['tested'] = 0;
@@ -788,6 +787,7 @@ class NewsletterController extends NewsletterAppController {
 		if(!empty($config)){
 			$config->beforeRenderEdit($this->data,$this);
 		}
+		$this->set('langs',$langs);
 		$this->set('newsletter',$this->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);
 		$this->set('templates',$this->NewsletterFunct->getTemplates());

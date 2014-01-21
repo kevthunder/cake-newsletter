@@ -40,7 +40,6 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
 		}
 		echo $form->input('template',array('options' =>$templates,'label'=>__d('newsletter','Template',true)));
 		
-		$langs = NewsletterConfig::load('langs');
 		if(!empty($langs)){
 			if(count($langs) > 1){
 				echo $form->input('lang',array('label'=>__('Language',true),'options'=>$langs,'empty'=>true));

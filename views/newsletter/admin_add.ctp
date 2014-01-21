@@ -7,6 +7,13 @@
 		echo $form->input('title',array('label'=>__d('newsletter','Title',true)));
 		echo $form->input('date');
 		echo $form->input('template',array('options' =>$templates,'label'=>__d('newsletter','Template',true)));
+		if(!empty($langs)){
+			if(count($langs) > 1){
+				echo $form->input('lang',array('label'=>__('Language',true),'options'=>$langs,'empty'=>true));
+			}else{
+				echo $form->input('lang',array('type'=>'hidden','value'=>reset(array_keys($langs))));
+			}
+		}
 	?>
 	</fieldset>
 <?php echo $form->end(__d('newsletter','Continue', true));?>
