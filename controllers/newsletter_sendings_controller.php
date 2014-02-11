@@ -1257,8 +1257,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$query['fields'] = $fields;
 			if($query['model']->useDbConfig != $this->NewsletterSended->useDbConfig){
 				//--------------- external database ---------------
-				$this->_consoleOut($id,sprintf(__d('newsletter','The sendlist id : %s Is using an external Database', true),$query['fields']['sendlist_id']));
-				$this->_consoleOut($id,sprintf(__d('newsletter','Retrieving data', true),$query['fields']['sendlist_id']));
+				$this->_consoleOut($id,sprintf(__d('newsletter','The sendlist id : %s Is using an external Database', true),$query['fields']['tabledlist_id']));
+				$this->_consoleOut($id,sprintf(__d('newsletter','Retrieving data', true),$query['fields']['tabledlist_id']));
 				$tableSendlist = $query['tableSendlist'];
 				//debug($tableSendlist);
 				unset($query['tableSendlist']);

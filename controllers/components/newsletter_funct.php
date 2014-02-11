@@ -534,7 +534,7 @@ class NewsletterFunctComponent extends Object
 				}
 			}
 			$emailData['name'] = $name;
-			$emailData['sendlist_id'] = $tableSendlist['id'];
+			$emailData['tabledlist_id'] = $tableSendlist['id'];
 			$emailData['data'] = $mail;
 			if($useModel){
 				return array($useModel => $emailData);

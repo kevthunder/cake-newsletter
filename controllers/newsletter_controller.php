@@ -179,7 +179,9 @@ class NewsletterController extends NewsletterAppController {
 				$str_email = $this->data['NewsletterEmail']['email'];
 			}elseif($sended_id){
 				$sended = $this->NewsletterSended->read(null, $sended_id);
-				$email_id = $sended['NewsletterSended']['email_id'];
+				if(empty( $sended['NewsletterSended']['tabledlist_id'])){
+					$email_id = $sended['NewsletterSended']['email_id'];
+				}
 				$str_email = $sended['NewsletterSended']['email'];
 			}
 			if($str_email || $email_id){
