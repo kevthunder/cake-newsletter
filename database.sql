@@ -3,7 +3,7 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletters`
+-- Structure de la table `newsletters`
 --
 
 CREATE TABLE IF NOT EXISTS `newsletters` (
@@ -20,14 +20,14 @@ CREATE TABLE IF NOT EXISTS `newsletters` (
   `tested` tinyint(1) NOT NULL,
   `external_key` varchar(255) collate utf8_unicode_ci default NULL,
   `cache_file` varchar(255) collate utf8_unicode_ci default NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
-
+  `last_sync` datetime default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletter_assocs`
+-- Structure de la table `newsletter_assocs`
 --
 
 CREATE TABLE IF NOT EXISTS `newsletter_assocs` (
@@ -38,68 +38,86 @@ CREATE TABLE IF NOT EXISTS `newsletter_assocs` (
   `created` datetime default NULL,
   `modified` datetime default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
-
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletter_boxes`
+-- Structure de la table `newsletter_boxes`
 --
 
 CREATE TABLE IF NOT EXISTS `newsletter_boxes` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL auto_increment,
   `active` tinyint(1) NOT NULL,
   `created` datetime NOT NULL,
   `modified` datetime NOT NULL,
   `newsletter_id` int(11) NOT NULL,
-  `zone` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `order` int(11) NOT NULL DEFAULT '0',
-  `template` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `data` text COLLATE utf8_unicode_ci DEFAULT NULL,
-  `multimedia` text COLLATE utf8_unicode_ci,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+  `zone` varchar(255) collate utf8_unicode_ci NOT NULL,
+  `order` int(11) NOT NULL default '0',
+  `template` varchar(255) collate utf8_unicode_ci NOT NULL,
+  `data` text collate utf8_unicode_ci,
+  `multimedia` text collate utf8_unicode_ci,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletter_emails`
+-- Structure de la table `newsletter_emails`
 --
 
 CREATE TABLE IF NOT EXISTS `newsletter_emails` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL auto_increment,
   `active` tinyint(1) NOT NULL,
   `created` datetime NOT NULL,
   `modified` datetime NOT NULL,
-  `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+  `name` varchar(255) collate utf8_unicode_ci default NULL,
+  `email` varchar(255) collate utf8_unicode_ci NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletter_sended`
+-- Structure de la table `newsletter_events`
+--
+
+CREATE TABLE IF NOT EXISTS `newsletter_events` (
+  `id` int(11) NOT NULL auto_increment,
+  `sended_id` int(11) NOT NULL,
+  `date` datetime NOT NULL,
+  `action` varchar(255) collate utf8_unicode_ci default NULL,
+  `url` varchar(255) collate utf8_unicode_ci default NULL,
+  `ip_address` varchar(255) collate utf8_unicode_ci default NULL,
+  `user_agent` varchar(255) collate utf8_unicode_ci default NULL,
+  `processed` tinyint(1) NOT NULL default '0',
+  PRIMARY KEY  (`id`),
+  KEY `sended_id` (`sended_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `newsletter_sended`
 --
 
 CREATE TABLE IF NOT EXISTS `newsletter_sended` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL auto_increment,
   `newsletter_id` int(11) NOT NULL,
-  `newsletter_variant_id` int(11) DEFAULT NULL,
-  `email_id` int(11) DEFAULT NULL,
-  `tabledlist_id` int(11) DEFAULT NULL,
-  `email` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `view` int(11) NOT NULL DEFAULT '0',
-  `sending_id` int(11) DEFAULT NULL,
-  `status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `error` text COLLATE utf8_unicode_ci,
-  `date` datetime DEFAULT NULL,
-  `active` tinyint(1) DEFAULT NULL,
+  `newsletter_variant_id` int(11) default NULL,
+  `email_id` int(11) default NULL,
+  `tabledlist_id` int(11) default NULL,
+  `email` varchar(255) collate utf8_unicode_ci NOT NULL,
+  `name` varchar(255) collate utf8_unicode_ci default NULL,
+  `view` int(11) NOT NULL default '0',
+  `sending_id` int(11) default NULL,
+  `status` varchar(255) collate utf8_unicode_ci default NULL,
+  `error` text collate utf8_unicode_ci,
+  `date` datetime default NULL,
+  `active` tinyint(1) default NULL,
   `created` datetime NOT NULL,
   `modified` datetime NOT NULL,
-  PRIMARY KEY (`id`),
+  PRIMARY KEY  (`id`),
   KEY `newsletter_id` (`newsletter_id`),
   KEY `email` (`email`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -107,8 +125,9 @@ CREATE TABLE IF NOT EXISTS `newsletter_sended` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletter_sendings`
+-- Structure de la table `newsletter_sendings`
 --
+
 CREATE TABLE IF NOT EXISTS `newsletter_sendings` (
   `id` int(11) NOT NULL auto_increment,
   `newsletter_id` int(11) default NULL,
@@ -132,42 +151,27 @@ CREATE TABLE IF NOT EXISTS `newsletter_sendings` (
   `created` datetime default NULL,
   `modified` datetime default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletter_sendlists_emails`
---
-
-CREATE TABLE IF NOT EXISTS `newsletter_sendlists_emails` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `newsletter_sendlist_id` int(11) DEFAULT NULL,
-  `newsletter_email_id` int(11) DEFAULT NULL,
-  `active` tinyint(1) DEFAULT '1',
-  `created` datetime DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
-
--- --------------------------------------------------------
-
---
--- Table structure for table `newsletter_sendlists`
+-- Structure de la table `newsletter_sendlists`
 --
 
 CREATE TABLE IF NOT EXISTS `newsletter_sendlists` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL auto_increment,
   `active` tinyint(1) NOT NULL,
   `subscriptable` tinyint(1) NOT NULL,
-  `order` int(11) DEFAULT NULL,
+  `order` int(11) default NULL,
   `created` datetime NOT NULL,
   `modified` datetime NOT NULL,
-  `title` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `description` text COLLATE utf8_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=2 ;
+  `title` varchar(255) collate utf8_unicode_ci NOT NULL,
+  `description` text collate utf8_unicode_ci NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
 
 --
 -- Dumping data for table `newsletter_sendlists`
@@ -176,23 +180,38 @@ CREATE TABLE IF NOT EXISTS `newsletter_sendlists` (
 INSERT INTO `newsletter_sendlists` (`id`, `active`, `subscriptable`, `order`, `created`, `modified`, `title`, `description`) VALUES
 (1, 1, 1, NULL, '2013-10-24 13:49:00', '2013-10-24 13:49:10', 'Default Sendlist', '');
 
+--
+-- Structure de la table `newsletter_sendlists_emails`
+--
+
+CREATE TABLE IF NOT EXISTS `newsletter_sendlists_emails` (
+  `id` int(11) NOT NULL auto_increment,
+  `newsletter_sendlist_id` int(11) default NULL,
+  `newsletter_email_id` int(11) default NULL,
+  `active` tinyint(1) default '1',
+  `created` datetime default NULL,
+  `modified` datetime default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `newsletter_stats`
+-- Structure de la table `newsletter_stats`
 --
 
 CREATE TABLE IF NOT EXISTS `newsletter_stats` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `sended_id` int(11) NOT NULL,
-  `date` datetime NOT NULL,
-  `action` varchar(255) collate utf8_unicode_ci default NULL,
-  `url` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `ip_address` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `user_agent` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `sended_id` (`sended_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+  `id` int(11) NOT NULL auto_increment,
+  `newsletter_id` int(11) default NULL,
+  `date` datetime default NULL,
+  `name` varchar(255) collate utf8_unicode_ci default NULL,
+  `val` varchar(255) collate utf8_unicode_ci default NULL,
+  `context` varchar(255) collate utf8_unicode_ci default NULL,
+  `created` datetime NOT NULL,
+  `modified` datetime NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `newsletter_id` (`newsletter_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -201,13 +220,13 @@ CREATE TABLE IF NOT EXISTS `newsletter_stats` (
 --
 
 CREATE TABLE IF NOT EXISTS `newsletter_variants` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `newsletter_id` int(11) DEFAULT NULL,
-  `code` varchar(63) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `conditions` text COLLATE utf8_unicode_ci,
-  `html` text COLLATE utf8_unicode_ci,
-  `active` tinyint(1) DEFAULT NULL,
-  `created` datetime DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+  `id` int(11) NOT NULL auto_increment,
+  `newsletter_id` int(11) default NULL,
+  `code` varchar(63) collate utf8_unicode_ci default NULL,
+  `conditions` text collate utf8_unicode_ci,
+  `html` text collate utf8_unicode_ci,
+  `active` tinyint(1) default NULL,
+  `created` datetime default NULL,
+  `modified` datetime default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
