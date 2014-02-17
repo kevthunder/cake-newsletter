@@ -27,6 +27,13 @@ class NewsletterUpgrade extends Object {
 			),
 			'recheck' => true,
 		),
+		'htmlLongText' => array(
+			'fields'=> array(
+				'newsletters' => 'html',
+				'newsletter_variants' => 'html',
+				'newsletter_sendings' => 'html',
+			)
+		),
 	);
 	var $defOpt = array(
 		'check'=>null,
@@ -152,7 +159,7 @@ class NewsletterUpgrade extends Object {
 		$Schema =& new CakeSchema(array('name'=>'Newsletter', 'file'=>'schema.php', 'connection'=>$_this->connection, 'plugin'=>'Newsletter'));
 		$file = $Schema->path . DS . $Schema->file;
 		
-		return sha1_file($file);
+		return sha1(sha1_file($file).serialize($this->tests));
 	}
 	
 	function getSourceList(){
@@ -241,7 +248,31 @@ class NewsletterUpgrade extends Object {
 		}
 		return false;
 	}
-	
+	function check_htmlLongText($opt){
+		$_this =& NewsletterUpgrade::getInstance();
+		
+		$db =& ConnectionManager::getDataSource($_this->connection);
+		
+		$mismatch = array();
+		foreach ($opt['fields'] as $table=>$field) {
+			$cols = $db->query('DESCRIBE `'.$table.'`');
+			
+			$htmlField = null;
+			foreach($cols as $col){
+				$colKey = key($col);
+				if($col[$colKey]['Field'] == $field){
+					$htmlField = $col[$colKey];
+					break;
+				}
+			}
+			if($htmlField['Type'] != 'longtext'){
+				$mismatch[$table] = $field;
+			}
+		}
+		
+		if(!empty($mismatch)) return $mismatch;
+		return false;
+	}
 	/////////////////////////////////////////////////////////////////////
 	/////////////////////////// FIX functions ///////////////////////////
 	/////////////////////////////////////////////////////////////////////
@@ -405,7 +436,6 @@ class NewsletterUpgrade extends Object {
 	}
 	
 	function fix_schemaUpdate($error,$opt,&$msg){
-		//debug($error);
 		$_this =& NewsletterUpgrade::getInstance();
 		$db =& ConnectionManager::getDataSource($_this->connection);
 		$queries = array();
@@ -425,6 +455,19 @@ class NewsletterUpgrade extends Object {
 		
 		return true;
 	}
-	
+	function fix_htmlLongText($error,$opt,&$msg){
+		$_this =& NewsletterUpgrade::getInstance();
+		$db =& ConnectionManager::getDataSource($_this->connection);
+		
+		foreach ($error as $table=>$field) {
+			$query = 'ALTER TABLE  `'.$table.'` CHANGE  `'.$field.'`  `'.$field.'` LONGTEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL DEFAULT NULL;';
+			//debug($query);
+			if(!$db->execute($query)){
+				$msg = __('Unable to execute query :',true).' '.$query;
+				return false;
+			}
+		}
+		return true;
+	}
 }
 ?>
