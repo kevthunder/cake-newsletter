@@ -3,9 +3,12 @@ $script = 'var newsletter_id = '.$this->data["Newsletter"]["id"].';';
 $javascript->codeBlock($script,array('inline'=>false));
 
 $script = '
-	var root = "'.$html->url('/').'";
-	var tinymce_url = "'.$html->url('/js/tiny_mce/tiny_mce.js').'";
-	var defLang = "'.Configure::read('Config.language').'";
+	var NewsletterConfig = {
+		root : "'.$html->url('/').'",
+		tinymce_url : "'.$html->url('/js/tiny_mce/tiny_mce.js').'",
+		defLang : "'.Configure::read('Config.language').'",
+		boxEditorKeepOpen : '.(NewsletterConfig::load('boxEditorKeepOpen')?'true':'false').'
+	};
 ';
 $javascript->codeBlock($script,array('inline'=>false));
 

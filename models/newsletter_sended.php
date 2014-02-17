@@ -39,8 +39,8 @@ class NewsletterSended extends NewsletterAppModel {
 	);
 	
 	var $hasMany = array(
-		'NewsletterStat' => array(
-			'className' => 'Newsletter.NewsletterStat',
+		'NewsletterEvent' => array(
+			'className' => 'Newsletter.NewsletterEvent',
 			'foreignKey' => 'sended_id',
 			'dependent' => false,
 			'conditions' => '',

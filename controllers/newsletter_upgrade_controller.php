@@ -7,14 +7,31 @@ class NewsletterUpgradeController extends NewsletterAppController {
 	var $uses = array();
 
 	function admin_upgrade(){
-		if(NewsletterConfig::checkSchema($sErrors)){
+		$sErrors = NewsletterUpgrade::check();
+		if(!$sErrors){
 			$this->Session->setFlash(__d('newsletter','The database is valid', true));
 			$this->redirect(array('plugin'=>'newsletter','controller'=>'newsletter','action'=>'index'));
 		}
 		//debug($sErrors);
 		if(!empty($this->params['named']['start'])){
 			$error = array();
-			
+			$step = empty($this->params['named']['step'])?1:$this->params['named']['step'];
+			$res = NewsletterUpgrade::run($error);
+			if($res === 'break'){
+				$this->redirect(array('start'=>'1','step'=>$step++));
+			}
+			if($res === true){
+				$this->Session->setFlash(__d('newsletter','The database has been fixed', true));
+				$this->redirect(array('plugin'=>'newsletter','controller'=>'newsletter','action'=>'index'));
+			}else{
+				$this->Session->setFlash(
+					__d('newsletter','An error occurred', true)
+					.' :<ul><li>'
+					.implode('</li><li>',$error)
+					.'</li></ul>'
+				);
+			}
+			/*
 			App::import('Lib', 'Newsletter.QueryUtil'); 
 			if(!empty($sErrors['missing_table'])){
 				$this->_fix_missing_tables($sErrors,$error);
@@ -44,8 +61,10 @@ class NewsletterUpgradeController extends NewsletterAppController {
 				$this->Session->setFlash(__d('newsletter','The database has been fixed', true));
 				$this->redirect(array('plugin'=>'newsletter','controller'=>'newsletter','action'=>'index'));
 			}
+			*/
 		}
 	}
+	
 	
 	function _fix_missing_tables($sErrors,&$error){
 		$db =& ConnectionManager::getDataSource('default');

@@ -64,8 +64,8 @@
 	function getLang(){
 		if($("#NewsletterLang").length){
 			return $("#NewsletterLang").val();
-		}else if(window.defLang){
-			return window.defLang;
+		}else if(NewsletterConfig.defLang){
+			return NewsletterConfig.defLang;
 		}else{
 			return 'fre1';
 		}
@@ -162,21 +162,21 @@
 		}else if(container.hasClass("nltr_row")){
 			container.children("tbody").children("tr").append(cell);
 		}
-		var url = root+"admin/newsletter/newsletter/add_box/"+newsletter_id+"/"+container.attr("zoneid")+"/"+box_element+"/t:"+new Date().getTime();
+		var url = NewsletterConfig.root+"admin/newsletter/newsletter/add_box/"+newsletter_id+"/"+container.attr("zoneid")+"/"+box_element+"/t:"+new Date().getTime();
 		//alert(url);
-		cell.load(url,null,box_loaded);
+		cell.load(url,null,function(){box_loaded(this,true)});
 		$(this).closest(".popup").hide("fast");
 	}
-	function box_loaded(responseText, textStatus, XMLHttpRequest){
+	function box_loaded(box,created){
 		//alert($(this).html());
 		
-		adjustStyles(this);
-		/*$(this).find("input, select, textarea").change(input_change);*/
-		var id = $(this).find("#NewsletterBoxId").val();
+		adjustStyles(box);
+		/*$(box).find("input, select, textarea").change(input_change);*/
+		var id = $(box).find("#NewsletterBoxId").val();
 		if(id){
-			$(this).attr("boxid",id);
-			$(this).attr("id","box"+id);
-			$(this).prepend('<a name="box'+id+'"></a>');
+			$(box).attr("boxid",id);
+			$(box).attr("id","box"+id);
+			$(box).prepend('<a name="box'+id+'"></a>');
 			try{
 				w.location.href=w.location.toString().split('#')[0]+"#box"+id;
 			}catch(e){
@@ -184,9 +184,13 @@
 					console.log('could not change url',e,e.message);
 				}
 			}
-			show_edit_form($(this));
+			if(created || NewsletterConfig.boxEditorKeepOpen){
+				show_edit_form($(box));
+			}else{
+				$("#edit_form_zone").hide("fast");
+			}
 		}else{
-			$(this).removeAttr("boxid",id);
+			$(box).removeAttr("boxid",id);
 		}
 	}
 	function close_link_click(e){
@@ -194,7 +198,7 @@
 	}
 	function del_box_click(){
 		var newsletter_box = $(this).closest(".newsletter_box");
-		var url = root+"admin/newsletter/newsletter/delete_box/"+newsletter_box.attr("boxid")+"/t:"+new Date().getTime();
+		var url = NewsletterConfig.root+"admin/newsletter/newsletter/delete_box/"+newsletter_box.attr("boxid")+"/t:"+new Date().getTime();
 		$.get(url, function(data){
 			//alert("Data Loaded: " + data);
 		});
@@ -205,12 +209,12 @@
 	}
 	function reset_box_click(){
 		var newsletter_box = $(this).closest(".newsletter_box");
-		var url = root+"admin/newsletter/newsletter/reset_box/"+newsletter_box.attr("boxid")+"/t:"+new Date().getTime();
+		var url = NewsletterConfig.root+"admin/newsletter/newsletter/reset_box/"+newsletter_box.attr("boxid")+"/t:"+new Date().getTime();
 	
 		if(newsletter_box.hasClass('selected')){
 			hide_edit_form();
 		}
-		newsletter_box.load(url,null,box_loaded);
+		newsletter_box.load(url,null,function(){box_loaded(this,false)});
 		/*$.ajax({
 			url       :  '/some_controller/some_method',
 			success   :  function(responseText, textStatus, XMLHttpRequest) {
@@ -236,9 +240,9 @@
 		var completeCallback = edit_form_loaded;
 		if(boxid){
 			samebox = $("#edit_form_zone .edit_form").attr("boxid")==boxid;
-			url = root+"admin/newsletter/newsletter/get_box_edit/"+boxid+"/t:"+new Date().getTime();
+			url = NewsletterConfig.root+"admin/newsletter/newsletter/get_box_edit/"+boxid+"/t:"+new Date().getTime();
 		}else if(newsletter_box.hasClass('nltr_single')){
-			url = root+"admin/newsletter/newsletter/add_box/"+newsletter_id+"/"+newsletter_box.attr("zoneid")+"/mode:edit/t:"+new Date().getTime();
+			url = NewsletterConfig.root+"admin/newsletter/newsletter/add_box/"+newsletter_id+"/"+newsletter_box.attr("zoneid")+"/mode:edit/t:"+new Date().getTime();
 			completeCallback = function(responseText, textStatus, XMLHttpRequest){
 				edit_form_loaded(responseText, textStatus, XMLHttpRequest, newsletter_box)
 			}
@@ -288,7 +292,7 @@
 	function submit_edit_form(){
 		var edit_form = $("#edit_form_zone .edit_form");
 		var boxid = edit_form.attr("boxid");
-		var url = root+"admin/newsletter/newsletter/edit_box/"+boxid+"/t:"+new Date().getTime();
+		var url = NewsletterConfig.root+"admin/newsletter/newsletter/edit_box/"+boxid+"/t:"+new Date().getTime();
 		submitTinyMCE();
 		$('input[type="file"]',edit_form).each(function(){
 			if(!$(this).val()){
@@ -307,7 +311,7 @@
 		//console.debug(this);
 		var box_element = $("#box"+boxid);
 		box_element.html(data);
-		box_loaded.call(box_element,data,null,null);
+		box_loaded(box_element,false);
 		adjustStyles(box_element);
 	}
 	/*function input_change(e){
@@ -345,14 +349,14 @@
 				theme_advanced_statusbar_location : "bottom",
 				theme_advanced_toolbar_location : "top",
 				theme_advanced_toolbar_align : "left",
-				content_css : root+"css/admin/tinymce.css",
+				content_css : NewsletterConfig.root+"css/admin/tinymce.css",
 				theme_advanced_buttons3_add : "pastetext, template, separator, tablecontrols",
 				paste_auto_cleanup_on_paste: true,
 				table_inline_editing : true,
 				paste_text_sticky: true,
 				relative_urls : false,
 				setupcontent_callback : tinyMceLoaded,
-				document_base_url : root
+				document_base_url : NewsletterConfig.root
 			});
 		}catch(e){
 			if(window.console){
@@ -462,7 +466,7 @@
 		var model = $entryFinder.attr('model');
 		if(id && model){
 			$('.loading',$entryFinder).show();
-			var url = root+"admin/newsletter/newsletter_assets/ajax_get_entry/"+model+"/"+id+"/lang:"+getLang()+"/"+new Date().getTime();
+			var url = NewsletterConfig.root+"admin/newsletter/newsletter_assets/ajax_get_entry/"+model+"/"+id+"/lang:"+getLang()+"/"+new Date().getTime();
 			
 			$.get(url, function(jsonData){
 				if(model.indexOf('.') != -1){

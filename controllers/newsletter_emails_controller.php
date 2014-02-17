@@ -293,6 +293,11 @@ class NewsletterEmailsController extends NewsletterAppController {
 			$this->redirect($action);
 		}
 	}
+	
+	function admin_update_bounces(){
+		$this->NewsletterFunct->updateBounces();
+		$this->render(false);
+	}
 
 }
 ?>

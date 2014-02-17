@@ -1,16 +1,16 @@
 <?php
 App::import('Vendor', 'Newsletter.browscap',array('file'=>'browscap.php'));
-App::import('Vendor', 'Newsletter.php-ofc-library', array('file'=>'php-ofc-library/open-flash-chart.php'));
 App::import('Vendor', 'Newsletter.PHPExcel',array('file' => 'PHPExcel/IOFactory.php'));
 
 class NewsletterController extends NewsletterAppController {
 
 	var $name = 'Newsletter';
 	var $helpers = array('Html', 'Form', 'Newsletter.NewsletterMaker', 'Javascript');
-	var $uses = array('Newsletter.Newsletter','Newsletter.NewsletterBox','Newsletter.NewsletterSendlist','Newsletter.NewsletterEmail','Newsletter.NewsletterSended','Newsletter.NewsletterStat');
+	var $uses = array('Newsletter.Newsletter','Newsletter.NewsletterBox','Newsletter.NewsletterSendlist','Newsletter.NewsletterEmail','Newsletter.NewsletterSended','Newsletter.NewsletterEvent');
 	var $components = array('Email','Newsletter.NewsletterFunct', 'RequestHandler', 'Session','Acl');
 	
 	function index() {
+	
 		$this->paginate['order'] = 'date DESC';
 		$this->set('newsletters', $this->paginate());
 	}
@@ -63,7 +63,7 @@ class NewsletterController extends NewsletterAppController {
 		
 		///////// Save stats if sended_id is present /////////
 		if($sended_id){
-			$this->NewsletterStat->create();
+			$this->NewsletterEvent->create();
 			$visite = array();
 			$visite['sended_id'] = $sended_id;
 			$visite['date'] = date('Y-m-d H:i:s');
@@ -71,7 +71,7 @@ class NewsletterController extends NewsletterAppController {
 			$visite['url'] = $url;
 			$visite['ip_address'] = $_SERVER['REMOTE_ADDR'];
 			$visite['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
-			$this->NewsletterStat->save($visite);
+			$this->NewsletterEvent->save($visite);
 		}
 		//debug($this->params);
 		
@@ -107,14 +107,14 @@ class NewsletterController extends NewsletterAppController {
 	function counter($sended_id=null,$img_url=null){
 		//Configure::write('debug', 1);
 		if($sended_id){
-			$this->NewsletterStat->create();
+			$this->NewsletterEvent->create();
 			$visite = array();
 			$visite['sended_id'] = $sended_id;
 			$visite['date'] = date('Y-m-d H:i:s');
 			$visite['action'] = 'view';
 			$visite['ip_address'] = $_SERVER['REMOTE_ADDR'];
 			$visite['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
-			$this->NewsletterStat->save($visite);
+			$this->NewsletterEvent->save($visite);
 		}
 		if($img_url){
 			$img_path = WWW_ROOT . str_replace('>',DS,$img_url);
@@ -218,6 +218,19 @@ class NewsletterController extends NewsletterAppController {
 		$this->render($view);
 	}
 	
+	function beforeFilter(){
+		Cache::config('newsletter_task', array(
+			'engine' => 'File',
+			'duration'=> '+1 hours',
+		));
+		if(!empty($this->params['admin']) && !NewsletterConfig::load('cron') && !Cache::read('newsletter_task','newsletter_task')){
+			App::import('Lib', 'Newsletter.NewsletterTask');
+			NewsletterTask::sync();
+			Cache::write('newsletter_task',1,'newsletter_task');
+		}
+		parent::beforeFilter();
+	}
+	
 	function admin_index() {
 		$this->Newsletter->recursive = 0;
 		$this->paginate['order'] = 'date DESC';
@@ -273,366 +286,6 @@ class NewsletterController extends NewsletterAppController {
 		$this->layout = "empty";
 		$this->set('Newsletter', $Newsletter);
 	}
-	function admin_graphs($id = null) {
-		//Configure::write('debug', 0);
-		//$this->layout = null;
-		// generate some random data
-		srand((double)microtime()*1000000);
-		$title = new title( __d("newsletter","Views per time",true));
-		$chart = new open_flash_chart();
-		$chart->set_title($title);
-		
-		
-		$newsletter = $this->Newsletter->read(null, $id);
-		
-		
-		// Views
-		$dates = array();
-		$values = array();
-		
-		
-		//// init sender class ////
-		App::import('Lib', 'Newsletter.ClassCollection');
-		$senderOpt = NewsletterConfig::load('sender');
-		if(!is_array($senderOpt)){
-			$senderOpt = array('name' => $senderOpt);
-		}
-		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
-		
-		//// query ////
-		$query = array(
-			'fields' => array('count(*) as nb','DATE(NewsletterStat.date) as date'),
-			'conditions'=>array(
-				'NewsletterSended.newsletter_id'=>$id,
-				'or' => array(
-					'NewsletterStat.action' => 'view',
-					array(
-						'NewsletterStat.action IS NULL',
-						'NewsletterStat.url' => null,
-					)
-				)
-			),
-			'group' => 'DATE(NewsletterStat.date)',
-			'order' => 'DATE(NewsletterStat.date)',
-			'model'=>'NewsletterStat',
-		);
-		
-		//// beforeGraph callback ////
-		if(method_exists($sender,'beforeGraph')){
-			$res = $sender->beforeGraph($this,$newsletter,$query);
-			if(!empty($res) ){
-				$query = $res;
-			}
-		}
-		
-		//// Execute Query ////
-		
-		//$sql = "select count(*) as nb,DATE(NewsletterStats.date) as date from newsletter_stats NewsletterStats left join newsletter_sended NewsletterSended on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' AND url is NULL AND (`action` IS NULL or `action` = 'view') group by DATE(NewsletterStats.date) order by DATE(NewsletterStats.date)";
-		//$views = $this->NewsletterSended->query($sql);
-		
-		//debug($query);
-		$views = $this->_stat_query($query);
-		//debug($views);
-		
-		$min_value = 99999999;
-		$max_value = 0;
-		foreach($views as $view){
-			$dates[$view[0]["date"]] = $view[0]["nb"];
-			if($view[0]["nb"] < $min_value){
-				$min_value = $view[0]["nb"];
-			}
-			if($view[0]["nb"] > $max_value){
-				$max_value = $view[0]["nb"];
-			}
-		}
-		if($max_value == $min_value){
-			$max_value++;
-			$min_value--;
-		}
-		$min_value = 0;
-		//pr($dates);
-		$min_date = strtotime($views[0][0]["date"]);
-		$max_date = strtotime($views[sizeof($views) - 1][0]["date"]);
-		//$cur_date = $min_date;
-		for($cur_date = $min_date;$cur_date<=$max_date;$cur_date = $cur_date + 86400){
-			$x=$cur_date;
-			if(isset($dates[date("Y-m-d",$cur_date)])){
-				
-				$values[] = new scatter_value($x,$dates[date("Y-m-d",$cur_date)]);
-			}else{
-				
-				$values[] = new scatter_value($x,0);
-			}
-			
-		}
-		if($max_date == $min_date){
-			$max_date += 86400;
-		}
-		//pr($values);
-		//pr($views);
-		
-		$line_dot = new line();
-		$line_dot->set_values($values);
-		$line_dot->set_text("Views");
-		
-		
-		$chart->add_element($line_dot);
-		
-		
-		
-		$y = new y_axis();
-		$y->set_range($min_value,$max_value,($max_value-$min_value)/10);
-		$x = new x_axis();
-		// grid line and tick every 10
-		$x->set_range(
-		mktime(0, 0, 0, date("m",$min_date), date("d",$min_date),date("Y",$min_date)),
-		mktime(0, 0, 0, date("m",$max_date), date("d",$max_date),date("Y",$max_date))
-		);
-		// show ticks and grid lines for every day:
-		$x->set_steps(86400);
-		
-		$labels = new x_axis_labels();
-		
-		// tell the labels to render the number as a date:
-		$labels->text('#date:d-m-Y#');
-		// generate labels for every day
-		$labels->set_steps(86400);
-		// only display every other label (every other day)
-		$labels->visible_steps(ceil(($max_date-$min_date)/86400/20));
-		$labels->rotate(90);
-		$x->set_labels($labels);
-		$chart->set_x_axis($x);
-		$chart->set_y_axis($y);
-		$chart->set_bg_colour("#FFFFFF");
-		//print_r($views);
-		//$this->set("allviews",$views[0][0]['count(*)']);
-		
-		
-		$line_dot = new line();
-		$line_dot->set_values(array(2,1));
-		$line_dot->set_text("Unique views");
-		$line_dot->colour("#0000000");
-		//$chart->add_element($line_dot);
-		
-		//
-		
-		
-		
-
-		echo $chart->toPrettyString();
-		exit();
-		
-		//$this->render(false);
-	}
-	function admin_stats($id = null) {
-		set_time_limit(120);
-		//Configure::write('debug', 2);
-		
-		$newsletter = null;
-		if($id){
-			$newsletter = $this->Newsletter->read(null, $id);
-		}
-		
-		if (empty($newsletter)) {
-			$this->Session->setFlash(__d('newsletter','Invalid Newsletter.', true));
-			debug('Invalid Newsletter.');
-			$this->redirect(array('action'=>'index'));
-		}
-		
-		//// init sender class ////
-		App::import('Lib', 'Newsletter.ClassCollection');
-		$senderOpt = NewsletterConfig::load('sender');
-		if(!is_array($senderOpt)){
-			$senderOpt = array('name' => $senderOpt);
-		}
-		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
-		
-		//// queries ////
-		$queries = array(
-			'sended_count' => array(
-				'conditions'=>array(
-					'NewsletterSended.newsletter_id'=>$id
-				),
-				'type' => 'count'
-			),
-			"allviews" => array(
-				'conditions'=>array(
-					'NewsletterSended.newsletter_id'=>$id,
-					'or' => array(
-						'NewsletterStat.action' => 'view',
-						array(
-							'NewsletterStat.action IS NULL',
-							'NewsletterStat.url' => null,
-						)
-					)
-				),
-				'model'=>'NewsletterStat',
-				'type' => 'count'
-			),
-			"uniqueviews" => array(
-				'fields'=>array(
-					'count(DISTINCT NewsletterStat.sended_id) as uniqueviews'
-				),
-				'conditions'=>array(
-					'NewsletterSended.newsletter_id'=>$id,
-					'or' => array(
-						'NewsletterStat.action' => 'view',
-						array(
-							'NewsletterStat.action IS NULL',
-							'NewsletterStat.url' => null,
-						)
-					)
-				),
-				'model'=>'NewsletterStat',
-				'type' => 'first'
-			),
-			"clickedlinks"  => array(
-				'conditions'=>array(
-					'NewsletterSended.newsletter_id'=>$id,
-					'or' => array(
-						'NewsletterStat.action' => 'click',
-						array(
-							'NewsletterStat.action IS NULL',
-							'NewsletterStat.url IS NOT NULL',
-						)
-					)
-				),
-				'model'=>'NewsletterStat',
-				'type' => 'count'
-			),
-			"uniqueclics"  => array(
-				'fields'=>array(
-					'count(DISTINCT NewsletterStat.sended_id) as uniqueclics'
-				),
-				'conditions'=>array(
-					'NewsletterSended.newsletter_id'=>$id,
-					'or' => array(
-						'NewsletterStat.action' => 'click',
-						array(
-							'NewsletterStat.action IS NULL',
-							'NewsletterStat.url IS NOT NULL',
-						)
-					)
-				),
-				'model'=>'NewsletterStat',
-				'type' => 'first'
-			),
-			'toppages' => array(
-				'fields'=>array(
-					'count(*)',
-					'NewsletterStat.url'
-				),
-				'conditions'=>array(
-					'NewsletterSended.newsletter_id'=>$id,
-					'or' => array(
-						'NewsletterStat.action' => 'click',
-						array(
-							'NewsletterStat.action IS NULL',
-							'NewsletterStat.url IS NOT NULL',
-						)
-					)
-				),
-				'model'=>'NewsletterStat',
-				'group' => 'NewsletterStat.url',
-				'order' => 'count(*) DESC',
-				'limit' => 10,
-				'type' => 'all'
-			)
-		);
-		
-		//// beforeStats callback ////
-		if(method_exists($sender,'beforeStats')){
-			$res = $sender->beforeStats($this,$newsletter,$queries);
-			if(!empty($res) && is_array($res)){
-				$queries = $res;
-			}
-		}
-		
-		//print_r($newsletter);
-		//$newsletter = array();
-		
-		//// Execute Queries ////
-		
-		foreach($queries as $key => $q){
-			$res = $this->_stat_query($q);
-			if($q['type'] == 'count'){
-					$stats[$key] = $res;
-			}elseif($q['type'] == 'first'){
-					if(!empty($q['fields'])){
-						foreach($q['fields'] as $fkey => $f){
-							if(is_numeric($fkey)){
-								$fkey = $key;
-							}
-							$val = null;
-							if(preg_match('/^([0-9a-z_]+).([0-9a-z_]+)$/i',$f,$match)){
-								$val = Set::extract($f,$res);
-							}elseif(preg_match('/ as ([0-9a-z_]+)$/i',$f,$match)){
-								$val = $res[0][$match[1]];
-							}elseif(!empty($res[$model->alias][$f])){
-								$val = $res[$model->alias][$f];
-							}elseif(!empty($res[0][$f])){
-								$val = $res[0][$f];
-							}
-							$stats[$fkey] = $val;
-						}
-					}else{
-						$stats[$key] = $res;
-					}
-				}else{
-					$stats[$key] = $res;
-				}
-			}
-		
-		//debug($stats);
-		
-		
-		//$unique_views = $this->NewsletterStats->find('count',array('conditions'=>array('newsletter_id'=>$id)));
-		//$this->set("sended_count",$sended_count);
-		
-		
-		if(method_exists($sender,'afterStats')){
-			$res = $sender->afterStats($this,$newsletter,$stats);
-			if(!empty($res)){
-				$stats = $res;
-			}
-		}
-		
-		$this->set('Newsletter', $newsletter);
-		$this->set($stats);
-		
-		//$newsletterSended = $this->NewsletterSended->find('all', array('conditions'=>array('newsletter_id'=>$id)));
-		$newsletterSended = array();
-		$this->set('newsletterSended', $newsletterSended);
-	}
-	
-	function _stat_query(&$q){
-		if(is_string($q) || !empty($q['sql'])){
-			if(is_string($q)){
-				$q = array('sql' => $q);
-			}
-			$q['type'] = 'all';
-			$res = $this->NewsletterSended->query($sql);
-			if(!empty($q['extract'])){
-				$res = Set::extract($q['extract'],$res);
-			}
-		}else{
-			$final = $q;
-			unset($final['type']);
-			unset($final['model']);
-			if(empty($q['type'])) $q['type'] = 'all';
-			if(empty($q['model'])) $q['model'] = $this->NewsletterSended;
-			if(is_string($q['model'])){
-				if(!empty($this->{$q['model']})) {
-					$q['model'] = $this->{$q['model']};
-				}else{
-					$q['model'] = ClassRegistry::init($q['model']);
-				}
-			}
-			$res = $q['model']->find($q['type'],$q);
-		}
-		
-		return $res;
-	}
 	
 	function admin_excel($id = null){
 		//echo getcwd();
@@ -641,12 +294,12 @@ class NewsletterController extends NewsletterAppController {
 		//$objPHPExcel = $objReader->load();
 		$objPHPExcel = $objReader->load(APP.'plugins'.DS.'newsletter'.DS.'vendors'.DS.'template.xlsx');
 		//var_dump($excel);
-		$sql = "select email,count(*)'cnt',GROUP_CONCAT(url)'url' from newsletter_sended NewsletterSended  left join newsletter_stats NewsletterStats on  NewsletterSended.id = NewsletterStats.sended_id where NewsletterSended.newsletter_id = '".$id."' group by email order by email,url";
+		$sql = "select email,count(*)'cnt',GROUP_CONCAT(url)'url' from newsletter_sended NewsletterSended  left join newsletter_stats NewsletterEvent on  NewsletterSended.id = NewsletterEvent.sended_id where NewsletterSended.newsletter_id = '".$id."' group by email order by email,url";
 		$email_read = $this->NewsletterSended->query($sql);
 		//print_r($email_read);
 		//$this->set("email_read",$views[0][0]['count(*)']);
 		
-		$sql = "select * from newsletter_sended NewsletterSended  where NewsletterSended.newsletter_id = '".$id."' and (select count(*) from newsletter_stats NewsletterStats where NewsletterStats.sended_id = NewsletterSended.id ) = 0 order by email";
+		$sql = "select * from newsletter_sended NewsletterSended  where NewsletterSended.newsletter_id = '".$id."' and (select count(*) from newsletter_stats NewsletterEvent where NewsletterEvent.sended_id = NewsletterSended.id ) = 0 order by email";
 		$email_notread = $this->NewsletterSended->query($sql);
 		//$this->set("email_notread",$views[0][0]['count(*)']);
 		

@@ -618,6 +618,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$this->_console_render();
 			
 			//$this->render(false);
+			
+			
+			App::import('Lib', 'Newsletter.NewsletterTask');
+			NewsletterTask::sync();
 		}
 	}
 	

@@ -596,5 +596,6 @@ class NewsletterFunctComponent extends Object
 		}
 		return null;
 	}
+	
 }
 ?>

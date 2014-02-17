@@ -16,6 +16,8 @@ class NewsletterConfig extends Object {
 		'sender' => 'Newsletter.PhpMail', //Newsletter.PhpMail, Newsletter.Mailgun
 		'maxSend' => null, //defaults to 10000 for PhpMail and 200 000 for Mailgun
 		'langs' => array(), //array('fre'=>'Français','eng'=>'English')
+		'bounceLimit' => 3,
+		'newsletterSyncTimout'=>'7 DAY',
 		'hiddenTemplates' => array(),
 		'multimedia' => true,
 		'cron' => 'auto',
@@ -85,63 +87,5 @@ class NewsletterConfig extends Object {
 		return $paths;
 	}
 	
-	
-	function checkTables(&$errors = array()){
-		$tables = array(
-			'newsletter_boxes',
-			'newsletter_emails',
-			'newsletter_sended',
-			'newsletter_sendings',
-			'newsletter_sendlists',
-			'newsletter_sendlists_emails',
-			'newsletter_stats',
-			'newsletter_variants',
-			'newsletters',
-		);
-		
-		
-		App::import('Lib', 'ConnectionManager');
-		$db =& ConnectionManager::getDataSource('default');
-		
-		$sourceList = $db->listSources();
-		
-		$missing = array_diff($tables,$sourceList);
-		if(count($missing)){
-			$errors['missing_table'] = array('msg'=>'Missing Table(s)','tables'=>$missing);
-			return false;
-		}
-		
-		return empty($errors);
-	}
-	
-	function checkSchema(&$errors = array()){
-
-		if(!NewsletterConfig::checkTables($errors)){
-			return false;
-		}
-		
-		$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
-		//debug($NewsletterEmail->schema());
-		if(array_key_exists('sendlist_id',$NewsletterEmail->schema())){
-			$errors['field_mismatch']['fields'][] = 'NewsletterEmail.sendlist_id';
-		}
-		$NewsletterSended = ClassRegistry::init('Newsletter.NewsletterSended');
-		if(array_key_exists('sendlist_id',$NewsletterSended->schema())){
-			$errors['field_mismatch']['fields'][] = 'NewsletterSended.sendlist_id';
-		}
-		if(!array_key_exists('newsletter_variant_id',$NewsletterSended->schema())){
-			$errors['field_mismatch']['fields'][] = 'NewsletterSended.newsletter_variant_id';
-		}
-		if(!array_key_exists('name',$NewsletterSended->schema())){
-			$errors['field_mismatch']['fields'][] = 'NewsletterSended.name';
-		}
-		
-		
-		if(!empty($errors['field_mismatch'])){
-			$errors['field_mismatch']['Msg'] = 'Some field(s) are configured wrong';
-		}
-		
-		return empty($errors);
-	}
 }
 ?>

@@ -111,7 +111,7 @@ foreach ($newsletters as $newsletter):
 			if($newsletter['Newsletter']['active']) {
 				echo $html->link(
 					'<span>'.__d('newsletter','Stats', true).'</span>', 
-					array('action' => 'stats', $newsletter['Newsletter']['id']), 
+					array('plugin'=>'newsletter','controller'=>'newsletter_stats','action' => 'index', $newsletter['Newsletter']['id']), 
 					array('class'=>'icon stats','escape' => false)
 				);
 			}

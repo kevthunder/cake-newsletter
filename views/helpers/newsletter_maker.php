@@ -612,8 +612,8 @@ class NewsletterMakerHelper extends AppHelper {
 		$result_html .= $this->Form->input('id',array('value'=>$this->box_id));
 		return $result_html;
 	}
-	function multimedia(){
-		$this->Multimedia->display('NewsletterBox.multimedia');
+	function multimedia($opt=array()){
+		$this->Multimedia->display('NewsletterBox.multimedia',array('multimedia'=>$opt));
 	}
 	function editInput($name,$options=array()){
 		if(!is_array($options)){
