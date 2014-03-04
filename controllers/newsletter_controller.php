@@ -412,17 +412,22 @@ class NewsletterController extends NewsletterAppController {
 					$this->NewsletterBox->save($newsletter_box);
 				}
 			}
-			$this->data['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($this->data);//$this->requestAction('admin/newsletter/newsletter/make/'.$id);
-			$this->Newsletter->NewsletterVariant->updateAll(array('NewsletterVariant.html'=>null), array('NewsletterVariant.newsletter_id'=>$id));
-			
-			$this->data['Newsletter']['tested'] = 0;
 			if(empty($this->data['Newsletter']['associated'])){
 				$this->data['Newsletter']['associated'] = array();
 			}
-			if ($this->Newsletter->save($this->data)) {
-				$this->Session->setFlash(__d('newsletter','The Newsletter has been saved', true));
-				$this->Session->delete('EditedNewsletter');
-				$this->redirect(array('action'=>'index'));
+			$this->Newsletter->set($this->data);
+			if ($this->Newsletter->validates()) {
+				$this->data['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($this->Newsletter->data);//$this->requestAction('admin/newsletter/newsletter/make/'.$id);
+				$this->Newsletter->NewsletterVariant->updateAll(array('NewsletterVariant.html'=>null), array('NewsletterVariant.newsletter_id'=>$id));
+				
+				$this->data['Newsletter']['tested'] = 0;
+				if ($this->Newsletter->save($this->data)) {
+					$this->Session->setFlash(__d('newsletter','The Newsletter has been saved', true));
+					$this->Session->delete('EditedNewsletter');
+					$this->redirect(array('action'=>'index'));
+				} else {
+					$this->Session->setFlash(__d('newsletter','The Newsletter could not be saved. Please, try again.', true));
+				}
 			} else {
 				$this->Session->setFlash(__d('newsletter','The Newsletter could not be saved. Please, try again.', true));
 			}
