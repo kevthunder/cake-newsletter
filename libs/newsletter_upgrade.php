@@ -287,14 +287,14 @@ class NewsletterUpgrade extends Object {
 			return false;
 		}
 		
-		$query = 'INSERT INTO  `laurier_ndev`.`newsletter_events` SELECT * FROM  `laurier_ndev`.`newsletter_stats` ;';
+		$query = 'INSERT INTO  `newsletter_events` (`id`,`sended_id`,`date`,`action`,`url`,`ip_address`,`user_agent`) SELECT `id`,`sended_id`,`date`,`action`,`url`,`ip_address`,`user_agent` FROM `newsletter_stats` ;';
 		//debug($query);
 		if(!$db->execute($query)){
 			$msg = str_replace(array('%table1%','%table2%'),array('newsletter_stats','newsletter_events'),__('Failled to copy `%table1%` into `%table2%` :',true)).' '.$query;
 			return false;
 		}
 		
-		$query = 'DROP TABLE  `laurier_ndev`.`newsletter_stats` ;';
+		$query = 'DROP TABLE `newsletter_stats` ;';
 		//debug($query);
 		if(!$db->execute($query)){
 			$msg = str_replace('%table%','newsletter_stats',__('Failled delete old `%table%` table :',true)).' '.$query;
