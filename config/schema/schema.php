@@ -108,7 +108,7 @@ class NewsletterSchema extends CakeSchema {
 		'active' => array('type' => 'boolean', 'null' => true, 'default' => '1'),
 		'created' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
-		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1)),
+		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1), 'newsletter_sendlist_id' => array('column' => array('newsletter_sendlist_id', 'newsletter_email_id'), 'unique' => 1)),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
 	);
 	var $newsletter_events = array(

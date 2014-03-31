@@ -25,10 +25,17 @@ class NewsletterEmail extends NewsletterAppModel {
 		)
 	);
 	
-	function beforeSave($options) {
+	function save($data = null, $validate = true, $fieldList = array()) {
+		$this->set($data);
+		$this->parseSave();
+		return parent::save(null, $validate, $fieldList);
+	}
+	
+	function parseSave(){
 		if(!empty($this->data['NewsletterEmail']['sendlist_id'])){
 			$this->data['NewsletterSendlist'] = (array)$this->data['NewsletterEmail']['sendlist_id'];
 		}
+		
 		if(empty($this->data['NewsletterEmail']['id'])){
 			if(!array_key_exists('active',$this->data['NewsletterEmail'])){
 				$this->data['NewsletterEmail']['active'] = 1;
@@ -52,18 +59,16 @@ class NewsletterEmail extends NewsletterAppModel {
 					)
 				),
 			));
-			//debug($exists);
 			if($exists){
-				$this->data['NewsletterEmail']['id'] = $exists['NewsletterEmail']['id'];
+				$this->id = $exists['NewsletterEmail']['id'];
+				$this->data['NewsletterEmail'] = array_merge($this->data['NewsletterEmail'],$exists['NewsletterEmail']);
 				$this->data['NewsletterEmail']['existed'] = 1;
 				foreach($exists['NewsletterSendlistsEmail'] as $l){
 					$this->data['NewsletterSendlist'][] = $l['newsletter_sendlist_id'];
 				}
 			}
 		}
-		//debug($this->data);
-		//exit();
-		return true;
 	}
+	
 }
 ?>

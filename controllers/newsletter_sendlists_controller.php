@@ -276,7 +276,16 @@ class NewsletterSendlistsController extends NewsletterAppController {
 					$data['name'] = trim($data['name'] . ' ' . $data['last_name']);
 				}
 				$data['email'] = strtolower($data['email']);
-				$exists = $this->NewsletterSendlist->NewsletterEmail->find('first',array('conditions'=>array('sendlist_id' => $list_id, 'email' => $data['email'])));
+				
+				$this->NewsletterSendlist->NewsletterEmail->bindModel(
+					array('hasOne' => array(
+							'NewsletterSendlistsEmail' => array(
+								'className' => 'Newsletter.NewsletterSendlistsEmail'
+							)
+						)
+					)
+				);
+				$exists = $this->NewsletterSendlist->NewsletterEmail->find('first',array('conditions'=>array('newsletter_sendlist_id' => $list_id, 'email' => $data['email'])));
 				if(empty($exists)){
 					//debug($data);
 					$this->NewsletterSendlist->NewsletterEmail->create();
