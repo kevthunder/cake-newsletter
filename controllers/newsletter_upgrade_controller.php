@@ -7,6 +7,7 @@ class NewsletterUpgradeController extends NewsletterAppController {
 	var $uses = array();
 
 	function admin_upgrade(){
+		clearCache(null, 'models');
 		$sErrors = NewsletterUpgrade::check();
 		if(!$sErrors){
 			$this->Session->setFlash(__d('newsletter','The database is valid', true));

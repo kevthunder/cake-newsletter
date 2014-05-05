@@ -4,7 +4,7 @@ class NewsletterUpgrade extends Object {
 		App::import('Lib', 'Newsletter.NewsletterUpgrade');
 	*/
 	var $connection = 'default';
-	var $tests = array(
+	var $testsOpt = array(
 		'movedStats' => array(
 			//'break' => true,
 			'recheck' => true,
@@ -47,6 +47,7 @@ class NewsletterUpgrade extends Object {
 		static $instance = array();
 		if (!$instance) {
 			$instance[0] =& new NewsletterUpgrade();
+			$instance[0]->tests = $instance[0]->testsOpt;
 		}
 		return $instance[0];
 	}
@@ -159,7 +160,7 @@ class NewsletterUpgrade extends Object {
 		$Schema =& new CakeSchema(array('name'=>'Newsletter', 'file'=>'schema.php', 'connection'=>$_this->connection, 'plugin'=>'Newsletter'));
 		$file = $Schema->path . DS . $Schema->file;
 		
-		return sha1(sha1_file($file).serialize($this->tests));
+		return sha1(sha1_file($file).serialize($this->testsOpt));
 	}
 	
 	function getSourceList(){

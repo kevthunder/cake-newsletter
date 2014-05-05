@@ -494,6 +494,7 @@
 				$entryFinder.trigger(event,[data]);
 				if(!event.isDefaultPrevented() && (!$.isFunction(loadCallback) || loadCallback(data)!==false)){
 					///// try to extract maching fields /////
+          var toUpdate = [];
 					for(var i in data[model]){
 						var selector = "#NewsletterBoxData"+i.camelize();
 						if(i.endsWith("_"+getLang())){
@@ -505,11 +506,7 @@
 						}*/
 						if($input.length){
 							//alert(i);
-							if(data[model][i]==null){
-								$input.val("");
-							}else{
-								$input.val(data[model][i]);
-							}
+              toUpdate.push({input:$input,val:data[model][i]});
 						}
 					}
 					///// if a mapping is defined, use it to fill fields /////
@@ -539,17 +536,23 @@
 									}*/
 									var $input = $(selector,$edit_box);
 									if($input.length){
-										if($input.hasClass("tinymce")){
-											var editor = tinyMCE.getInstanceById($input.attr('id'));
-											editor.setContent((val==null)?"":val);
-										}else{
-											$input.val((val==null)?"":val);
-										}
+                    toUpdate.push({input:$input,val:val});
 									}
 								}
 							}
 						}
 					}
+          /*if(window.console){
+            console.log(toUpdate);
+          }*/
+          $.each(toUpdate,function(i,up){
+            if(up.input.hasClass("tinymce")){
+              var editor = tinyMCE.getInstanceById(up.input.attr('id'));
+              editor.setContent((up.val==null)?"":up.val);
+            }else{
+              up.input.val((up.val==null)?"":up.val);
+            }
+          });
 					if(data["newsletterbox_media"] && $('table.multimedia',$edit_box).length){
 						$('table.multimedia',$edit_box).multimedia.clear();
 						$.each(data["newsletterbox_media"], function(index, value) { 
