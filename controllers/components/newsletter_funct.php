@@ -39,24 +39,7 @@ class NewsletterFunctComponent extends Object
 		return $newArr;
 	}
 	function getAllViewPaths(){
-		if(!isset($this->allViewPaths)){
-		
-			$templates = array();
-			$paths = App::path('views');
-			$pluginsPaths = App::path('plugins');
-			foreach($pluginsPaths as $path) {
-				if($this->Folder->cd($path)){
-					$pluginPaths = $this->Folder->read();
-					foreach($pluginPaths[0] as $pluginPath){
-						array_push($paths,$path.$pluginPath.DS.'views'.DS);
-					}
-				}
-			}
-			$this->allViewPaths = $paths;
-		}else{
-			$paths = $this->allViewPaths;
-		}
-		return $paths;
+		return NewsletterConfig::getAllViewPaths();
 	}
 	
 	function getTemplates(){
@@ -73,18 +56,7 @@ class NewsletterFunctComponent extends Object
 	}
 	
 	function getTemplatesConfig(){
-		$paths = $this->getAllViewPaths();
-		foreach($paths as $path) {
-			if($this->Folder->cd($path.'/elements/newsletter')){
-				$templateFiles = $this->Folder->find('.+\.ctp$');
-				foreach($templateFiles as &$file){
-					$name = basename($file, ".ctp");
-					$config = ClassCollection::getObject('NewsletterConfig',$name);
-					$templates[$name] = $config;
-				}
-			}
-		}
-		return $templates;
+		return NewsletterConfig::getTemplatesConfig();
 	}
 	
 	function getBoxElements($template = null){

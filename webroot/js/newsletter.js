@@ -416,11 +416,11 @@
 
 	function page_click(){
 		var page = $(this).attr('page');
-		$(this).closest("#entries_list").find(".pagin .pagin_page").removeClass('cur_page');
-		$(this).closest("#entries_list").find(".pagin .pagin_page[page="+page+"]").addClass('cur_page');
+		$(this).closest("#entries_list").find(".pagin .pagin_page").removeClass('cur');
+		$(this).closest("#entries_list").find(".pagin .pagin_page[page="+page+"]").addClass('cur');
 
-		$(this).closest("#entries_list").find(".page").removeClass('cur');
-		$(this).closest("#entries_list").find("#page"+page).addClass('cur');
+		$(this).closest("#entries_list").find(".page").removeClass('cur_page');
+		$(this).closest("#entries_list").find("#page"+page).addClass('cur_page');
 	}
 	////////////////////////// box_edit EntryFinder functions //////////////////////////
 	var $cur_entryFinder = null;

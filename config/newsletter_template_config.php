@@ -8,7 +8,27 @@ class NewsletterTemplateConfig extends Object {
 		return __(empty($this->label)?$this->name:$this->label,true);
 	}
 	
+	function getPath(){
+		if(empty($this->path)){
+			$paths = NewsletterConfig::getAllViewPaths();
+			foreach($paths as $path) {
+				$file = $path.'/elements/newsletter/'.$this->name.'.ctp';
+				if(file_exists($file)){
+					$this->path = $file;
+					break;
+				}
+			}
+		}
+		return $this->path;
+	}
 	
+	function check(){
+		$contents = file_get_contents($this->getPath());
+		if(strpos($contents,'$newsletter->') != false){
+			return false;
+		}
+		return true;
+	}
 	
 	function beforeConfig($data,$controller){ //deprecated
 	}

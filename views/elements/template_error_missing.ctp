@@ -1,0 +1,1 @@
+<h2><?php __('Template file could not be found') ?></h2>

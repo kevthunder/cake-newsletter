@@ -1,0 +1,1 @@
+<h2><?php __('This template is outdated') ?></h2>

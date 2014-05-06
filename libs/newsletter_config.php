@@ -87,5 +87,55 @@ class NewsletterConfig extends Object {
 		return $paths;
 	}
 	
+	function getTemplatesConfig(){
+		$_this =& NewsletterConfig::getInstance();
+		if(!isset($_this->templates)){
+			App::import('Lib', 'Newsletter.ClassCollection');
+			
+			uses('Folder');
+			$Folder =& new Folder();
+			
+			$paths = $_this->getAllViewPaths();
+			foreach($paths as $path) {
+				if($Folder->cd($path.'/elements/newsletter')){
+					$templateFiles = $Folder->find('.+\.ctp$');
+					foreach($templateFiles as &$file){
+						$name = basename($file, ".ctp");
+						$config = ClassCollection::getObject('NewsletterConfig',$name);
+						$config->path = $Folder->path.DS.$file;
+						$templates[$name] = $config;
+					}
+				}
+			}
+			$_this->templates = $templates;
+		}
+		return $_this->templates;
+	}
+	
+	function getAllViewPaths(){
+		$_this =& NewsletterConfig::getInstance();
+		if(!isset($_this->allViewPaths)){
+		
+			uses('Folder');
+			$Folder =& new Folder();
+		
+			$templates = array();
+			$paths = App::path('views');
+			$pluginsPaths = App::path('plugins');
+			foreach($pluginsPaths as $path) {
+				if($Folder->cd($path)){
+					$pluginPaths = $Folder->read();
+					foreach($pluginPaths[0] as $pluginPath){
+						array_push($paths,$path.$pluginPath.DS.'views'.DS);
+					}
+				}
+			}
+			$_this->allViewPaths = $paths;
+		}else{
+			$paths = $_this->allViewPaths;
+		}
+		return $paths;
+	}
+	
 }
 ?>

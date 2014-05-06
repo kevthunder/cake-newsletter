@@ -8,6 +8,7 @@ class NewsletterMakerHelper extends AppHelper {
 		$this->view = $view;	
 		$this->newsletter_box = $view->getVar('newsletter_box');
 		$this->newsletter = $view->getVar('newsletter');
+		$this->templates = $view->getVar('templates');
        	$this->box_element = $this->newsletter_box["NewsletterBox"]["template"];
 		$this->box_id = $this->newsletter_box["NewsletterBox"]["id"];
 		//$this->data = $view->data;
@@ -16,6 +17,26 @@ class NewsletterMakerHelper extends AppHelper {
 		$this->Session = new CakeSession();
 		$this->Session->start();
 		//debug('test');
+	}
+	
+	function showNewsletter(){
+		$template_error = $this->view->getVar('template_error');
+		if(empty($template_error)){
+			$vars = array(
+				'newsletter_data' => $this->newsletter,
+				'title_for_newsletter' => '<span id="title_for_newsletter">'.$this->newsletter['Newsletter']['title'].'</span>'
+			);
+			$tmp = Configure::read('Config.language');
+			if(!empty($this->newsletter['Newsletter']['lang'])) Configure::write('Config.language',$this->newsletter['Newsletter']['lang']);
+			
+			$res = $this->view->element('newsletter/'.$this->newsletter['Newsletter']['template'],$vars);
+			$res = str_replace(array('<html>','</html>','<body>','</body>','%sended_id%'),'',$res);
+			
+			$tmp = Configure::write('Config.language',$tmp);
+		}else{
+			$res = $this->view->element('template_error_'.$template_error);
+		}
+		return $res;
 	}
 	
 	function showBox($box,$options=array()){
@@ -583,12 +604,12 @@ class NewsletterMakerHelper extends AppHelper {
 		$encoded_link = str_replace('/','-',base64_encode($base_url));
 		$final_url .= '/'.$encoded_link;
 		if(!$this->inEditMode()){
-		$final_url .= '/%sended_id%';
+			$final_url .= '/%sended_id%';
 		}
 		return $final_url;
 	}
 	function unsubscribeUrl(){
-		return $this->html->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'unsubscribe', '%sended_id%', 'admin' => false, 'lang'=>$this->newsletter['Newsletter']['lang']),true);
+		return $this->html->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'unsubscribe', $this->inEditMode()?null:'%sended_id%', 'admin' => false, 'lang'=>$this->newsletter['Newsletter']['lang']),true);
 	}
 	function viewUrl(){
 		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false, 'useContentUrl' => false));

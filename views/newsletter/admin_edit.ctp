@@ -74,14 +74,10 @@ $javascript->link('/newsletter/js/jquery.colorbox-min', false);
 				   
                    </div>
                 </div>
-				<?php 
-				if(in_array($this->data['Newsletter']['template'],array_keys($templates))){ ?>
-                <div class='preview'>
-					<?php echo str_replace(array('<html>','</html>','<body>','</body>','%sended_id%'),'',$this->requestAction(array('plugin'=>'newsletter','controller'=>'newsletter','action'=>'preview','admin'=>true,'prefix'=>'admin'), array('admin'=>true,'pass' => array($this->data['Newsletter']['id'])))); ?>
-                </div>
-				<?php }else{ ?>
-					<h2><?php __('Template file could not be found'); ?></h2>
-				<?php } ?>
+				
+				<div class='preview'>
+					<?php echo $this->NewsletterMaker->showNewsletter(); ?>
+				</div>
                 
                 <br style="clear:both" />
             </div>

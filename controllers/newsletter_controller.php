@@ -347,39 +347,6 @@ class NewsletterController extends NewsletterAppController {
 		exit;
 	
 	}
-	function admin_preview($id = null) {
-		if(Configure::read('debug')==2){
-			Configure::write('debug', 1);
-		}
-		$this->autoLayout = true;
-		$this->layout = "newsletter";
-		if (!$id) {
-			$this->Session->setFlash(__d('newsletter','Invalid Newsletter.', true));
-			//debug('Invalid Newsletter.');
-			$this->redirect(array('action'=>'index'));
-		}
-		//debug($this->params);
-		$newsletter = $this->Newsletter->read(null, $id);
-		$boxes_by_zone = $this->NewsletterFunct->getBoxByZone($id);
-		$config = $this->Newsletter->getConfig($this->Newsletter->data);
-		if(!empty($config)){
-			$config->beforeRender($this->Newsletter->data,$this);
-		}
-		$this->set('newsletter', $this->Newsletter->data);
-		$this->set('boxes_by_zone',$boxes_by_zone);
-		$this->set('newsletter_data', $this->Newsletter->data);
-		$this->set('title_for_newsletter', '<span id="title_for_newsletter">'.$newsletter['Newsletter']['title'].'</span>');
-		//$this->set('text_for_newsletter', '<div id="text_for_newsletter">'.$newsletter['Newsletter']['text'].'</div>');
-		
-		$tmp = Configure::read('Config.language');
-		if(!empty($newsletter['Newsletter']['lang'])) Configure::write('Config.language',$newsletter['Newsletter']['lang']);
-		
-		$res = $this->render('/elements/newsletter/'.$newsletter['Newsletter']['template']);
-		
-		$tmp = Configure::write('Config.language',$tmp);
-		
-		return $res;
-	}
 	
 	function admin_add() {
 		if (!empty($this->data)) {
@@ -447,6 +414,19 @@ class NewsletterController extends NewsletterAppController {
 		if(!empty($config)){
 			$config->beforeRenderEdit($this->data,$this);
 		}
+		
+		$template_error = false;
+		$config = $this->Newsletter->getConfig($this->data);
+		if(!empty($config)){
+			if(!$config->check()){
+				$template_error = 'outdated';
+			}
+			$config->beforeRender($this->data,$this);
+		}else{
+			$template_error = 'missing';
+		}
+		$this->set('template_error',$template_error);
+		
 		$this->set('langs',$langs);
 		$this->set('newsletter',$this->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);
