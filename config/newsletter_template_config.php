@@ -10,9 +10,10 @@ class NewsletterTemplateConfig extends Object {
 	
 	function getPath(){
 		if(empty($this->path)){
+			$this->path = null;
 			$paths = NewsletterConfig::getAllViewPaths();
 			foreach($paths as $path) {
-				$file = $path.'/elements/newsletter/'.$this->name.'.ctp';
+				$file = $path.'/elements/newsletter/'.Inflector::underscore($this->name).'.ctp';
 				if(file_exists($file)){
 					$this->path = $file;
 					break;
@@ -23,9 +24,12 @@ class NewsletterTemplateConfig extends Object {
 	}
 	
 	function check(){
-		$contents = file_get_contents($this->getPath());
-		if(strpos($contents,'$newsletter->') != false){
-			return false;
+		$path = $this->getPath();
+		if(!empty($path)){
+			$contents = file_get_contents($path);
+			if(strpos($contents,'$newsletter->') != false){
+				return false;
+			}
 		}
 		return true;
 	}
