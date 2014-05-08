@@ -119,7 +119,7 @@ class TabledSendlist extends Sendlist {
 				!empty($opt['active']) 
 				|| (!isset($opt['active']) && !$this->options['showInnactive'])
 		){
-			if($this->options['checkUnsubscribe']){
+			if($opt['mode'] != 'count' && $this->options['checkUnsubscribe']){
 				$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
 				$opt['joins'][] = array(
 					'alias' => $NewsletterEmail->alias,
