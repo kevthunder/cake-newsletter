@@ -182,7 +182,11 @@ class NewsletterUpgrade extends Object {
 			$SchemaCurrent =$_this->Schema->read(array('models'=>false));
 			//debug($Schema);
 			//debug($SchemaCurrent);
-			$_this->schemaDiff = $Schema->compare($SchemaCurrent);
+			if(version_compare(Configure::version(), '1.3.6', '>=')){
+				$_this->schemaDiff = $Schema->compare($SchemaCurrent);
+			}else{
+				$_this->schemaDiff = @$Schema->compare($SchemaCurrent);
+			}
 		}
 		return $_this->schemaDiff;
 	}
