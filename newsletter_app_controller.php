@@ -1,6 +1,6 @@
 <?php
 class NewsletterAppController extends AppController {
-	var $pluginVersion = "2.6.3alpha2"; 
+	var $pluginVersion = "2.6.3"; 
 	
 	var $view = "Newsletter";
 	
@@ -16,7 +16,7 @@ class NewsletterAppController extends AppController {
 	function constructClasses() {
 	
 		App::import('Lib', 'Newsletter.NewsletterUpgrade');
-		if(!empty($this->params['admin']) && $this->params['controller'] != 'newsletter_upgrade' && $this->params['action'] == 'index' && NewsletterUpgrade::check()) {
+		if(!empty($this->params['admin']) && $this->params['controller'] != 'newsletter_upgrade' && $this->params['action'] == 'admin_index' && NewsletterUpgrade::check()) {
 			$this->redirect(array('plugin'=>'newsletter','controller'=>'newsletter_upgrade','action'=>'upgrade','admin'=>true));
 		}
 		

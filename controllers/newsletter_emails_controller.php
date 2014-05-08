@@ -197,6 +197,7 @@ class NewsletterEmailsController extends NewsletterAppController {
 			$newsletterEmails = $sendlist->parseResult($mails,'NewsletterEmail');
 			//debug($newsletterEmails);
 			if($sendlist->type == 'tabled'){
+				$this->set('fields', $sendlist->emailFields());
 				$toRender = 'tabled_email';
 			}
 			$this->set('sendlist', $sendlist->getInfo());

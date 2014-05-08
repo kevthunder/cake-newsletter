@@ -445,11 +445,18 @@ pre{
     <ul>
 		<li>Détection des vieux template avant qu'ils bug</li>
 		<li>Shell script pour mettre à jour des templates</li>
+		<li>Le désabonement créé une addresse normal associer à aucune liste si le email de désabonement n'est présent que dans une "tabled sendlist"</li>
+		<li>Les "tabled sendlists" vérifie dans la table des email normal s'il y as des désabonnements
+    	<ul>
+				<li>Désactivable avec l'option "checkUnsubscribe"</li>
+			</ul>
+    </li>
 		<li>Interne : L'action edit des newsletter n'utilise plus requestAction</li>
 		<li>bug fix : Entry finder : les tinymce n'étais pas toujours remplis</li>
 		<li>bug fix : problèmes de détection de changement bd</li>
 		<li>bug fix : pagination de editEntriesSelect</li>
 		<li>bug fix : unsubscribeUrl renvoie une url non-valide en mode edit</li>
+		<li>bug fix : Trie des colonnes dans les "tabled sendlists"</li>
     </ul>
 </div>
 </body>

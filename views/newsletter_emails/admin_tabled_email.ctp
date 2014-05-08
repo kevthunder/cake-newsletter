@@ -30,10 +30,10 @@ echo $paginator->counter(array(
 ?></p>
 <table cellpadding="0" cellspacing="0">
 <tr>
-	<th><?php echo $paginator->sort('id');?></th>
-	<th><?php echo $paginator->sort('active');?></th>
-	<th><?php echo $paginator->sort('name');?></th>
-	<th><?php echo $paginator->sort('email');?></th>
+	<th><?php echo $paginator->sort(__('Id',true),$fields['id']);?></th>
+	<th><?php echo $paginator->sort(__('Active',true),$fields['active']);?></th>
+	<th><?php echo $paginator->sort(__('Name',true),empty($fields['name'])?$fields['first_name']:$fields['name']);?></th>
+	<th><?php echo $paginator->sort(__('Email',true),$fields['email']);?></th>
 </tr>
 <?php
 $i = 0;

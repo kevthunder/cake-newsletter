@@ -39,7 +39,8 @@ class TabledSendlist extends Sendlist {
 					'conditions'=>null,
 					'allowUnsubscribe'=>true,
 					'findOptions'=>null,
-					'recursive'=>-1
+					'recursive'=>-1,
+					'checkUnsubscribe'=>true,
 				);
 			if(!is_array($tableSendlist)){
 				$tableSendlist = array('model'=>$tableSendlist);
@@ -115,14 +116,27 @@ class TabledSendlist extends Sendlist {
 	
 		$conditions = array();
 		if(	
-			(
 				!empty($opt['active']) 
 				|| (!isset($opt['active']) && !$this->options['showInnactive'])
-			) 
-			&& !empty($this->options['fields']['active']) 
-			&& $Model->hasField($this->options['fields']['active'])
 		){
-			$conditions[$modelName.'.'.$this->options['fields']['active']] = 1;
+			if($this->options['checkUnsubscribe']){
+				$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
+				$opt['joins'][] = array(
+					'alias' => $NewsletterEmail->alias,
+					'table'=> $NewsletterEmail->useTable,
+					'type' => 'LEFT',
+					'conditions' => array(
+						$modelName.'.'.$this->options['fields']['email'].' = '.$NewsletterEmail->alias.'.email'
+					)
+				);
+				$conditions[] = array('or'=>array(
+					$NewsletterEmail->alias.'.active' => 1,
+					$NewsletterEmail->alias.'.id IS NULL'
+				));
+			}
+			if(!empty($this->options['fields']['active']) && $Model->hasField($this->options['fields']['active'])){
+				$conditions[$modelName.'.'.$this->options['fields']['active']] = 1;
+			}
 		}
 		$conditions['NOT'][$modelName.'.'.$this->options['fields']['email']] = "";
 		$conditions[] = $modelName.'.'.$this->options['fields']['email'].' IS NOT NULL';

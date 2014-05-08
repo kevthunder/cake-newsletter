@@ -148,6 +148,7 @@ class NewsletterController extends NewsletterAppController {
 					//$email_data['id'] = $this->data['NewsletterEmail']['id'];
 					$email_data['active'] = '0';
 					$count = $this->NewsletterEmail->updateAll($email_data, array('email'=>$this->data['NewsletterEmail']['email']));
+					$normalCount = $this->NewsletterEmail->getAffectedRows();
 					$tableSendlists = $this->NewsletterFunct->getTableSendlists(true);
 					foreach($tableSendlists as $tableSendlist){
 						if($tableSendlist['allowUnsubscribe']){
@@ -155,6 +156,20 @@ class NewsletterController extends NewsletterAppController {
 							$modelName = $Model->alias;
 							if($Model->hasField($tableSendlist['activeField'])){
 								$count += $Model->updateAll(array($tableSendlist['activeField']=>0), array($modelName.'.'.$tableSendlist['emailField']=>$this->data['NewsletterEmail']['email']));
+							}
+						}
+					}
+					if($count && !$normalCount){
+						$normalCount = $this->NewsletterEmail->find('count', array('conditions'=>array('email'=>$this->data['NewsletterEmail']['email']),'recursive'=>-1));
+						if(!$normalCount){
+							//We keep unsubcriptions because tabled Sendlists are not allways reliable
+							$data = array(
+								'email'=>$this->data['NewsletterEmail']['email'],
+								'active'=>0
+							);
+							$this->NewsletterEmail->create();
+							if(!$this->NewsletterEmail->save($data)){
+								$count = 0;
 							}
 						}
 					}
