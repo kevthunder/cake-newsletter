@@ -1,0 +1,26 @@
+<?php
+	/*Configure::write('Newsletter.sendEmail', 'O2 Web Solutions <info@o2web.ca>');
+	Configure::write('Newsletter.replyTo', 'info@o2web.ca');
+	Configure::write('Newsletter.errorReturn', 'bounce@o2web.ca');*/
+	Configure::write('Newsletter.defaultSendlist', 1);
+	Configure::write('Newsletter.EmailAdd.confirm', true);
+	/*Configure::write('Newsletter.smtpOptions', array(
+		'port'=>'25',
+		'timeout'=>'30',
+        'host' => 'laurierduvallon.com',
+		'username'=>'postmaster@laurierduvallon.com',
+		'password'=>'zipczipc'
+    ));*/
+	
+	/*Configure::write('Newsletter.tableSendlist', array(
+		array(
+			'id'=>4,
+			'model'=>'NewsletterEmail',
+			//'firstNameField'=>'first_name',
+			//'lastNameField'=>'last_name',
+			//'activeField'=>'newsletter',
+			//'showInnactive'=>false,
+			'conditions'=>array("NewsletterEmail.name like 'ke%'")
+		)
+	));*/
+?>
