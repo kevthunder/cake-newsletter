@@ -25,9 +25,9 @@ class NewsletterSendlistsController extends NewsletterAppController {
 		$this->paginate['order'] =  array('NewsletterSendlist.order' => 'asc');
 		$lists = $this->paginate();
 		$this->NewsletterSendlist->NewsletterEmail->recursive = -1;
-		
+
 		App::import('Lib', 'Newsletter.TabledSendlist');
-		$restrictedSendlists = TabledSendlist::allIds();
+		$restrictedSendlists = (array)TabledSendlist::allIds();
 		
 		App::import('Lib', 'Newsletter.Sendlist');
 		foreach($lists as &$list){
