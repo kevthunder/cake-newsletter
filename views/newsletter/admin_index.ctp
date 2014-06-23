@@ -131,3 +131,5 @@ foreach ($newsletters as $newsletter):
 		<li><?php echo $html->link(__d('newsletter','New Newsletter', true), array('action' => 'add')); ?></li>
 	</ul>
 </div>
+<div class="version"><p>Newsletter v.<?php echo $pluginVersion ?></p></div>
+

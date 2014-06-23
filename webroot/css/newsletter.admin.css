@@ -8,6 +8,15 @@ div.ajax_loader{
 	height:16px;
 	width:16px;
 }
+
+.version{
+  margin-top: 25px;
+  font-size : 0.8em;
+}
+p.warning{
+  color: #dd6600;
+}
+
 .send_lists{
 	position: absolute;
 	margin: 0px;

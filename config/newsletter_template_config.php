@@ -45,6 +45,10 @@ class NewsletterTemplateConfig extends Object {
 		return $this->beforeConfig($data,$controller);//deprecated
 	}
 	
+	function form($view){
+		
+	}
+	
 	function getGroupOpts($newsletter,$sendlist){
 		return null;
 	}
@@ -77,6 +81,13 @@ class NewsletterTemplateConfig extends Object {
 		return null;
 	}
 	
+	function beforeSend($sender,&$opt,&$mailsOptions){
+	
+	}
+	
+	function afterSend($sender,$opt,$mailsOptions){
+	}
+	
 	function afterFind(&$model, $result){
 	}
 	
@@ -89,10 +100,29 @@ class NewsletterTemplateConfig extends Object {
 	function afterSave(&$model, $created){
 	}
 	
+	
 	function beforeDelete(&$model, $cascade){
 	}
 	
 	function afterDelete(&$model){
+	}
+	
+	////// utility funct //////
+	function beforeSendCreateCodes(&$mailsOptions,$len=16){
+		$this->NewsletterSended = ClassRegistry::init('Newsletter.NewsletterSended');
+		
+		$to_bind = array();
+		foreach($mailsOptions as $sended_id => $opt){
+			if(empty($opt['email']['code'])){
+				$to_bind[] = $sended_id;
+			}
+		}
+		
+		$binded = $this->NewsletterSended->bindCode($to_bind,$len);
+		foreach($binded as $sended_id => $code){
+			$mailsOptions[$sended_id]['email']['code'] = $code;
+			$mailsOptions[$sended_id]['replace']['%code%'] = $code;
+		}
 	}
 
 }

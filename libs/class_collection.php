@@ -10,6 +10,7 @@ class ClassCollection extends Object {
 			'paths'=>'%app%/config/plugins/newsletter/',
 			'ext'=>'php',
 			'defaultByParent'=> true,
+			'pluginPassthrough'=>true,
 			'setName'=> true,
 			'parent'=>array(
 				'paths'=>'%app%/config/',
@@ -22,6 +23,7 @@ class ClassCollection extends Object {
 			'paths'=>'%app%/config/plugins/newsletter_box/',
 			'ext'=>'php',
 			'defaultByParent'=> true,
+			'pluginPassthrough'=>true,
 			'setName'=> true,
 			'parent'=>array(
 				'paths'=>'%app%/config/',

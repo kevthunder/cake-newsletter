@@ -3,6 +3,8 @@ class Newsletter extends NewsletterAppModel {
 
 	var $name = 'Newsletter';
 
+	var $actsAs = array('Newsletter.Serialized'=>array('data'));
+	
 	//The Associations below have been created with all possible keys, those that are not needed can be removed
 	var $hasMany = array(
 		'NewsletterBox' => array(
@@ -131,6 +133,7 @@ class Newsletter extends NewsletterAppModel {
 	}
 	
 	function afterFind($results,  $primary){
+		$results = parent::afterFind($results, $primary);
 		if(!empty($results)){
 			if(!Set::numeric(array_keys($results))){
 				$tmp = array(&$results);

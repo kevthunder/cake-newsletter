@@ -30,6 +30,67 @@ class Sendlist extends Object {
 		}
 	}
 	
+	function disable_email($email){
+		$emails = (array)$email;
+	
+		$email_data = array();
+		$email_data['active'] = '0';
+		
+		$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
+		
+		$normalEmail = $NewsletterEmail->find('list',array('fields'=> array('id','email'),'conditions' => array('email'=>$emails),'recursive'=>-1));
+		$count = $NewsletterEmail->updateAll($email_data, array('id'=>array_keys($normalEmail)));
+		$normalCount = $NewsletterEmail->getAffectedRows();
+		
+		App::import('Lib', 'Newsletter.TabledSendlist');
+		$tableSendlists = TabledSendlist::all();
+		foreach($tableSendlists as $tableSendlist){
+			if($tableSendlist->allowUnsubscribe()){
+				$count += $tableSendlist->EmailModel->updateAll(array($tableSendlist->realField('active')=>0), array($tableSendlist->realField('email')=>$emails));
+			}
+		}
+		
+		$notInNormal = array_diff($emails, $normalEmail);
+		foreach($notInNormal as $bkemail){
+			//We keep unsubcriptions because tabled Sendlists are not allways reliable
+			$data = array(
+				'email'=>$bkemail,
+				'active'=>0
+			);
+			$NewsletterEmail->create();
+			if(!$NewsletterEmail->save($data)){
+				return false;
+			}
+		}
+		
+		return $count;
+	}
+	
+	function enable_email($email){
+		$emails = (array)$email;
+	
+		$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
+		$format = $NewsletterEmail->getDataSource()->columns['datetime']['format'];
+		
+		$email_data = array();
+		$email_data['active'] = '1';
+		$email_data['user_action'] = $NewsletterEmail->getDataSource()->value(date($format));
+		
+		
+		$count = $NewsletterEmail->updateAll($email_data, array('email'=>$emails));
+		$normalCount = $NewsletterEmail->getAffectedRows();
+		
+		App::import('Lib', 'Newsletter.TabledSendlist');
+		$tableSendlists = TabledSendlist::all();
+		foreach($tableSendlists as $tableSendlist){
+			if($tableSendlist->allowUnsubscribe()){
+				$count += $tableSendlist->EmailModel->updateAll(array($tableSendlist->realField('active')=>1), array($tableSendlist->realField('email')=>$emails));
+			}
+		}
+		
+		return $count;
+	}
+	
 	function addSendlistsEmailCond($sendlist,$opt=array(),$reset=true){
 		$NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
 		$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');

@@ -901,6 +901,10 @@ class NewsletterSendingsController extends NewsletterAppController {
 	
 	function _sendBatch($sender,$opt,$mailsOptions){
 		$id = $opt['sending']['NewsletterSending']['id'];
+		
+		if($opt['sending']['Newsletter']['TemplateConfig']){
+			$opt['sending']['Newsletter']['TemplateConfig']->beforeSend($sender,$opt,$mailsOptions);
+		}
 		if(method_exists($sender,'sendBatch')){
 			$this->_consoleOut($id,sprintf(__d('newsletter','sending a batch of %s emails...', true),count($mailsOptions)));
 			$res = $sender->sendBatch($opt,$mailsOptions);
@@ -945,6 +949,9 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$this->NewsletterSended->save($data);
 				$this->_updateProcessTime($id,true);
 			}
+		}
+		if($opt['sending']['Newsletter']['TemplateConfig']){
+			$opt['sending']['Newsletter']['TemplateConfig']->afterSend($sender,$opt,$mailsOptions);
 		}
 	}
 	
@@ -1117,6 +1124,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 						),
 						'group' => 'NewsletterEmail.id',
 						'recursive'=>-1,
+						'msg' => '',
 					));
 					
 					if($sending['NewsletterSending']['check_sended']){

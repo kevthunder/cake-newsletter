@@ -33,4 +33,14 @@ class QueryUtil extends Object {
 		}
 		return $formated;
 	}
+	
+	function mergeFindOpt($opt){
+		$options = func_get_args();
+		array_shift($options);
+		App::import('Lib', 'Newsletter.SetMulti');
+		foreach($options as $opt2){
+			$opt = SetMulti::merge2($opt,$opt2);
+		}
+		return $opt;
+	}
 }

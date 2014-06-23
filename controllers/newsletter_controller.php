@@ -144,35 +144,7 @@ class NewsletterController extends NewsletterAppController {
 		if(!empty($this->data) && isset($this->data['NewsletterEmail']['confirm'])){
 			if($this->data['NewsletterEmail']['confirm']){
 				if($this->data['NewsletterEmail']['email']){
-					$email_data = array();
-					//$email_data['id'] = $this->data['NewsletterEmail']['id'];
-					$email_data['active'] = '0';
-					$count = $this->NewsletterEmail->updateAll($email_data, array('email'=>$this->data['NewsletterEmail']['email']));
-					$normalCount = $this->NewsletterEmail->getAffectedRows();
-					$tableSendlists = $this->NewsletterFunct->getTableSendlists(true);
-					foreach($tableSendlists as $tableSendlist){
-						if($tableSendlist['allowUnsubscribe']){
-							$Model = $tableSendlist['modelClass'];
-							$modelName = $Model->alias;
-							if($Model->hasField($tableSendlist['activeField'])){
-								$count += $Model->updateAll(array($tableSendlist['activeField']=>0), array($modelName.'.'.$tableSendlist['emailField']=>$this->data['NewsletterEmail']['email']));
-							}
-						}
-					}
-					if($count && !$normalCount){
-						$normalCount = $this->NewsletterEmail->find('count', array('conditions'=>array('email'=>$this->data['NewsletterEmail']['email']),'recursive'=>-1));
-						if(!$normalCount){
-							//We keep unsubcriptions because tabled Sendlists are not allways reliable
-							$data = array(
-								'email'=>$this->data['NewsletterEmail']['email'],
-								'active'=>0
-							);
-							$this->NewsletterEmail->create();
-							if(!$this->NewsletterEmail->save($data)){
-								$count = 0;
-							}
-						}
-					}
+					$count = $this->NewsletterFunct->disable_email($this->data['NewsletterEmail']['email']);
 					if($count){
 						$view = 'unsubscribe_step3';
 					}else{
@@ -233,6 +205,19 @@ class NewsletterController extends NewsletterAppController {
 		$this->render($view);
 	}
 	
+	function decline($sended_id=null){
+		$newsletter = null;
+		if(!empty($sended_id)){
+			$this->NewsletterSended->Behaviors->attach('Containable');
+			$this->NewsletterSended->contain = array('Newsletter');
+			$newsletter = $this->NewsletterSended->read(null, $sended_id);
+		}elseif(!empty($this->params['named']['newsletter_id'])){
+			$this->Newsletter->recursive = -1;
+			$newsletter = $this->Newsletter->read(null, $this->params['named']['newsletter_id']);
+		}
+		$this->set('sended', $newsletter);
+	}
+	
 	function beforeFilter(){
 		Cache::config('newsletter_task', array(
 			'engine' => 'File',
@@ -284,6 +269,7 @@ class NewsletterController extends NewsletterAppController {
 				);
 			}
 		};
+		$this->set('pluginVersion', $this->pluginVersion);
 		$this->set('newsletters', $res);
 		$this->set('sendlists', $this->NewsletterSendlist->find('all',array('conditions'=>array('NewsletterSendlist.active'=>1),'recursive'=>-1)));
 	}
@@ -442,6 +428,7 @@ class NewsletterController extends NewsletterAppController {
 		}
 		$this->set('template_error',$template_error);
 		
+		$this->set('template_config',$config);
 		$this->set('langs',$langs);
 		$this->set('newsletter',$this->data);
 		$this->set('boxes_by_zone',$boxes_by_zone);

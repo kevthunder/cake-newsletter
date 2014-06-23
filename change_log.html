@@ -459,6 +459,18 @@ pre{
 		<li>bug fix : Trie des colonnes dans les "tabled sendlists"</li>
 		<li>bug fix : cakephp &lt; 1.3.6 fait des warning dans le script d'update</li>
     </ul>
+    <h1>v2.6.4</h1>
+    <ul>
+		<li>Reconfirmation Template
+    	<ul>
+				<li>Désactive des emails et demande à ceux-ci de confirmer s'ils veulent continuer à recevoir des newsletter</li>
+			</ul>
+    </li>
+		<li>NewsletterTemplateConfig::form : Permet d'ajouter du contenu au formulaire d'édition de newsletter</li>
+		<li>NewsletterTemplateConfig::beforeSend : permet de modifier les options d'envoie</li>
+		<li>NewsletterTemplateConfig::afterSend : permet de faire des actions après que le email est envoyé</li>
+		<li>NewsletterTemplateConfig::beforeSendCreateCodes : à utiliser dans beforeSend, Permet j'ajouter un code de confirmation pour chaque envoie</li>
+    </ul>
 </div>
 </body>
 </html>
