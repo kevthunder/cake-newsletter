@@ -617,6 +617,20 @@ class NewsletterMakerHelper extends AppHelper {
 	function selfSendingUrl(){
 		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action'=>'add', $this->newsletter["Newsletter"]["id"],'%sended_id%', 'admin' => false, 'useContentUrl' => false));
 	}
+	
+	function reenableUrl(){
+		return $this->html->url(array('plugin'=>'newsletter','controller'=>'newsletter_emails','action'=>'reenable','%code%','admin'=>false),true);
+	}
+	function declineUrl(){
+		$url = array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'decline', 'admin' => false);
+		if($this->inEditMode()){
+			$url['newsletter_id'] = $this->newsletter["Newsletter"]["id"];
+		}else{
+			$url[] = '%sended_id%';
+		}
+		return $this->html->url($url,true);
+	}
+	
 	function title(){
 		return $this->newsletter["Newsletter"]["title"];
 	}

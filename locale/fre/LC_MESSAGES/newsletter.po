@@ -429,14 +429,23 @@ msgstr "Les visiteurs peuvent s'y inscrire"
 msgid "You must choose at least one sendlist."
 msgstr "Vous devez choisir la langue / You must choose the language"
 
-msgid ""
-msgstr ""
+msgid "Resubcribe response text"
+msgstr "Message apres la réinscription"
 
-msgid ""
-msgstr ""
+msgid "Decline response text"
+msgstr "Message apres désistement"
 
-msgid ""
-msgstr ""
+msgid "Thank you"
+msgstr "Merci"
+
+msgid "I wish to continue receiving Emails"
+msgstr "Je souhaite toujours recevoir les communication courriel"
+
+msgid "I do not wish to be contacted anymore"
+msgstr "Je souhaite ne plus être contacté"
+
+msgid "Any email this newsletter is sent to will be disabled until the user use the link to resubscribe"
+msgstr "Les courriels à qui cette infolettre est envoyée seront désactivé jusqu'à ce que l'utilisateur utilise le lien pour se réabonner"
 
 msgid ""
 msgstr ""

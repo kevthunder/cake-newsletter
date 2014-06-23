@@ -169,6 +169,22 @@ class NewsletterEmailsController extends NewsletterAppController {
 		}
 		$this->set('newsletterEmail', $this->NewsletterEmail->read(null, $id));
 	}
+	
+	function reenable($code){
+		$this->NewsletterSended = ClassRegistry::init('Newsletter.NewsletterSended');
+		$this->NewsletterSended->Behaviors->attach('Containable');
+		$sended = $this->NewsletterSended->byCode($code,array('contain'=>array('Newsletter'),'recursive'=>0));
+
+		if(empty($sended)){
+			$this->Session->setFlash(__d('newsletter','Email Could not be found.', true));
+			$this->redirect('add');
+			return;
+		}
+		
+		App::import('Lib', 'Newsletter.Sendlist');
+		Sendlist::enable_email($sended['NewsletterSended']['email']);
+		$this->set('sended', $sended);
+	}
 
 	function admin_index($listId = null) {
 		$q = null;

@@ -1,11 +1,34 @@
 <?php
-App::import('Lib', 'Sendlist');
+App::import('Lib', 'Newsletter.Sendlist');
 class TabledSendlist extends Sendlist {
 	/*
 		App::import('Lib', 'Newsletter.TabledSendlist');
 	*/
 	
 	///////// Static Functions /////////
+	function all(){
+		$tableSendlists = Configure::read('Newsletter.tableSendlist');
+		if(!empty($tableSendlists)){
+			$sendlists = array();
+			foreach($tableSendlists as $key => $tableSendlist){
+				$sendlists[$tableSendlist['id']] = new TabledSendlist($tableSendlist['id']);
+			}
+			return $sendlists;
+		}
+		return null;
+	}
+	function allIds(){
+		$tableSendlists = Configure::read('Newsletter.tableSendlist');
+		if(!empty($tableSendlists)){
+			$sendlists = array();
+			foreach($tableSendlists as $key => $tableSendlist){
+				$sendlists[] = $tableSendlist['id'];
+			}
+			return $sendlists;
+		}
+		return null;
+	}
+	
 	function getOptions($tableSendlist_id,$getModel = false){
 		if(is_array($tableSendlist_id)){
 			return $tableSendlist_id;
@@ -107,7 +130,7 @@ class TabledSendlist extends Sendlist {
 			$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail'); 
 			App::import('Lib', 'Newsletter.SetMulti');
 			$replace = array(
-					$NewsletterEmail->alias.'.email' => $modelName.'.'.$this->options['fields']['email'],
+					$NewsletterEmail->alias.'.email' => $this->realField('email'),
 					$NewsletterEmail->alias => $modelName
 				);
 			$opt = SetMulti::replaceTree(array_keys($replace),array_values($replace),$opt);
@@ -126,7 +149,7 @@ class TabledSendlist extends Sendlist {
 					'table'=> $NewsletterEmail->useTable,
 					'type' => 'LEFT',
 					'conditions' => array(
-						$modelName.'.'.$this->options['fields']['email'].' = '.$NewsletterEmail->alias.'.email'
+						$this->realField('email').' = '.$NewsletterEmail->alias.'.email'
 					)
 				);
 				$conditions[] = array('or'=>array(
@@ -135,11 +158,11 @@ class TabledSendlist extends Sendlist {
 				));
 			}
 			if(!empty($this->options['fields']['active']) && $Model->hasField($this->options['fields']['active'])){
-				$conditions[$modelName.'.'.$this->options['fields']['active']] = 1;
+				$conditions[$this->realField('active')] = 1;
 			}
 		}
-		$conditions['NOT'][$modelName.'.'.$this->options['fields']['email']] = "";
-		$conditions[] = $modelName.'.'.$this->options['fields']['email'].' IS NOT NULL';
+		$conditions['NOT'][$this->realField('email')] = "";
+		$conditions[] = $this->realField('email').' IS NOT NULL';
 		if(!empty($this->options['conditions'])){
 			if(!array($this->options['conditions'])){
 				$this->options['conditions'] = array($this->options['conditions']);
@@ -187,6 +210,17 @@ class TabledSendlist extends Sendlist {
 			$fields = array_diff_key($fields,array_flip($opt['exclude']));
 		}
 		return $fields;
+	}
+	
+	function realField($alias){
+		if(!empty($this->options['fields'][$alias])){
+			return $this->EmailModel->alias . '.' . $this->options['fields'][$alias];
+		}
+		return null;
+	}
+	
+	function allowUnsubscribe(){
+		return $this->options['allowUnsubscribe'] && $this->EmailModel->hasField($this->options['fields']['active']);
 	}
 	
 	function parseResult($res,$useAlias=null){
