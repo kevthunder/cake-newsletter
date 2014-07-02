@@ -239,9 +239,6 @@ class ClassCollection extends Object {
 					$created->{$prop} = $options['plugin'];
 				}
 			}
-			if($options['setPlugin'] && !isset($created->plugin)){
-				$created->plugin = $options['plugin'];
-			}
 			if($created && !$isParent){
 				$success = ClassRegistry::addObject($type.'.'.$name, $created);
 			}
