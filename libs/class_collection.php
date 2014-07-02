@@ -51,6 +51,7 @@ class ClassCollection extends Object {
 		'defaultByParent'=>false,
 		'throwException'=>true,
 		'setName'=>false,
+		'setPlugin'=>false,
 	);
 	var $parentInerit = array(
 		'ext','paths'
@@ -120,6 +121,8 @@ class ClassCollection extends Object {
 				}
 			}elseif(!is_array($typeOpt['plugin'])){
 				$plugins = array($typeOpt['plugin']);
+			}else{
+				$plugins = $typeOpt['plugin'];
 			}
 			foreach((array)$typeOpt['paths'] as $path){
 				foreach($plugins as $p){
@@ -224,8 +227,17 @@ class ClassCollection extends Object {
 		//debug($class);
 		if(!empty($class) && class_exists($class) ) {
 			$created = new $class();
-			if($options['setName'] && empty($created->name)){
-				$created->name = $options['name'];
+			if($options['setName']){
+				$prop = ($options['setName'] === true ? 'name' : $options['setName']);
+				if(!isset($created->{$prop})){
+					$created->{$prop} = $options['name'];
+				}
+			}
+			if($options['setPlugin']){
+				$prop = ($options['setPlugin'] === true ? 'plugin' : $options['setPlugin']);
+				if(!isset($created->{$prop})){
+					$created->{$prop} = $options['plugin'];
+				}
 			}
 			if($created && !$isParent){
 				$success = ClassRegistry::addObject($type.'.'.$name, $created);

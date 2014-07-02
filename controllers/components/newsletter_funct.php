@@ -159,6 +159,7 @@ class NewsletterFunctComponent extends Object
 			}
 		}else{
 			$newsletter['Newsletter']['html'] = $html;
+			$newsletter['Newsletter']['renderers_sha'] = $this->Newsletter->getRenderersSha($newsletter);
 			if($save){
 				$this->Newsletter->save(array('Newsletter'=>$newsletter['Newsletter']));
 			}

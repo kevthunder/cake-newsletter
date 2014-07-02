@@ -1497,12 +1497,11 @@ class NewsletterSendingsController extends NewsletterAppController {
 			'group' => 'NewsletterSended.newsletter_variant_id'
 		));
 		
-		if(empty($sending['Newsletter']['html'])){
+		if(!$this->Newsletter->validRender($sending)){
 			$this->_updateProcessTime($id,true);
 			$this->_consoleOut($id,__('Rendering the newsletter',true));
 			$this->NewsletterFunct->renderNewsletter($sending);
 		}
-		
 		
 		$i = 0;
 		foreach($unrenderedVariants as $variant){

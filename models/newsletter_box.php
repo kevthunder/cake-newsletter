@@ -49,17 +49,21 @@ class NewsletterBox extends NewsletterAppModel {
 		if(empty($data)){
 			$data = $this->data;
 		}
-		if(!empty($data['TemplateConfig'])){
-			return $data['TemplateConfig'];
-		}elseif(!empty($data[$this->alias]['TemplateConfig'])){
-			return $data[$this->alias]['TemplateConfig'];
-		}
 		$template = null;
-		if(!empty($data['template'])){
-			$template = $data['template'];
-		}
-		if(!empty($data[$this->alias]['template'])){
-			$template = $data[$this->alias]['template'];
+		if(is_string($data)){
+			$template = $data;
+		}else{
+			if(!empty($data['TemplateConfig'])){
+				return $data['TemplateConfig'];
+			}elseif(!empty($data[$this->alias]['TemplateConfig'])){
+				return $data[$this->alias]['TemplateConfig'];
+			}
+			if(!empty($data['template'])){
+				$template = $data['template'];
+			}
+			if(!empty($data[$this->alias]['template'])){
+				$template = $data[$this->alias]['template'];
+			}
 		}
 		if(!empty($template)){
 			return ClassCollection::getObject('NewsletterBoxConfig',$template);

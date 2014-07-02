@@ -159,6 +159,7 @@ class NewsletterSchema extends CakeSchema {
 		'lang' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'sender' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'html' => array('type' => 'text', 'null' => true, 'default' => NULL),
+		'renderers_sha' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'template' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'data' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'tested' => array('type' => 'boolean', 'null' => false, 'default' => NULL),

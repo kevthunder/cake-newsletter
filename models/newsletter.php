@@ -90,17 +90,21 @@ class Newsletter extends NewsletterAppModel {
 		if(empty($data)){
 			$data = $this->data;
 		}
-		if(!empty($data['TemplateConfig'])){
-			return $data['TemplateConfig'];
-		}elseif(!empty($data[$this->alias]['TemplateConfig'])){
-			return $data[$this->alias]['TemplateConfig'];
-		}
 		$template = null;
-		if(!empty($data['template'])){
-			$template = $data['template'];
-		}
-		if(!empty($data[$this->alias]['template'])){
-			$template = $data[$this->alias]['template'];
+		if(is_string($data)){
+			$template = $data;
+		}else{
+			if(!empty($data['TemplateConfig'])){
+				return $data['TemplateConfig'];
+			}elseif(!empty($data[$this->alias]['TemplateConfig'])){
+				return $data[$this->alias]['TemplateConfig'];
+			}
+			if(!empty($data['template'])){
+				$template = $data['template'];
+			}
+			if(!empty($data[$this->alias]['template'])){
+				$template = $data[$this->alias]['template'];
+			}
 		}
 		if(!empty($template)){
 			return ClassCollection::getObject('NewsletterConfig',$template);
@@ -167,6 +171,46 @@ class Newsletter extends NewsletterAppModel {
 			}
 		}
 		return $results;
+	}
+	
+	function validRender($newsletter = null){
+		if(is_null($newsletter)){
+			$newsletter = $this->data;
+		}
+		return !empty($newsletter['Newsletter']['html']) 
+			&& !empty($newsletter['Newsletter']['renderers_sha']) 
+			&& $newsletter['Newsletter']['renderers_sha'] == $this->getRenderersSha($newsletter);
+	}
+	
+	function getRenderersSha($newsletter = null){
+		if(is_null($newsletter)){
+			$newsletter = $this->data;
+		}
+		$templateConfig = $this->getConfig($newsletter);
+		
+		$data = array(
+			'template' => array(
+				'config' => $templateConfig,
+				'file' => sha1_file($templateConfig->getPath()),
+			)
+		);
+		
+		$boxes = $this->NewsletterBox->find('list',array(
+			'fields' => array('id','template'),
+			'conditions' => array('newsletter_id'=>$newsletter['Newsletter']['id']),
+			'group' => 'template',
+			'recursive' => -1,
+		));
+		
+		foreach($boxes as $id => $boxTmpl){
+			$templateConfig = $this->NewsletterBox->getConfig($boxTmpl);
+			$data['box'.$id] = array(
+				'config' => $templateConfig,
+				'file' => sha1_file($templateConfig->getPath()),
+			);
+		}
+		
+		return sha1(serialize($data));
 	}
 	
 	

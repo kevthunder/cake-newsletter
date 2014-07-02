@@ -30,13 +30,13 @@ class NewsletterController extends NewsletterAppController {
 		) {
 				$this->Newsletter->checkActive = false;
 		}
-		$Newsletter = $this->Newsletter->read(null, $id);
-		if(!$Newsletter) $this->cakeError('error404');
+		$newsletter = $this->Newsletter->read(null, $id);
+		if(!$newsletter) $this->cakeError('error404');
 		
-		if(empty($Newsletter['Newsletter']['html'])){
-			$Newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
+		if(!$this->Newsletter->validRender($newsletter)){
+			$newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
 		}
-		$this->set('Newsletter', $Newsletter);
+		$this->set('Newsletter', $newsletter);
 	}
 	function redir($url=null,$sended_id=null){
 		$this->autoRender = false;
@@ -123,7 +123,9 @@ class NewsletterController extends NewsletterAppController {
 		}
 		if(file_exists($img_path)){
 			$path_parts = pathinfo($img_path);
-			debug($path_parts);
+			//ob_clean();
+			//debug($path_parts);
+			//return $this->render(false);
 			$this->view = 'Media';
 			$params = array(
 				  'id' => $path_parts['basename'],
@@ -280,12 +282,12 @@ class NewsletterController extends NewsletterAppController {
 			debug('Invalid Newsletter.');
 			$this->redirect(array('action'=>'index'));
 		}
-		$Newsletter = $this->Newsletter->read(null, $id);
-		if(empty($Newsletter['Newsletter']['html'])){
-			$Newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
+		$newsletter = $this->Newsletter->read(null, $id);
+		if(!$this->Newsletter->validRender($newsletter)){
+			$newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
 		}
 		$this->layout = "empty";
-		$this->set('Newsletter', $Newsletter);
+		$this->set('Newsletter', $newsletter);
 	}
 	
 	function admin_excel($id = null){
