@@ -97,6 +97,18 @@ class NewsletterSendingsController extends NewsletterAppController {
 	}
 	
 	
+	function resume($sending){
+		$sending = $this->NewsletterSending->read(null,$sending);
+		
+		if(!$sending['NewsletterSending']['self_sending']) $this->cakeError('error404');
+	
+		$this->layout = false;
+		$this->autoRender = false;
+		
+		$this->_process($sending);
+	}
+	
+	
 	function admin_index() {
 		if(!empty($this->params['named']['newsletter'])) {
 			$newsletterId = $this->params['named']['newsletter'];
@@ -1497,7 +1509,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			'group' => 'NewsletterSended.newsletter_variant_id'
 		));
 		
-		if(!$this->Newsletter->validRender($sending)){
+		if(!$this->NewsletterSending->Newsletter->validRender($sending)){
 			$this->_updateProcessTime($id,true);
 			$this->_consoleOut($id,__('Rendering the newsletter',true));
 			$this->NewsletterFunct->renderNewsletter($sending);
@@ -1796,12 +1808,17 @@ class NewsletterSendingsController extends NewsletterAppController {
 			App::import('View', $this->view);
 		}
 
-		$View = new $viewClass($this, false);
+		$View = new $viewClass($this, true);
+		//addObject($View ) 
 		$View->layout = false;
 		
 		$opt['newsletterContent'] = $opt['content'];
 		
-		return $View->element('email' . DS . 'html' . DS . $wrapper, $opt, true);
+		$html = $View->element('email' . DS . 'html' . DS . $wrapper, $opt, true);
+		
+		ClassRegistry::removeObject('view');
+		
+		return $html;
 	}
 	
 	function _sendEmail($email,$sending,$newsletter=null){
