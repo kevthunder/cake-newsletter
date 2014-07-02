@@ -19,6 +19,9 @@ class NewsletterUpgrade extends Object {
 		'sendedTabled' => array(
 			'recheck' => true,
 		),
+		'emailDuplicate' => array(
+			'recheck' => true,
+		),
 		'schemaUpdate' => array(
 			'dropConstraint' => array(
 				'newsletter_emails' => array(
@@ -226,6 +229,15 @@ class NewsletterUpgrade extends Object {
 		$diff = $_this->getSchemaDiff();
 		return !empty($diff['newsletter_emails']['drop']['sendlist_id']);
 	}
+	function check_emailDuplicate($opt){
+		$_this =& NewsletterUpgrade::getInstance();
+		$diff = $_this->getSchemaDiff();
+		
+		if(!empty($diff['newsletter_sendlists_emails']['add']['indexes']['newsletter_sendlist_id'])){
+			return array('newsletter_sendlists_emails'=>array('add'=>array('indexes'=>array('newsletter_sendlist_id'=>$diff['newsletter_sendlists_emails']['add']['indexes']['newsletter_sendlist_id']))));
+		}
+		return !empty($diff['newsletter_sendlists_emails']['add']['indexes']['newsletter_sendlist_id']);
+	}
 	function check_sendedTabled($opt){
 		$_this =& NewsletterUpgrade::getInstance();
 		$diff = $_this->getSchemaDiff();
@@ -325,15 +337,23 @@ class NewsletterUpgrade extends Object {
 		}
 		return true;
 	}
-	
 	function fix_emailListRelation($error,$opt,&$msg){
 		$_this =& NewsletterUpgrade::getInstance();
 		$db = ConnectionManager::getDataSource($_this->connection);
-		
 		App::import('Lib', 'Newsletter.QueryUtil'); 
 			
 		$this->NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
 		$this->NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
+		
+		$query = 'SHOW INDEX FROM `'.$this->NewsletterEmail->useTable.'` WHERE KEY_NAME = \'newsletter_sendlist_id\'';
+		if(mysql_num_rows($db->execute($query))){
+			$query = 'ALTER TABLE `'.$this->NewsletterEmail->useTable.'` DROP INDEX `newsletter_sendlist_id`;';
+			if(!$db->execute($query)){
+				$msg[] = __('Unable to execute query :',true).' '.$query;
+				return false;
+			}
+		}
+		
 		$queries = array();
 		
 		$findOpt = array(
@@ -423,6 +443,47 @@ class NewsletterUpgrade extends Object {
 			}
 		}
 	
+		return true;
+	}
+	
+	function fix_emailDuplicate($error,$opt,&$msg){
+		$_this =& NewsletterUpgrade::getInstance();
+		$db = ConnectionManager::getDataSource($_this->connection);
+			
+		$this->NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
+	
+		$findOpt = array(
+			'fields' => array('NewsletterSendlistsEmail.id','e2.id'),
+			'conditions'=>array(
+			),
+			'joins' => array(
+				array(
+					'alias' => 'e2',
+					'table'=> $this->NewsletterSendlistsEmail->useTable,
+					'type' => 'INNER',
+					'conditions' => array(
+						'`e2`.`id` != `NewsletterSendlistsEmail`.`id`',
+						'`e2`.`newsletter_sendlist_id` = `NewsletterSendlistsEmail`.`newsletter_sendlist_id`',
+						'`e2`.`newsletter_email_id` = `NewsletterSendlistsEmail`.`newsletter_email_id`',
+					)
+				)
+			),
+			'group' => '`e2`.`id` HAVING `e2`.`id` > `NewsletterSendlistsEmail`.`id`',
+			'recursive' => -1,
+			'model' => $this->NewsletterSendlistsEmail,
+		);
+		$duplicated = $this->NewsletterSendlistsEmail->find('list',$findOpt);
+		if(!empty($duplicated)){
+			$this->NewsletterSendlistsEmail->deleteAll(array('id'=>array_values($duplicated)));
+		}
+		
+		$query = $db->alterSchema($error,'newsletter_sendlists_emails');
+		if(!$db->execute($query)){
+			$msg[] = __('Unable to execute query :',true).' '.$query;
+			return false;
+			break;
+		}
+		
 		return true;
 	}
 	
