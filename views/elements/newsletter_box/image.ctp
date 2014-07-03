@@ -10,8 +10,10 @@ if(isset($newsletter_box["NewsletterBox"]["file"]["photo"])){
 }elseif(!empty($newsletter_box["NewsletterBox"]["data"]["default_photo"])){
 	$imgSrc = $html->url($newsletter_box["NewsletterBox"]["data"]["default_photo"],true);
 }
+$alt = empty($newsletter_box["NewsletterBox"]["data"]["alt"]) ? '' : $newsletter_box["NewsletterBox"]["data"]["alt"];
+
 if(!empty($imgSrc)){
-	$img = '<img src="'.$imgSrc.'" />';
+	$img = '<img src="'.$imgSrc.'" alt="'.$alt.'"/>';
 	if(!empty($newsletter_box["NewsletterBox"]["data"]["url"])){
 		echo '<a href="'.$newsletterMaker->url($newsletter_box["NewsletterBox"]["data"]["url"]).'">'.$img.'</a>';
 	}else{
