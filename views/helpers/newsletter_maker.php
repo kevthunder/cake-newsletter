@@ -241,7 +241,7 @@ class NewsletterMakerHelper extends AppHelper {
 		return $this->params['controller'] == 'newsletter' && in_array($this->params['action'],$editActions);
 	}
 	function column($id,$options=array()){
-		return zone($id,$options);
+		return $this->zone($id,$options);
 	}
 	function zone($id,$options=array()){
 		$editMode = $this->inEditMode();
