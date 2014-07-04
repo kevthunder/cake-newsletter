@@ -390,6 +390,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			
 			$objWriter = new PHPExcel_Writer_Excel2007($objPHPExcel);
 			$objWriter->save('php://output');
+			exit();
 		}else{
 			$this->Session->setFlash(__('The NewsletterSendlist is empty, nothing to export.', true));
 			$this->redirect(array('action'=>'index'));
