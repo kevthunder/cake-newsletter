@@ -3,6 +3,7 @@ class NewsletterTemplateConfig extends Object {
 
 	var $label = null;
 	var $name = null;
+	var $element_folder = 'newsletter';
 	
 	function getLabel(){
 		return __(empty($this->label)?$this->name:$this->label,true);
@@ -13,7 +14,7 @@ class NewsletterTemplateConfig extends Object {
 			$this->path = null;
 			$paths = NewsletterConfig::getAllViewPaths();
 			foreach($paths as $path) {
-				$file = $path.'/elements/newsletter/'.Inflector::underscore($this->name).'.ctp';
+				$file = $path.'elements' . DS . $this->element_folder . DS .Inflector::underscore($this->name).'.ctp';
 				if(file_exists($file)){
 					$this->path = $file;
 					break;
