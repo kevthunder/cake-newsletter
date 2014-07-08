@@ -290,66 +290,6 @@ class NewsletterController extends NewsletterAppController {
 		$this->set('Newsletter', $newsletter);
 	}
 	
-	function admin_excel($id = null){
-		//echo getcwd();
-		//$excel = new PHPExcel();
-		$objReader = PHPExcel_IOFactory::createReader('Excel2007');
-		//$objPHPExcel = $objReader->load();
-		$objPHPExcel = $objReader->load(APP.'plugins'.DS.'newsletter'.DS.'vendors'.DS.'template.xlsx');
-		//var_dump($excel);
-		$sql = "select email,count(*)'cnt',GROUP_CONCAT(url)'url' from newsletter_sended NewsletterSended  left join newsletter_stats NewsletterEvent on  NewsletterSended.id = NewsletterEvent.sended_id where NewsletterSended.newsletter_id = '".$id."' group by email order by email,url";
-		$email_read = $this->NewsletterSended->query($sql);
-		//print_r($email_read);
-		//$this->set("email_read",$views[0][0]['count(*)']);
-		
-		$sql = "select * from newsletter_sended NewsletterSended  where NewsletterSended.newsletter_id = '".$id."' and (select count(*) from newsletter_stats NewsletterEvent where NewsletterEvent.sended_id = NewsletterSended.id ) = 0 order by email";
-		$email_notread = $this->NewsletterSended->query($sql);
-		//$this->set("email_notread",$views[0][0]['count(*)']);
-		
-		$row_sheet_index=0;
-		$row_index =0;
-		$cc =0;
-		foreach ($objPHPExcel->getWorksheetIterator() as $worksheet) {
-			if($cc == 0){
-				$worksheet->setTitle("Courriels ouvert");
-				$row_sheet_index=0;
-				foreach($email_read as $email){
-					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $email["NewsletterSended"]["email"]);
-					$worksheet->setCellValueByColumnAndRow(1,$row_sheet_index + 2, $email[0]["cnt"]);
-					$split = explode(",",$email[0]["url"]);
-					$split_index = 0;
-					foreach($split as $ss){
-						$worksheet->setCellValueByColumnAndRow(2 + $split_index,$row_sheet_index + 2, $ss);
-						$split_index++;
-					}	
-					
-					$row_sheet_index++;
-					
-				}
-			}else{
-				$row_sheet_index=0;
-				$worksheet->setTitle("Courriels non-ouvert");
-				foreach($email_notread as $email){
-					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $email["NewsletterSended"]["email"]);
-					$row_sheet_index++;
-				}
-			}
-			$cc++;
-			//break;
-			//$worksheet->setCellValueByColumnAndRow($key,$row_sheet_index + 5, $arr[$row_index][$val]);
-			
-		}
-		
-		
-		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-		header('Content-Disposition: attachment;filename="export.xlsx"');
-		header('Cache-Control: max-age=0');
-		
-		$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
-		$objWriter->save('php://output');
-		exit;
-	
-	}
 	
 	function admin_add() {
 		if (!empty($this->data)) {
