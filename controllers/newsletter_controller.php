@@ -1,6 +1,5 @@
 <?php
-App::import('Vendor', 'Newsletter.browscap',array('file'=>'browscap.php'));
-App::import('Vendor', 'Newsletter.PHPExcel',array('file' => 'PHPExcel/IOFactory.php'));
+
 
 class NewsletterController extends NewsletterAppController {
 

@@ -6,6 +6,7 @@ class NewsletterStatsController extends NewsletterAppController {
 	var $components = array('RequestHandler');
 	
 	function admin_index($id = null) {
+		//App::import('Vendor', 'Newsletter.browscap',array('file'=>'browscap.php'));
 		if($this->RequestHandler->isAjax() || !empty($this->params['named']['ajax'])){
 			Configure::write('debug',0);
 			$this->layout = 'ajax';
@@ -143,20 +144,110 @@ class NewsletterStatsController extends NewsletterAppController {
 	
 	
 	function admin_excel($id = null){
+		App::import('Vendor', 'Newsletter.PHPExcel',array('file' => 'PHPExcel/IOFactory.php'));
 		//echo getcwd();
 		//$excel = new PHPExcel();
 		$objReader = PHPExcel_IOFactory::createReader('Excel2007');
 		//$objPHPExcel = $objReader->load();
 		$objPHPExcel = $objReader->load(APP.'plugins'.DS.'newsletter'.DS.'vendors'.DS.'template.xlsx');
 		//var_dump($excel);
-		$sql = "select email,count(*)'cnt',GROUP_CONCAT(url)'url' from newsletter_sended NewsletterSended  left join newsletter_stats NewsletterEvent on  NewsletterSended.id = NewsletterEvent.sended_id where NewsletterSended.newsletter_id = '".$id."' group by email order by email,url";
-		$email_read = $this->NewsletterSended->query($sql);
-		//print_r($email_read);
-		//$this->set("email_read",$views[0][0]['count(*)']);
 		
-		$sql = "select * from newsletter_sended NewsletterSended  where NewsletterSended.newsletter_id = '".$id."' and (select count(*) from newsletter_stats NewsletterEvent where NewsletterEvent.sended_id = NewsletterSended.id ) = 0 order by email";
-		$email_notread = $this->NewsletterSended->query($sql);
-		//$this->set("email_notread",$views[0][0]['count(*)']);
+		$readIdsFindOpt = array(
+			'fields' => array('Sended.id','Sended.id'),
+			'conditions'=>array(
+				'NewsletterSended.newsletter_id' => $id,
+			),
+			'joins' => array(
+				array(
+					'alias' => 'Evnt',
+					'table'=> $this->NewsletterEvent->useTable,
+					'type' => 'INNER',
+					'conditions' => array(
+						'NewsletterSended.id = Evnt.sended_id',
+						'not'=>array(
+							'Evnt.action' => 'bounce'
+						)
+					)
+				),
+				array(
+					'alias' => 'Sended',
+					'table'=> $this->NewsletterSended->useTable,
+					'type' => 'INNER',
+					'conditions' => array(
+						'NewsletterSended.email = Sended.email',
+						'Sended.newsletter_id' => $id,
+					)
+				)
+			),
+			'group'=>'Sended.id',
+			'recursive' => -1,
+		);
+		$readIds = $this->NewsletterSended->find('list',$readIdsFindOpt);
+		//debug($readIds);
+		
+		$urlsFindOpt = array(
+			'fields' => array(
+				'NewsletterEvent.url',
+				'NewsletterSended.email',
+			),
+			'conditions'=>array(
+				'NewsletterEvent.sended_id' => $readIds,
+				'not' => array('NewsletterEvent.action' => 'bounce'),
+				'NewsletterEvent.url IS NOT NULL',
+			),
+			'order' => 'NewsletterSended.email',
+			'group' => 'NewsletterEvent.url',
+			'contain' => 'NewsletterSended',
+		);
+		$this->NewsletterEvent->Behaviors->attach('Containable');
+		App::import('Lib', 'Newsletter.SetMulti');
+		$urls_by_email = SetMulti::group($this->NewsletterEvent->find('all',$urlsFindOpt),'NewsletterSended.email',array('valPath'=>'NewsletterEvent.url'));
+		// debug($urls_by_email);
+		
+		$nbEventsFindOpt = array(
+			'fields' => array(
+				'NewsletterSended.email',
+				'count(Evnt.id) as `count`',
+			),
+			'conditions'=>array(
+				'NewsletterSended.id' => $readIds,
+			),
+			'joins' => array(
+				array(
+					'alias' => 'Evnt',
+					'table'=> $this->NewsletterEvent->useTable,
+					'type' => 'LEFT',
+					'conditions' => array(
+						'NewsletterSended.id = Evnt.sended_id',
+						'not'=>array(
+							'Evnt.action' => 'bounce'
+						)
+					)
+				),
+			),
+			'group' => 'NewsletterSended.email',
+			'recursive' => -1,
+		);
+		App::import('Lib', 'Newsletter.SetMulti');
+		$nbEvents = $this->NewsletterSended->find('all',$nbEventsFindOpt);
+		// debug($nbEvents);
+		
+		$notReadsFindOpt = array(
+			'fields' => array(
+				'NewsletterSended.id',
+				'NewsletterSended.email'
+			),
+			'conditions'=>array(
+				'not'=>array('NewsletterSended.id' => $readIds),
+			),
+			'group' => 'NewsletterSended.email',
+			'recursive' => -1,
+		);
+		$notReads = $this->NewsletterSended->find('list',$notReadsFindOpt);
+		//debug($notReads);
+		
+		// $this->render(false);
+		// return;
 		
 		$row_sheet_index=0;
 		$row_index =0;
@@ -165,15 +256,15 @@ class NewsletterStatsController extends NewsletterAppController {
 			if($cc == 0){
 				$worksheet->setTitle("Courriels ouvert");
 				$row_sheet_index=0;
-				foreach($email_read as $email){
-					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $email["NewsletterSended"]["email"]);
-					$worksheet->setCellValueByColumnAndRow(1,$row_sheet_index + 2, $email[0]["cnt"]);
-					$split = explode(",",$email[0]["url"]);
-					$split_index = 0;
-					foreach($split as $ss){
-						$worksheet->setCellValueByColumnAndRow(2 + $split_index,$row_sheet_index + 2, $ss);
-						$split_index++;
-					}	
+				foreach($nbEvents as $email){
+					$mail = $email['NewsletterSended']['email'];
+					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $mail);
+					$worksheet->setCellValueByColumnAndRow(1,$row_sheet_index + 2, $email['0']['count']);
+					if(!empty($urls_by_email[$mail])){
+						foreach($urls_by_email[$mail] as $i => $url){
+							$worksheet->setCellValueByColumnAndRow(2 + $i,$row_sheet_index + 2, $url);
+						}	
+					}
 					
 					$row_sheet_index++;
 					
@@ -181,8 +272,8 @@ class NewsletterStatsController extends NewsletterAppController {
 			}else{
 				$row_sheet_index=0;
 				$worksheet->setTitle("Courriels non-ouvert");
-				foreach($email_notread as $email){
-					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $email["NewsletterSended"]["email"]);
+				foreach($notReads as $email){
+					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $email);
 					$row_sheet_index++;
 				}
 			}
