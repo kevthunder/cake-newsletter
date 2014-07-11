@@ -384,6 +384,7 @@ class NewsletterSendlistsController extends NewsletterAppController {
 			}
 			
 			/////// output ///////
+			$this->autoRender = false;
 			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 			header('Content-Disposition: attachment;filename="'.Inflector::slug($sendlist['NewsletterSendlist']['title']).'.xlsx"');
 			header('Cache-Control: max-age=0');

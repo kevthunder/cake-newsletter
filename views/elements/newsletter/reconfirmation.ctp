@@ -115,7 +115,7 @@
 												<td width="90%" valign="middle" align="center">
 													<p>
 														<font style="color:#444444; font-family: &#39;HelveticaNeue-Light&#39;, &#39;Helvetica Neue Light&#39;, &#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif; font-size:12px; font-weight:300; ">Si vous n’arrivez pas à lire ce courriel, </font>
-														<a href="<?php echo $this->NewsletterMaker->viewUrl(); ?>" style="color:#d52531; text-decoration: none;"><font style="color:#d52531; font-family: &#39;HelveticaNeue-Light&#39;, &#39;Helvetica Neue Light&#39;, &#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif; font-size:12px; font-weight:300;">cliquer ici</font></a>
+														<a href="<?php echo $this->NewsletterMaker->viewUrl(true); ?>" style="color:#d52531; text-decoration: none;"><font style="color:#d52531; font-family: &#39;HelveticaNeue-Light&#39;, &#39;Helvetica Neue Light&#39;, &#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif; font-size:12px; font-weight:300;">cliquer ici</font></a>
 														
 													</p>
 												</td>

@@ -19,6 +19,6 @@ $html->css('/newsletter/css/newsletter',null,array('inline'=>false));
 	if(preg_match('/<body[^>]*>/',$content,$matches,PREG_OFFSET_CAPTURE)){
 		$content = substr($content,$matches[0][1] + strlen($matches[0][0]));
 	}
-	$content = str_replace(array('<html>','</html>','<body>','</body>','%sended_id%'),'',$content); 
+	$content = str_replace(array('<html>','</html>','<body>','</body>','%sended_id%','%code%'),'',$content); 
 	echo $content;
 ?>

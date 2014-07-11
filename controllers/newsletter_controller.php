@@ -17,6 +17,7 @@ class NewsletterController extends NewsletterAppController {
 	function view($id = null) {
 		//$this->autoLayout = false;
 		$this->layout = "empty";
+		$sended = $admin = null;
 		if (!$id) {
 			$this->Session->setFlash(__d('newsletter','Invalid Newsletter.', true));
 			debug('Invalid Newsletter.');
@@ -27,7 +28,11 @@ class NewsletterController extends NewsletterAppController {
 			&& is_numeric($this->user['User']['id']) 
 			&& $this->Acl->check(array('model' => 'User', 'foreign_key' => $this->user['User']['id']), 'admin')
 		) {
-				$this->Newsletter->checkActive = false;
+			$admin = true;
+			$this->Newsletter->checkActive = false;
+		}
+		if(!empty($this->params['named']['sended_id'])){
+			$sended = $this->NewsletterSended->read(null, $this->params['named']['sended_id']);
 		}
 		$newsletter = $this->Newsletter->read(null, $id);
 		if(!$newsletter) $this->cakeError('error404');
@@ -35,7 +40,11 @@ class NewsletterController extends NewsletterAppController {
 		if(!$this->Newsletter->validRender($newsletter)){
 			$newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
 		}
+		if($newsletter['Newsletter']['TemplateConfig']){
+			$newsletter['Newsletter']['TemplateConfig']->beforeView($newsletter,$sended,$admin);
+		}
 		$this->set('Newsletter', $newsletter);
+		$this->set('sended', $sended);
 	}
 	function redir($url=null,$sended_id=null){
 		$this->autoRender = false;
@@ -213,6 +222,13 @@ class NewsletterController extends NewsletterAppController {
 			$this->NewsletterSended->contain = array('Newsletter');
 			$newsletter = $this->NewsletterSended->read(null, $sended_id);
 		}elseif(!empty($this->params['named']['newsletter_id'])){
+			if(
+				isset($this->user['User']['id']) 
+				&& is_numeric($this->user['User']['id']) 
+				&& $this->Acl->check(array('model' => 'User', 'foreign_key' => $this->user['User']['id']), 'admin')
+			) {
+					$this->Newsletter->checkActive = false;
+			}
 			$this->Newsletter->recursive = -1;
 			$newsletter = $this->Newsletter->read(null, $this->params['named']['newsletter_id']);
 		}
@@ -286,6 +302,10 @@ class NewsletterController extends NewsletterAppController {
 			$newsletter['Newsletter']['html'] = $this->NewsletterFunct->renderNewsletter($id);
 		}
 		$this->layout = "empty";
+		
+		if($newsletter['Newsletter']['TemplateConfig']){
+			$newsletter['Newsletter']['TemplateConfig']->beforeView($newsletter,null,true);
+		}
 		$this->set('Newsletter', $newsletter);
 	}
 	
