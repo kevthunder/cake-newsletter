@@ -55,7 +55,6 @@ class NewsletterSendlistsController extends NewsletterAppController {
 				$uploadFile = $this->data['NewsletterSendlist']['import_file'];
 				$ext = pathinfo($uploadFile['name'], PATHINFO_EXTENSION);
 				if(!in_array($ext,$allowedExt)){ //if(!in_array($uploadFile['type'],$allowedTypes)){
-					debug($uploadFile);
 					$this->Session->setFlash(__d('newsletter','This file type is not supported.', true));
 				}elseif($uploadFile['error'] == UPLOAD_ERR_OK){
 					$folderOk = is_dir($moveFolder);
