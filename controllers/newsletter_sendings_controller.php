@@ -1843,7 +1843,6 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$opt = $sender->editGlobalOpt($opt);
 		}
 		
-		
 		$sender = ClassCollection::getObject('NewsletterSender',$senderOpt['name']);
 		$sender->init($this,$senderOpt);
 		
@@ -1854,11 +1853,12 @@ class NewsletterSendingsController extends NewsletterAppController {
 			$opt['sending']['Newsletter']['TemplateConfig']->beforeSend($sender,$opt,$mailsOptions);
 		}
 		
-		$this->_sendSingle($sender,$opt,$mailOpt);
+		$res = $this->_sendSingle($sender,$opt,$mailOpt);
 		
 		if($opt['sending']['Newsletter']['TemplateConfig']){
 			$opt['sending']['Newsletter']['TemplateConfig']->afterSend($sender,$opt,$mailsOptions);
 		}
+		
 		return $res;
 	}
 	
