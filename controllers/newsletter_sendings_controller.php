@@ -388,7 +388,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$sending = $this->NewsletterSending->read(null,$this->NewsletterSending->id);
 			}
 			unset($sending['NewsletterSending']['html']);
-			if($this->_sendEmail($this->data['NewsletterSending']['test_email'],$sending)){
+			$emailOpt = $this->data['NewsletterSending']['test_email'];
+			if($this->_sendEmail($emailOpt,$sending)){
 				$msg = __d('newsletter','Test email sent.', true).' '.__d('newsletter','Please check your inbox to review the newsletter.', true);
 			}else{
 				$msg = __d('newsletter','Error, Test email could not be sent.', true);
@@ -1775,6 +1776,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 			'%sended_id%' => $sended_id,
 			'%recipient_name%' => $recipient_name,
 			'%recipient_email%' => $email['email'],
+			'%code%' => '',
 		);
 		if(isset($email['data'])){
 			preg_match_all('/%mdata\:([\w.]+)%/', $globalOpt['content'], $matches, PREG_SET_ORDER);
@@ -1795,6 +1797,9 @@ class NewsletterSendingsController extends NewsletterAppController {
 				$opt['replace'][$matche[0]] = $val;
 			}
 		}
+		
+		//debug($opt);
+		//exit();
 		
 		return $opt;
 	}
@@ -1843,8 +1848,18 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$sender->init($this,$senderOpt);
 		
 		$mailOpt = $this->_parseRecipientOpt($email,$opt);
+		$mailsOptions = array(&$mailOpt);
 	
-		return $this->_sendSingle($sender,$opt,$mailOpt);
+		if($opt['sending']['Newsletter']['TemplateConfig']){
+			$opt['sending']['Newsletter']['TemplateConfig']->beforeSend($sender,$opt,$mailsOptions);
+		}
+		
+		$this->_sendSingle($sender,$opt,$mailOpt);
+		
+		if($opt['sending']['Newsletter']['TemplateConfig']){
+			$opt['sending']['Newsletter']['TemplateConfig']->afterSend($sender,$opt,$mailsOptions);
+		}
+		return $res;
 	}
 	
 	function _sendSingle($sender,$opt,$mailOpt = array()){

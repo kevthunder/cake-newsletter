@@ -170,20 +170,38 @@ class NewsletterEmailsController extends NewsletterAppController {
 		$this->set('newsletterEmail', $this->NewsletterEmail->read(null, $id));
 	}
 	
-	function reenable($code){
+	function reenable($code = null){
 		$this->NewsletterSended = ClassRegistry::init('Newsletter.NewsletterSended');
 		$this->NewsletterSended->Behaviors->attach('Containable');
-		$sended = $this->NewsletterSended->byCode($code,array('contain'=>array('Newsletter'),'recursive'=>0));
-
-		if(empty($sended)){
-			$this->Session->setFlash(__d('newsletter','Email Could not be found.', true));
-			$this->redirect('add');
-			return;
+		if(!empty($code)){
+			$sended = $this->NewsletterSended->byCode($code,array('contain'=>array('Newsletter'),'recursive'=>0));
 		}
 		
-		App::import('Lib', 'Newsletter.Sendlist');
-		Sendlist::enable_email($sended['NewsletterSended']['email']);
+		$test = false;
+		if(
+			empty($sended)
+			&& isset($this->user['User']['id']) 
+			&& is_numeric($this->user['User']['id']) 
+			&& $this->Acl->check(array('model' => 'User', 'foreign_key' => $this->user['User']['id']), 'admin')
+			&& !empty($this->params['named']['newsletter_id'])
+		) {
+			$test = $this->params['named']['newsletter_id'];
+			$this->NewsletterSended->Newsletter->checkActive = false;
+			$sended = $this->NewsletterSended->Newsletter->read(null, $this->params['named']['newsletter_id']);
+		}
+		
+		if(!$test){
+			if(empty($sended)){
+				$this->Session->setFlash(__d('newsletter','Email Could not be found.', true));
+				$this->redirect('add');
+				return;
+			}
+			
+			App::import('Lib', 'Newsletter.Sendlist');
+			Sendlist::enable_email($sended['NewsletterSended']['email']);
+		}
 		$this->set('sended', $sended);
+		$this->set('test', $test);
 	}
 
 	function admin_index($listId = null) {

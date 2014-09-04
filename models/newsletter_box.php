@@ -3,6 +3,7 @@ class NewsletterBox extends NewsletterAppModel {
 
 	var $name = 'NewsletterBox';
 	//var $useTable = 'newsletter_boxes';
+	var $checkActive = false;
 	
 	var $multimedia = array(
 		'multimedia' => array(

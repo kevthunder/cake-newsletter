@@ -6,6 +6,7 @@ class NewsletterStatsController extends NewsletterAppController {
 	var $components = array('RequestHandler');
 	
 	function admin_index($id = null) {
+		//App::import('Vendor', 'Newsletter.browscap',array('file'=>'browscap.php'));
 		if($this->RequestHandler->isAjax() || !empty($this->params['named']['ajax'])){
 			Configure::write('debug',0);
 			$this->layout = 'ajax';
@@ -141,6 +142,157 @@ class NewsletterStatsController extends NewsletterAppController {
 		$this->set('newsletterSended', $newsletterSended);
 	}
 	
+	
+	function admin_excel($id = null){
+		App::import('Vendor', 'Newsletter.PHPExcel',array('file' => 'PHPExcel/IOFactory.php'));
+		//echo getcwd();
+		//$excel = new PHPExcel();
+		$objReader = PHPExcel_IOFactory::createReader('Excel2007');
+		//$objPHPExcel = $objReader->load();
+		$objPHPExcel = $objReader->load(APP.'plugins'.DS.'newsletter'.DS.'vendors'.DS.'template.xlsx');
+		//var_dump($excel);
+		
+		$readIdsFindOpt = array(
+			'fields' => array('Sended.id','Sended.id'),
+			'conditions'=>array(
+				'NewsletterSended.newsletter_id' => $id,
+			),
+			'joins' => array(
+				array(
+					'alias' => 'Evnt',
+					'table'=> $this->NewsletterEvent->useTable,
+					'type' => 'INNER',
+					'conditions' => array(
+						'NewsletterSended.id = Evnt.sended_id',
+						'not'=>array(
+							'Evnt.action' => 'bounce'
+						)
+					)
+				),
+				array(
+					'alias' => 'Sended',
+					'table'=> $this->NewsletterSended->useTable,
+					'type' => 'INNER',
+					'conditions' => array(
+						'NewsletterSended.email = Sended.email',
+						'Sended.newsletter_id' => $id,
+					)
+				)
+			),
+			'group'=>'Sended.id',
+			'recursive' => -1,
+		);
+		$readIds = $this->NewsletterSended->find('list',$readIdsFindOpt);
+		//debug($readIds);
+		
+		$urlsFindOpt = array(
+			'fields' => array(
+				'NewsletterEvent.url',
+				'NewsletterSended.email',
+			),
+			'conditions'=>array(
+				'NewsletterEvent.sended_id' => $readIds,
+				'not' => array('NewsletterEvent.action' => 'bounce'),
+				'NewsletterEvent.url IS NOT NULL',
+			),
+			'order' => 'NewsletterSended.email',
+			'group' => 'NewsletterEvent.url',
+			'contain' => 'NewsletterSended',
+		);
+		$this->NewsletterEvent->Behaviors->attach('Containable');
+		App::import('Lib', 'Newsletter.SetMulti');
+		$urls_by_email = SetMulti::group($this->NewsletterEvent->find('all',$urlsFindOpt),'NewsletterSended.email',array('valPath'=>'NewsletterEvent.url'));
+		// debug($urls_by_email);
+		
+		$nbEventsFindOpt = array(
+			'fields' => array(
+				'NewsletterSended.email',
+				'count(Evnt.id) as `count`',
+			),
+			'conditions'=>array(
+				'NewsletterSended.id' => $readIds,
+			),
+			'joins' => array(
+				array(
+					'alias' => 'Evnt',
+					'table'=> $this->NewsletterEvent->useTable,
+					'type' => 'LEFT',
+					'conditions' => array(
+						'NewsletterSended.id = Evnt.sended_id',
+						'not'=>array(
+							'Evnt.action' => 'bounce'
+						)
+					)
+				),
+			),
+			'group' => 'NewsletterSended.email',
+			'recursive' => -1,
+		);
+		App::import('Lib', 'Newsletter.SetMulti');
+		$nbEvents = $this->NewsletterSended->find('all',$nbEventsFindOpt);
+		// debug($nbEvents);
+		
+		$notReadsFindOpt = array(
+			'fields' => array(
+				'NewsletterSended.id',
+				'NewsletterSended.email'
+			),
+			'conditions'=>array(
+				'not'=>array('NewsletterSended.id' => $readIds),
+			),
+			'group' => 'NewsletterSended.email',
+			'recursive' => -1,
+		);
+		$notReads = $this->NewsletterSended->find('list',$notReadsFindOpt);
+		//debug($notReads);
+		
+		// $this->render(false);
+		// return;
+		
+		$row_sheet_index=0;
+		$row_index =0;
+		$cc =0;
+		foreach ($objPHPExcel->getWorksheetIterator() as $worksheet) {
+			if($cc == 0){
+				$worksheet->setTitle("Courriels ouvert");
+				$row_sheet_index=0;
+				foreach($nbEvents as $email){
+					$mail = $email['NewsletterSended']['email'];
+					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $mail);
+					$worksheet->setCellValueByColumnAndRow(1,$row_sheet_index + 2, $email['0']['count']);
+					if(!empty($urls_by_email[$mail])){
+						foreach($urls_by_email[$mail] as $i => $url){
+							$worksheet->setCellValueByColumnAndRow(2 + $i,$row_sheet_index + 2, $url);
+						}	
+					}
+					
+					$row_sheet_index++;
+					
+				}
+			}else{
+				$row_sheet_index=0;
+				$worksheet->setTitle("Courriels non-ouvert");
+				foreach($notReads as $email){
+					$worksheet->setCellValueByColumnAndRow(0,$row_sheet_index + 2, $email);
+					$row_sheet_index++;
+				}
+			}
+			$cc++;
+			//break;
+			//$worksheet->setCellValueByColumnAndRow($key,$row_sheet_index + 5, $arr[$row_index][$val]);
+			
+		}
+		
+		
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		header('Content-Disposition: attachment;filename="export.xlsx"');
+		header('Cache-Control: max-age=0');
+		
+		$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+		$objWriter->save('php://output');
+		exit;
+	
+	}
 	
 	function admin_graphs($id = null) {
 		App::import('Vendor', 'Newsletter.php-ofc-library', array('file'=>'php-ofc-library/open-flash-chart.php'));

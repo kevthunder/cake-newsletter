@@ -188,9 +188,10 @@ class Newsletter extends NewsletterAppModel {
 		}
 		$templateConfig = $this->getConfig($newsletter);
 		
+		$templateConfigClass = get_class($templateConfig);
 		$data = array(
 			'template' => array(
-				'config' => $templateConfig,
+				'config' => (array)( new $templateConfigClass() ),
 				'file' => sha1_file($templateConfig->getPath()),
 			)
 		);
@@ -204,12 +205,16 @@ class Newsletter extends NewsletterAppModel {
 		
 		foreach($boxes as $id => $boxTmpl){
 			$templateConfig = $this->NewsletterBox->getConfig($boxTmpl);
+			$path = $templateConfig->getPath();
+			
+			$templateConfigClass = get_class($templateConfig);
 			$data['box'.$id] = array(
-				'config' => $templateConfig,
-				'file' => sha1_file($templateConfig->getPath()),
+				'config' => (array)( new $templateConfigClass() ),
+				'file' => empty($path) ? '' : sha1_file($path),
 			);
+			
 		}
-		
+		//debug($data);
 		return sha1(serialize($data));
 	}
 	

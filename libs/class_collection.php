@@ -27,7 +27,11 @@ class ClassCollection extends Object {
 			'setName'=> true,
 			'parent'=>array(
 				'paths'=>'%app%/config/',
-				'name'=>'Newsletter.NewsletterTemplateConfig'
+				'name'=>'Newsletter.NewsletterBoxTemplateConfig',
+				'parent'=>array(
+					'paths'=>'%app%/config/',
+					'name'=>'Newsletter.NewsletterTemplateConfig'
+				)
 			)
 		),
 		'NewsletterSender'=>array(

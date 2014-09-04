@@ -3,6 +3,7 @@ class NewsletterTemplateConfig extends Object {
 
 	var $label = null;
 	var $name = null;
+	var $element_folder = 'newsletter';
 	
 	function getLabel(){
 		return __(empty($this->label)?$this->name:$this->label,true);
@@ -13,7 +14,7 @@ class NewsletterTemplateConfig extends Object {
 			$this->path = null;
 			$paths = NewsletterConfig::getAllViewPaths();
 			foreach($paths as $path) {
-				$file = $path.'/elements/newsletter/'.Inflector::underscore($this->name).'.ctp';
+				$file = $path.'elements' . DS . $this->element_folder . DS .Inflector::underscore($this->name).'.ctp';
 				if(file_exists($file)){
 					$this->path = $file;
 					break;
@@ -88,6 +89,10 @@ class NewsletterTemplateConfig extends Object {
 	function afterSend($sender,$opt,$mailsOptions){
 	}
 	
+	function beforeView(&$newsletter,$sended,$admin){
+	
+	}
+	
 	function afterFind(&$model, $result){
 	}
 	
@@ -108,20 +113,23 @@ class NewsletterTemplateConfig extends Object {
 	}
 	
 	////// utility funct //////
-	function beforeSendCreateCodes(&$mailsOptions,$len=16){
-		$this->NewsletterSended = ClassRegistry::init('Newsletter.NewsletterSended');
-		
-		$to_bind = array();
-		foreach($mailsOptions as $sended_id => $opt){
-			if(empty($opt['email']['code'])){
-				$to_bind[] = $sended_id;
+	function beforeSendCreateCodes(&$mailsOptions,$opt,$len=16){
+		if(!empty($opt['sending']['NewsletterSending']['status']) && $opt['sending']['NewsletterSending']['status'] == 'test'){
+		}else{
+			$this->NewsletterSended = ClassRegistry::init('Newsletter.NewsletterSended');
+			
+			$to_bind = array();
+			foreach($mailsOptions as $sended_id => $sopt){
+				if(empty($sopt['email']['code'])){
+					$to_bind[] = $sended_id;
+				}
 			}
-		}
-		
-		$binded = $this->NewsletterSended->bindCode($to_bind,$len);
-		foreach($binded as $sended_id => $code){
-			$mailsOptions[$sended_id]['email']['code'] = $code;
-			$mailsOptions[$sended_id]['replace']['%code%'] = $code;
+			
+			$binded = $this->NewsletterSended->bindCode($to_bind,$len);
+			foreach($binded as $sended_id => $code){
+				$mailsOptions[$sended_id]['email']['code'] = $code;
+				$mailsOptions[$sended_id]['replace']['%code%'] = $code;
+			}
 		}
 	}
 

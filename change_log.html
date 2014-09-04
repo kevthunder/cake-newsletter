@@ -470,13 +470,17 @@ pre{
 		<li>NewsletterTemplateConfig::beforeSend : permet de modifier les options d'envoie</li>
 		<li>NewsletterTemplateConfig::afterSend : permet de faire des actions après que le email est envoyé</li>
 		<li>NewsletterTemplateConfig::beforeSendCreateCodes : à utiliser dans beforeSend, Permet j'ajouter un code de confirmation pour chaque envoie</li>
+		<li>NewsletterTemplateConfig::beforeView : callback avant d'afficher la version site web de l'infoletter</li>
 		<li>NewsletterMaker::zone : Nouveaux nom de la function "column" l'ancien nom est maintenant un alias</li>
+    <li>NewsletterMaker::viewUrl : Nouveaux parametre permettant d'ajouter le sended id dans l'url</li>
 		<li>Import template : Va essayer de détecter les lien de la version et du désabonement</li>
 		<li>Option interne "alt", "size" et "default_photo" pour le template image</li>
 		<li>Vérification de modification aux fichiers template pour invalider les Renders</li>
+		<li>fix : stat exportation</li>
 		<li>bug fix : newsletter_upgrade : les emails dupliqués ne peuvent pas être migré</li>
 		<li>bug fix : tag body et html dédoublé</li>
 		<li>bug fix : self sending</li>
+		<li>bug fix : sendliste export, html à la fin du fichier</li>
     </ul>
 </div>
 </body>

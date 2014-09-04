@@ -614,8 +614,12 @@ class NewsletterMakerHelper extends AppHelper {
 	function unsubscribeUrl(){
 		return $this->html->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'unsubscribe', $this->inEditMode()?null:'%sended_id%', 'admin' => false, 'lang'=>$this->newsletter['Newsletter']['lang']),true);
 	}
-	function viewUrl(){
-		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false, 'useContentUrl' => false));
+	function viewUrl($keep_sended_id = false){
+		$opt = array('plugin'=>'newsletter', 'controller'=>'newsletter', 'action'=>'view', $this->newsletter["Newsletter"]["id"], 'admin' => false, 'useContentUrl' => false);
+		if(!$this->inEditMode() && $keep_sended_id){
+			$opt['sended_id'] = '%sended_id%';
+		}
+		return $this->url($opt);
 	}
 	function selfSendingUrl(){
 		return $this->url(array('plugin'=>'newsletter', 'controller'=>'newsletter_sendings', 'action'=>'add', $this->newsletter["Newsletter"]["id"],'%sended_id%', 'admin' => false, 'useContentUrl' => false));
