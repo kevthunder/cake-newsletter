@@ -154,7 +154,7 @@ class NewsletterController extends NewsletterAppController {
 		if(!empty($this->data) && isset($this->data['NewsletterEmail']['confirm'])){
 			if($this->data['NewsletterEmail']['confirm']){
 				if($this->data['NewsletterEmail']['email']){
-					$count = $this->NewsletterFunct->disable_email($this->data['NewsletterEmail']['email']);
+					$count = $this->NewsletterFunct->disable_email($this->data['NewsletterEmail']['email'],true);
 					if($count){
 						$view = 'unsubscribe_step3';
 					}else{

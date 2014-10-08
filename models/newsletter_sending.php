@@ -61,6 +61,29 @@ class NewsletterSending extends NewsletterAppModel {
 		}
 	}
 	
+	function cancel($id, $recuperable = true){
+		$data = array('active'=>0);
+		if(!$recuperable){
+			$data['status'] = "'cancelled'";
+		}
+		$this->unbindModelAll();
+		$this->updateAll($data, array($this->alias.'.id' => $id));
+		if(!$recuperable){
+			$this->NewsletterSended = ClassRegistry::init('NewsletterSended');
+			$data = array(
+				'active' => 0,
+				'status' => "'cancelled'"
+			);
+			$this->NewsletterSended->unbindModelAll();
+			$this->NewsletterSended->updateAll($data, array(
+				$this->NewsletterSended->alias.'.status' => 'ready',
+				$this->NewsletterSended->alias.'.sending_id' => $id,
+			));
+		}
+	}
+	
+
+	
 	function notEmpty2($check){
 		return !empty($check);
 	}

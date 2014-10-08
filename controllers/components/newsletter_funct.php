@@ -197,9 +197,9 @@ class NewsletterFunctComponent extends Object
 		return $value;
 	}
 	
-	function disable_email($email){
+	function disable_email($email,$user_action = false){
 		App::import('Lib', 'Newsletter.Sendlist');
-		return Sendlist::disable_email($email);
+		return Sendlist::disable_email($email,$user_action);
 	}
 	
 	function get_emails($newsletterSendlist){

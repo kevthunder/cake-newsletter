@@ -41,6 +41,7 @@ echo $paginator->counter(array(
 </tr>
 <?php
 $i = 0;
+$bool=array(__('No',true),__('Yes',true));
 foreach ($newsletterEmails as $newsletterEmail):
 	$class = null;
 	if ($i++ % 2 == 0) {
@@ -52,7 +53,12 @@ foreach ($newsletterEmails as $newsletterEmail):
 			<?php echo $newsletterEmail['NewsletterEmail']['id']; ?>
 		</td>
 		<td>
-			<?php echo $newsletterEmail['NewsletterEmail']['active']; ?>
+			<?php 
+				echo $bool[$newsletterEmail['NewsletterEmail']['active']];
+				if(!$newsletterEmail['NewsletterEmail']['active'] && !empty($newsletterEmail['NewsletterEmail']['disabled'])){
+					echo date_(' (jS F Y)',strtotime($newsletterEmail['NewsletterEmail']['disabled'])); 
+				}
+			?>
 		</td>
 		<td>
 			<?php 
