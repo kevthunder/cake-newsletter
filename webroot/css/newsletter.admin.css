@@ -339,14 +339,17 @@ td.order.labeled a.icon span{
 	padding: 0px 0px 0px 10px;
 }
 #edit_zone #add_elem_box{
-	position:absolute;
-	margin: 0px;
-	padding: 5px;
-	display:none;
-	border:1px #333 solid;
-	width:200px;
-	background-color:#EEE;
-	text-align:left
+    /* TEST AVEC POSITION RELATIVE POUR EMPÊCHER LE CONTENU DE PASSER PAR DESSUS */
+    /*position:absolute;*/
+    position:relative;
+    margin: 0px;
+    padding: 5px;
+    display:none;
+    border:1px #333 solid;
+    width:200px;
+    background-color:#EEE;
+    text-align:left;
+    z-index:1000;
 }
 #edit_zone #add_elem_box select{
 	width:120px;
