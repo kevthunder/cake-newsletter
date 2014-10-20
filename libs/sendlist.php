@@ -30,14 +30,20 @@ class Sendlist extends Object {
 		}
 	}
 	
-	function disable_email($email){
+	function disable_email($email,$user_action = false){
 		$emails = (array)$email;
+	
+		$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
+		$format = $NewsletterEmail->getDataSource()->columns['datetime']['format'];
 	
 		$email_data = array();
 		$email_data['active'] = '0';
+		$email_data['disabled'] = $NewsletterEmail->getDataSource()->value(date($format));
+		if($user_action){
+			$email_data['user_action'] = $NewsletterEmail->getDataSource()->value(date($format));
+		}
 		
-		$NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
-		
+		$NewsletterEmail->checkActive = false;
 		$normalEmail = $NewsletterEmail->find('list',array('fields'=> array('id','email'),'conditions' => array('email'=>$emails),'recursive'=>-1));
 		$count = $NewsletterEmail->updateAll($email_data, array('id'=>array_keys($normalEmail)));
 		$normalCount = $NewsletterEmail->getAffectedRows();
@@ -53,10 +59,8 @@ class Sendlist extends Object {
 		$notInNormal = array_diff($emails, $normalEmail);
 		foreach($notInNormal as $bkemail){
 			//We keep unsubcriptions because tabled Sendlists are not allways reliable
-			$data = array(
-				'email'=>$bkemail,
-				'active'=>0
-			);
+			$data = $email_data;
+			$data['email'] = $bkemail;
 			$NewsletterEmail->create();
 			if(!$NewsletterEmail->save($data)){
 				return false;
@@ -170,12 +174,21 @@ class Sendlist extends Object {
 		return $res;
 	}
 	
-	function parseResult($res,$useAlias=null){
+	function parseResult($res,$options=array()){
 		if(empty($res)) return $res;
 		
+		
+		if(!is_array($options)){
+			$options = array('alias'=>$options);
+		}
+		$defOpt = array(
+			'alias'=> null,
+		);
+		$opt = array_merge($defOpt,$options);
+		
 		foreach($res as &$r){
-			if($useAlias){
-				$r = array($useAlias => $r[$this->EmailModel->alias]);
+			if(!empty($opt['alias'])){
+				$r = array($opt['alias'] => $r[$this->EmailModel->alias]);
 			}else{
 				$r = $r[$this->EmailModel->alias];
 			}
@@ -189,7 +202,12 @@ class Sendlist extends Object {
 	
 	function getInfo(){
 		$NewsletterSendlist = ClassRegistry::init('Newsletter.NewsletterSendlist');
-		return $NewsletterSendlist->read(null, $this->id);
+		return $NewsletterSendlist->find('first', array(
+			'conditions'=>array(
+				'id' => $this->id
+			),
+			'recursive' => -1
+		));
 	}
 }
 ?>

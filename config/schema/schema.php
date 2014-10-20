@@ -32,7 +32,10 @@ class NewsletterSchema extends CakeSchema {
 		'template' => array('type' => 'string', 'null' => false, 'default' => NULL),
 		'data' => array('type' => 'text', 'null' => true, 'default' => NULL),
 		'multimedia' => array('type' => 'text', 'null' => true, 'default' => NULL),
-		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1)),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1),
+			'newsletter_id' => array('column' => 'newsletter_id', 'unique' => 0)
+		),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
 	);
 	var $newsletter_emails = array(
@@ -41,9 +44,13 @@ class NewsletterSchema extends CakeSchema {
 		'name' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'email' => array('type' => 'string', 'null' => false, 'default' => NULL),
 		'user_action' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
+		'disabled' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
 		'created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
-		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1)),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1),
+			'email' => array('column' => 'email', 'unique' => 1)
+		),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
 	);
 	var $newsletter_sended = array(
@@ -63,7 +70,11 @@ class NewsletterSchema extends CakeSchema {
 		'active' => array('type' => 'boolean', 'null' => true, 'default' => NULL),
 		'created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
-		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1), 'newsletter_id' => array('column' => 'newsletter_id', 'unique' => 0), 'email' => array('column' => 'email', 'unique' => 0)),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1), 
+			'newsletter_id' => array('column' => 'newsletter_id', 'unique' => 0), 
+			'email' => array('column' => 'email', 'unique' => 0)
+		),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
 	);
 	var $newsletter_sendings = array(
@@ -110,7 +121,10 @@ class NewsletterSchema extends CakeSchema {
 		'active' => array('type' => 'boolean', 'null' => true, 'default' => '1'),
 		'created' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
-		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1), 'newsletter_sendlist_id' => array('column' => array('newsletter_sendlist_id', 'newsletter_email_id'), 'unique' => 1)),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1), 
+			'newsletter_sendlist_id' => array('column' => array('newsletter_sendlist_id', 'newsletter_email_id'), 'unique' => 1)
+		),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
 	);
 	var $newsletter_events = array(
@@ -122,7 +136,10 @@ class NewsletterSchema extends CakeSchema {
 		'ip_address' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'user_agent' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'processed' => array('type' => 'boolean', 'null' => false, 'default' => '0'),
-		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1), 'sended_id' => array('column' => 'sended_id', 'unique' => 0)),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1), 
+			'sended_id' => array('column' => 'sended_id', 'unique' => 0)
+		),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
 	);
 	var $newsletter_stats = array(
@@ -134,7 +151,10 @@ class NewsletterSchema extends CakeSchema {
 		'context' => array('type' => 'string', 'null' => true, 'default' => NULL),
 		'created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
-		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1), 'newsletter_id' => array('column' => 'newsletter_id', 'unique' => 0)),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1), 
+			'newsletter_id' => array('column' => 'newsletter_id', 'unique' => 0)
+		),
 		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
 	);
 	var $newsletter_variants = array(

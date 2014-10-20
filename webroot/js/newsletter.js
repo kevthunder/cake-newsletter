@@ -554,9 +554,9 @@
             }
           });
 					if(data["newsletterbox_media"] && $('table.multimedia',$edit_box).length){
-						$('table.multimedia',$edit_box).multimedia.clear();
+						$('table.multimedia',$edit_box).multimedia().clear();
 						$.each(data["newsletterbox_media"], function(index, value) { 
-							$('table.multimedia',$edit_box).multimedia.add(value);
+							$('table.multimedia',$edit_box).multimedia().add(value);
 						});
 					}
 				}

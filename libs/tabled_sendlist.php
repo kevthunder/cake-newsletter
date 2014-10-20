@@ -223,8 +223,18 @@ class TabledSendlist extends Sendlist {
 		return $this->options['allowUnsubscribe'] && $this->EmailModel->hasField($this->options['fields']['active']);
 	}
 	
-	function parseResult($res,$useAlias=null){
+	function parseResult($res,$options=array()){
 		if(empty($res)) return $res;
+		
+		if(!is_array($options)){
+			$options = array('alias'=>$options);
+		}
+		$defOpt = array(
+			'alias'=> null,
+			'local'=>false,
+		);
+		$opt = array_merge($defOpt,$options);
+		
 		
 		$Model = $this->EmailModel;
 		$modelName = $Model->alias;
@@ -233,7 +243,8 @@ class TabledSendlist extends Sendlist {
 		//debug($fields);
 		if($single) $res = array($res);
 		
-		foreach ($res as &$mail) {
+		$emails = array();
+		foreach ($res as $pos => &$mail) {
 			$emailData = array();
 			if(isset($mail[$modelName]['email'])){
 				$emailData['email']= $mail[$modelName]['email'];
@@ -242,6 +253,7 @@ class TabledSendlist extends Sendlist {
 			}
 			
 			if(!empty($emailData['email'])){
+				$emails[$pos] = $emailData['email'];
 				//$basicFields = array('id','email','name','first_name','last_name');
 				//$emailData = array_intersect_key($mail[$modelName],array_flip($basicFields));
 				//if(array_key_exists($Model->primaryKey, $mail[$modelName]) {}
@@ -276,11 +288,18 @@ class TabledSendlist extends Sendlist {
 				$emailData['name'] = $name;
 				$emailData['sendlist_id'] = $this->id;
 				$emailData['data'] = $mail;
-				if($useAlias){
-					$mail = array($useAlias => $emailData);
+				if(!empty($opt['alias'])){
+					$mail = array($opt['alias'] => $emailData);
 				}else{
 					$mail = $emailData;
 				}
+			}
+		}
+		if($opt['local'] && ! empty($emails)){
+			$localModel = ClassRegistry::init('Newsletter.NewsletterEmail');
+			$locals = $localModel->find('all', array('conditions'=>array('email'=>$emails),'recursive'=>-1));
+			foreach($locals as $local){
+				$res[array_search($local['NewsletterEmail']['email'],$emails)]['local'] = $local['NewsletterEmail'];
 			}
 		}
 		if($single) $res = $res[0];

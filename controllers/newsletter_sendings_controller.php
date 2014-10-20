@@ -165,7 +165,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 					'NewsletterSending.id',
 					"COUNT(DISTINCT CASE WHEN `".$this->NewsletterSended->alias."`.`status` IN ('sent','error') THEN `".$this->NewsletterSended->alias."`.`id` END) AS total_sended",
 					"COUNT(DISTINCT CASE WHEN `".$this->NewsletterSended->alias."`.`status` = 'error' THEN `".$this->NewsletterSended->alias."`.`id` END) AS errors",
-					"COUNT(DISTINCT CASE WHEN `".$this->NewsletterSended->alias."`.`status` IN ('ready','reserved') THEN `".$this->NewsletterSended->alias."`.`id` END) AS remaining"
+					"COUNT(DISTINCT CASE WHEN `".$this->NewsletterSended->alias."`.`status` IN ('ready','reserved', 'cancelled') THEN `".$this->NewsletterSended->alias."`.`id` END) AS remaining"
 				),
 				'conditions'=>array(
 					'NewsletterSending.id' => $ids
@@ -553,17 +553,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 			);
 		}
 		
-		$this->NewsletterSending->create();
-		$data = array('NewsletterSending'=>array('id'=>$id,'active'=>0));
-		if($this->NewsletterSending->save($data)){
-			$this->_consoleOut($id,__('Sending Canceled.',true));
-		}else{
-			$this->_consoleOut($id,
-				__('Could not start Sending',true),
-				array('exit'=>true)
-			);
-		}
-		
+		$this->NewsletterSending->cancel($id);
+		$this->_consoleOut($id,__('Sending Canceled.',true));
 		
 		$this->_console_render();
 	}
@@ -586,6 +577,7 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$this->_process($sending);
 	}
 	
+	// wget http://{DOMAIN}/newsletter/newsletter_sendings/cron_tcheck_send > /dev/null 2>&1
 	function cron_tcheck_send(){
 		if(NewsletterConfig::load('cron') || NewsletterConfig::load('_cronAuto')){
 			$this->layout = false;
@@ -986,6 +978,25 @@ class NewsletterSendingsController extends NewsletterAppController {
 		
 		$this->_consoleOut($id,__d('newsletter','Start Building Sending', true));
 		
+		
+		//=========================== Close Cancelled Sending ===========================
+		
+		$toClose = $this->NewsletterSending->find('list',array(
+			'fields' => array('id','id'),
+			'conditions' => array(
+				'active' => 0,
+				'newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
+				'not' => array('status' => array('done', 'cancelled')),
+			),
+			'recursive' => -1,
+		));
+		
+		if(!empty($toClose)){
+			$this->NewsletterSending->cancel($toClose,false);
+			
+			$this->_consoleOut($id,sprintf(__d('newsletter','%s old sending cancelled', true),count($toClose)));
+		}
+		
 		//=========================== Data ===========================
 		
 		$basicInfo = array(
@@ -1148,7 +1159,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 							'foreignKey' => false,
 							'conditions'=> array(
 								$this->NewsletterSendlist->NewsletterEmail->alias.'.id = '.$this->NewsletterSended->alias.'.email_id',
-								$this->NewsletterSended->alias.'.newsletter_id' => $sending['NewsletterSending']['newsletter_id']
+								$this->NewsletterSended->alias.'.newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
+								'not' => array($this->NewsletterSended->alias.'.status' => 'cancelled')
 							)
 						);
 						$findOpt['conditions'][] = $this->NewsletterSended->alias.'.id IS NULL';
@@ -1212,7 +1224,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 				'foreignKey' => false,
 				'conditions'=> array(
 					$this->NewsletterSendlist->NewsletterEmail->alias.'.email = '.$this->NewsletterSended->alias.'.email',
-					$this->NewsletterSended->alias.'.newsletter_id' => $sending['NewsletterSending']['newsletter_id']
+					$this->NewsletterSended->alias.'.newsletter_id' => $sending['NewsletterSending']['newsletter_id'],
+					'not' => array($this->NewsletterSended->alias.'.status' => 'cancelled')
 				)
 			);
 			if(!$sending['NewsletterSending']['check_sended']){
@@ -1307,7 +1320,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 							'fields' => array('id','email'),
 							'conditions'=>array(
 								'email'=>$adresses,
-								'newsletter_id'=>$sending['NewsletterSending']['newsletter_id']
+								'newsletter_id'=>$sending['NewsletterSending']['newsletter_id'],
+								'not' => array($this->NewsletterSended->alias.'.status' => 'cancelled')
 							),
 							'recursive'=>-1
 						);
@@ -1426,7 +1440,14 @@ class NewsletterSendingsController extends NewsletterAppController {
 			}
 			
 			//--- tcheck for duplicate ---
-			$findOpt = array('fields'=>array('DISTINCT email'),'conditions'=>array('email'=>array_keys($add_emails),'newsletter_id'=>$sending['NewsletterSending']['newsletter_id']));
+			$findOpt = array(
+				'fields'=>array('DISTINCT email'),
+				'conditions'=>array(
+					'email'=>array_keys($add_emails),
+					'newsletter_id'=>$sending['NewsletterSending']['newsletter_id'],
+					'not' => array($this->NewsletterSended->alias.'.status' => 'cancelled')
+				)
+			);
 			if(!$sending['NewsletterSending']['check_sended']){
 				$findOpt['conditions']['sending_id'] = $id;
 			}

@@ -22,6 +22,9 @@ class NewsletterUpgrade extends Object {
 		'emailDuplicate' => array(
 			'recheck' => true,
 		),
+		'emailDuplicate2' => array(
+			'recheck' => true,
+		),
 		'schemaUpdate' => array(
 			'dropConstraint' => array(
 				'newsletter_emails' => array(
@@ -236,7 +239,16 @@ class NewsletterUpgrade extends Object {
 		if(!empty($diff['newsletter_sendlists_emails']['add']['indexes']['newsletter_sendlist_id'])){
 			return array('newsletter_sendlists_emails'=>array('add'=>array('indexes'=>array('newsletter_sendlist_id'=>$diff['newsletter_sendlists_emails']['add']['indexes']['newsletter_sendlist_id']))));
 		}
-		return !empty($diff['newsletter_sendlists_emails']['add']['indexes']['newsletter_sendlist_id']);
+		return false;
+	}
+	function check_emailDuplicate2($opt){
+		$_this =& NewsletterUpgrade::getInstance();
+		$diff = $_this->getSchemaDiff();
+		
+		if(!empty($diff['newsletter_emails']['add']['indexes']['email'])){
+			return array('newsletter_emails'=>array('add'=>array('indexes'=>array('email'=>$diff['newsletter_emails']['add']['indexes']['email']))));
+		}
+		return false;
 	}
 	function check_sendedTabled($opt){
 		$_this =& NewsletterUpgrade::getInstance();
@@ -453,7 +465,7 @@ class NewsletterUpgrade extends Object {
 		$this->NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
 	
 		$findOpt = array(
-			'fields' => array('NewsletterSendlistsEmail.id','e2.id'),
+			'fields' => array('e2.id','NewsletterSendlistsEmail.id'),
 			'conditions'=>array(
 			),
 			'joins' => array(
@@ -472,7 +484,7 @@ class NewsletterUpgrade extends Object {
 			'recursive' => -1,
 			'model' => $this->NewsletterSendlistsEmail,
 		);
-		$duplicated = $this->NewsletterSendlistsEmail->find('list',$findOpt);
+		$duplicated = array_keys($this->NewsletterSendlistsEmail->find('list',$findOpt));
 		if(!empty($duplicated)){
 			$this->NewsletterSendlistsEmail->deleteAll(array('id'=>array_values($duplicated)));
 		}
@@ -484,6 +496,61 @@ class NewsletterUpgrade extends Object {
 			break;
 		}
 		
+		return true;
+	}
+	
+	
+	function fix_emailDuplicate2($error,$opt,&$msg){
+		$_this =& NewsletterUpgrade::getInstance();
+		$db = ConnectionManager::getDataSource($_this->connection);
+		App::import('Lib', 'Newsletter.SetMulti');
+			
+		$this->NewsletterEmail = ClassRegistry::init('Newsletter.NewsletterEmail');
+		$this->NewsletterSendlistsEmail = ClassRegistry::init('Newsletter.NewsletterSendlistsEmail');
+	
+		$findOpt = array(
+			'fields' => array('e2.id','NewsletterEmail.id'),
+			'conditions'=>array(
+			),
+			'joins' => array(
+				array(
+					'alias' => 'e2',
+					'table'=> $this->NewsletterEmail->useTable,
+					'type' => 'INNER',
+					'conditions' => array(
+						'`e2`.`id` != `NewsletterEmail`.`id`',
+						'`e2`.`email` = `NewsletterEmail`.`email`',
+					)
+				)
+			),
+			'group' => '`e2`.`id` HAVING `e2`.`id` > `NewsletterEmail`.`id`',
+			'recursive' => -1,
+			'model' => $this->NewsletterEmail,
+		);
+		$duplicated = SetMulti::flip($this->NewsletterEmail->find('list',$findOpt));
+		
+		foreach($duplicated as $first => $dup){
+			$dup = (array)$dup;
+			$query = 'UPDATE `newsletter_sendlists_emails` AS `NewsletterSendlistsEmail` 
+				LEFT JOIN `newsletter_sendlists_emails` AS `Equiv` 
+				ON (`NewsletterSendlistsEmail`.`newsletter_sendlist_id` = `Equiv`.`newsletter_sendlist_id` AND `Equiv`.`newsletter_email_id` = '.$first.') 
+				SET `NewsletterSendlistsEmail`.`newsletter_email_id` = '.$first.' 
+				WHERE `Equiv`.`id` IS NULL AND `NewsletterSendlistsEmail`.`newsletter_email_id` IN ('.implode(', ',$dup).')';
+			if(!$db->execute($query)){
+				$msg = __('Unable to execute query :',true).' '.$query;
+				return false;
+			}
+			
+			$this->NewsletterSendlistsEmail->deleteAll(array('newsletter_email_id'=>array_values($dup)));
+			$this->NewsletterEmail->deleteAll(array('id'=>array_values($dup)));
+		}
+		
+		$query = $db->alterSchema($error,'newsletter_emails');
+		if(!$db->execute($query)){
+			$msg[] = __('Unable to execute query :',true).' '.$query;
+			return false;
+			break;
+		}
 		return true;
 	}
 	

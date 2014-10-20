@@ -228,14 +228,13 @@ class NewsletterEmailsController extends NewsletterAppController {
 			$this->paginate = $findOptions;
 			$mails = $this->paginate($sendlist->EmailModel);
 			//debug($mails);
-			$newsletterEmails = $sendlist->parseResult($mails,'NewsletterEmail');
+			$newsletterEmails = $sendlist->parseResult($mails,array('alias'=>'NewsletterEmail','local'=>true));
 			//debug($newsletterEmails);
 			if($sendlist->type == 'tabled'){
 				$this->set('fields', $sendlist->emailFields());
 				$toRender = 'tabled_email';
 			}
 			$this->set('sendlist', $sendlist->getInfo());
-			
 		}else{
 		
 			if($q != null) {
