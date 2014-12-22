@@ -654,8 +654,8 @@ class NewsletterSendingsController extends NewsletterAppController {
 		$ajax = ($this->RequestHandler->isAjax() || !empty($this->params['named']['ajax']));
 		if($ajax){
 			$json = array(
-				'status'=>$sending['NewsletterSending']['status'],
-				'stream'=>in_array($sending['NewsletterSending']['status'],array('build','send')) && $sending['NewsletterSending']['started'] && $sending['NewsletterSending']['active']
+				'status' => $sending['NewsletterSending']['status'],
+				'stream' => $sending['NewsletterSending']['status'] != 'done' && $sending['NewsletterSending']['started'] && $sending['NewsletterSending']['active']
 			);
 			$this->set('json',$json);
 		}
