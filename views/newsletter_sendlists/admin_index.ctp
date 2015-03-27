@@ -89,7 +89,8 @@ foreach ($newsletterSendlists as $newsletterSendlist):
 				echo $html->link(
 					'<span>'.__d('newsletter','Delete', true).'</span>', 
 					array('action' => 'delete', $newsletterSendlist['NewsletterSendlist']['id']), 
-					array('class'=>'icon delete','escape' => false)
+					array('class'=>'icon delete','escape' => false),
+					sprintf(__d('newsletter','Are you sure you want to delete # %s?', true), $newsletterSendlist['NewsletterSendlist']['id'])
 				);
 				echo $html->link(
 					'<span>'.__d('newsletter','Add Email', true).'</span>', 
