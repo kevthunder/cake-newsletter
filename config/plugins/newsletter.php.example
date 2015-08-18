@@ -1,7 +1,7 @@
 <?php
-	// Configure::write('Newsletter.sendEmail', 'O2 Web Solutions <info@o2web.ca>');
-	// Configure::write('Newsletter.replyTo', 'info@o2web.ca');
-	// Configure::write('Newsletter.errorReturn', 'bounce@o2web.ca');
+	// Configure::write('Newsletter.sendEmail', 'Webmaster <info@hostname.com>');
+	// Configure::write('Newsletter.replyTo', 'info@hostname.com');
+	// Configure::write('Newsletter.errorReturn', 'bounce@hostname.com');
 	Configure::write('Newsletter.defaultSendlist', 1);
 	Configure::write('Newsletter.EmailAdd.confirm', true);
 	/*Configure::write('Newsletter.smtpOptions', array(
